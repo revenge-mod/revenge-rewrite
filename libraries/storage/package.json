@@ -1,0 +1,13 @@
+{
+  "name": "@revenge-mod/storage",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {},
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@gullerya/object-observer": "^6.1.3",
+    "@revenge-mod/modules": "workspace:*"
+  }
+}

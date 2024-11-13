@@ -1,0 +1,7 @@
+{
+  "name": "@revenge-mod/compat",
+  "type": "module",
+  "exports": {
+    "./intl": "./src/intl.ts"
+  }
+}

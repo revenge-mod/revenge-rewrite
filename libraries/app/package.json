@@ -1,0 +1,14 @@
+{
+  "name": "@revenge-mod/app",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {},
+  "exports": {
+    ".": "./src/index.tsx"
+  },
+  "dependencies": {
+    "@revenge-mod/modules": "workspace:*",
+    "@revenge-mod/patcher": "workspace:*",
+    "@revenge-mod/shared": "workspace:*"
+  }
+}

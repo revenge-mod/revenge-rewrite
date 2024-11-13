@@ -1,0 +1,25 @@
+{
+  "name": "@revenge-mod/modules",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./common": "./src/common/index.ts",
+    "./common/components": "./src/common/components.ts",
+    "./filters": "./src/filters.ts",
+    "./constants": "./src/constants.ts",
+    "./metro": "./src/metro/index.ts",
+    "./native": "./src/native/index.ts"
+  },
+  "dependencies": {
+    "@revenge-mod/assets": "workspace:*",
+    "@revenge-mod/patcher": "workspace:*",
+    "@revenge-mod/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@react-native-clipboard/clipboard": "^1.14.3",
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/stack": "^6.4.1",
+    "@types/semver": "^7.5.8",
+    "react-native-safe-area-context": "^4.12.0"
+  }
+}

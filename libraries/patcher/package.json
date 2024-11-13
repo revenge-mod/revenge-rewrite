@@ -1,0 +1,10 @@
+{
+  "name": "@revenge-mod/patcher",
+  "module": "src/index.ts",
+  "type": "module",
+  "types": "src/index.ts",
+  "scripts": {},
+  "dependencies": {
+    "spitroast": "https://github.com/revenge-mod/spitroast"
+  }
+}

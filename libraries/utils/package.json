@@ -1,0 +1,11 @@
+{
+  "name": "@revenge-mod/utils",
+  "module": "src/index.ts",
+  "type": "module",
+  "exports": {
+    "./enums": "./src/enums.ts",
+    "./functions": "./src/functions.ts",
+    "./lazy": "./src/lazy.ts",
+    "./trees": "./src/trees.ts"
+  }
+}

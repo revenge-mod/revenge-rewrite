@@ -1,0 +1,53 @@
+{
+  "extends": "@tsconfig/strictest",
+  "compilerOptions": {
+    // Enable latest features
+    "lib": ["ESNext", "DOM"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "allowJs": true,
+
+    // Bundler mode
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+
+    "types": ["./types", "./types.scoped"],
+
+    "baseUrl": ".",
+    "rootDir": ".",
+
+    // TODO: Do this in types.d.ts instead?
+    "paths": {
+      "@revenge-mod/app": ["libraries/app/src/index.tsx"],
+      "@revenge-mod/assets": ["libraries/assets/src/index.ts"],
+      "@revenge-mod/compat/intl": ["libraries/compat/src/intl.ts"],
+      "@revenge-mod/modules": ["libraries/modules/src/index.ts"],
+      "@revenge-mod/modules/common": ["libraries/modules/src/common/index.ts"],
+      "@revenge-mod/modules/common/components": [
+        "libraries/modules/src/common/components.ts"
+      ],
+      "@revenge-mod/modules/constants": ["libraries/modules/src/constants.ts"],
+      "@revenge-mod/modules/filters": ["libraries/modules/src/filters.ts"],
+      "@revenge-mod/modules/metro": ["libraries/modules/src/metro/index.ts"],
+      "@revenge-mod/modules/native": ["libraries/modules/src/native/index.ts"],
+      "@revenge-mod/patcher": ["libraries/patcher/src/index.ts"],
+      "@revenge-mod/plugins": ["libraries/plugins/src/index.ts"],
+      "@revenge-mod/settings": ["libraries/settings/src/index.ts"],
+      "@revenge-mod/shared/*": ["libraries/shared/src/*"],
+      "@revenge-mod/storage": ["libraries/storage/src/index.ts"],
+      "@revenge-mod/utils/*": ["libraries/utils/src/*"],
+      "@revenge-mod/revenge": ["./types.d.ts"],
+      "@revenge-mod/ui/*": ["libraries/ui/src/*.ts"],
+      "events": ["./shims/events.ts"]
+    },
+
+    "skipLibCheck": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitReturns": false
+  },
+  "exclude": ["dist", "node_modules", "scripts"]
+}

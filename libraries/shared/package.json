@@ -1,0 +1,9 @@
+{
+  "name": "@revenge-mod/shared",
+  "module": "src/index.ts",
+  "type": "module",
+  "exports": {
+    "./symbols": "./src/symbols.ts",
+    "./types": "./src/types.d.ts"
+  }
+}

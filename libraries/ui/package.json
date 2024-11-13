@@ -1,0 +1,13 @@
+{
+  "name": "@revenge-mod/ui",
+  "type": "module",
+  "scripts": {},
+  "exports": {
+    "./settings": "./src/settings.ts"
+  },
+  "dependencies": {
+    "@revenge-mod/modules": "workspace:*",
+    "@revenge-mod/patcher": "workspace:*",
+    "@revenge-mod/shared": "workspace:*"
+  }
+}
