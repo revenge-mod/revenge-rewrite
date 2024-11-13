@@ -1,5 +1,5 @@
 import type { AnyObject } from '@revenge-mod/shared/types'
-import * as spitroast from 'spitroast'
+import * as patcherImpl from '@marshift/strawberry'
 import type { AwaitedWrappableParams, UnpatchFunction, WrappableName } from './types'
 import { createExtendedPatchFunction, trapFunctionCallsRecursive } from './utils'
 
@@ -11,9 +11,9 @@ export const patcherLazyModuleSymbol = Symbol.for('revenge.patcher.lazyModule')
 
 const patcherInstances = new Map<string, Set<UnpatchFunction>>()
 
-const _after = createExtendedPatchFunction<'after'>(spitroast.after)
-const _before = createExtendedPatchFunction<'before'>(spitroast.before)
-const _instead = createExtendedPatchFunction<'instead'>(spitroast.instead)
+const _after = createExtendedPatchFunction<'after'>(patcherImpl.after)
+const _before = createExtendedPatchFunction<'before'>(patcherImpl.before)
+const _instead = createExtendedPatchFunction<'instead'>(patcherImpl.instead)
 
 /**
  * Creates a new patcher instance, which are tied to specific patches

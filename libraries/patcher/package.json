@@ -5,6 +5,6 @@
   "types": "src/index.ts",
   "scripts": {},
   "dependencies": {
-    "spitroast": "https://github.com/revenge-mod/spitroast"
+    "@marshift/strawberry": "^1.5.1"
   }
 }

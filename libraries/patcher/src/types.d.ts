@@ -1,7 +1,5 @@
 import type { Metro } from '@revenge-mod/modules'
 
-import type * as spitroast from 'spitroast'
-
 type WrappableName = 'after' | 'before' | 'instead'
 type UnpatchFunction = () => boolean
 
