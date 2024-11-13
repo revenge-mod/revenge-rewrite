@@ -13,12 +13,12 @@ import type { DiscordNativeModules } from './types'
 const nmp = window.nativeModuleProxy
 
 export const CacheModule = lazyValue(() => nmp.NativeCacheModule ?? nmp.MMKVManager) as DiscordNativeModules.CacheModule
-export const FileModule = lazyValue(() => nmp.NativeFileModule ?? nmp.RTNFileManager) as DiscordNativeModules.FileModule
+export const FileModule = lazyValue(() => nmp.NativeFileModule ?? nmp.RTNFileManager ?? nmp.DCDFileManager) as DiscordNativeModules.FileModule
 export const ClientInfoModule = lazyValue(
-    () => nmp.NativeClientInfoModule ?? nmp.RTNClientInfoManager,
+    () => nmp.NativeClientInfoModule ?? nmp.RTNClientInfoManager ?? nmp.InfoDictionaryManager,
 ) as DiscordNativeModules.ClientInfoModule
 export const DeviceModule = lazyValue(
-    () => nmp.NativeDeviceModule ?? nmp.RTNDeviceManager,
+    () => nmp.NativeDeviceModule ?? nmp.RTNDeviceManager ?? nmp.DCDDeviceManager,
 ) as DiscordNativeModules.DeviceModule
 
 export const BundleUpdaterManager = lazyValue(
@@ -26,5 +26,5 @@ export const BundleUpdaterManager = lazyValue(
 ) as DiscordNativeModules.BundleUpdaterManager
 
 export const ThemeModule = lazyValue(
-    () => nmp.NativeThemeModule ?? nmp.RTNThemeManager,
+    () => nmp.NativeThemeModule ?? nmp.RTNThemeManager ?? nmp.DCDThemeManager,
 ) as DiscordNativeModules.ThemeModule
