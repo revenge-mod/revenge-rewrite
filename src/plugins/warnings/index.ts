@@ -1,6 +1,10 @@
 // TODO: Fix this path
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 import { registerPlugin } from 'libraries/plugins/src/internals'
+import { ReactNative } from '@revenge-mod/modules/common';
+
+// TODO: Is this iOS version actually a reasonable minimum?
+const TARGET_VERSION = ReactNative.Platform.select({ android: 250000, ios: 65235 })!
 
 registerPlugin<{
     supportWarningDismissed?: number
@@ -22,7 +26,7 @@ registerPlugin<{
                     body:
                         // biome-ignore lint/style/useTemplate: I can't see the whole message when not doing concatenation
                         'Revenge does not officially support this build of Discord. Please update to a newer version as some features may not work as expected.\n\n' +
-                        `Supported Builds: 250.0 (250000) or after\nYour Build: ${ClientInfoModule.Version} (${ClientInfoModule.Build})`,
+                        `Supported Builds: 250.0 (${TARGET_VERSION}) or after\nYour Build: ${ClientInfoModule.Version} (${ClientInfoModule.Build})`,
                     confirmText: 'Remind me in 7 days',
                     onConfirm: () => {
                         storage.supportWarningDismissed = Date.now()
@@ -37,6 +41,6 @@ registerPlugin<{
         },
     },
     true,
-    // We do !> instead of < in case the value of the left is NaN
-    () => !(Number(ClientInfoModule.Build) > 250000),
+    // We do !>= instead of <= in case the value of the left is NaN
+    () => !(Number(ClientInfoModule.Build) >= TARGET_VERSION),
 )
