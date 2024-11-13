@@ -10,7 +10,7 @@ import type { DiscordNativeModules } from './types'
  * - If the module name ends with "Manager", include it
  */
 
-const nmp = window.nativeModuleProxy
+const nmp = nativeModuleProxy
 
 export const CacheModule = lazyValue(() => nmp.NativeCacheModule ?? nmp.MMKVManager) as DiscordNativeModules.CacheModule
 export const FileModule = lazyValue(() => nmp.NativeFileModule ?? nmp.RTNFileManager ?? nmp.DCDFileManager) as DiscordNativeModules.FileModule

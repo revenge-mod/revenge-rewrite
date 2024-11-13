@@ -21,7 +21,7 @@ let context = {
  * @type {import('esbuild').BuildOptions}
  */
 const config = {
-    entryPoints: ['src/entry.ts'],
+    entryPoints: ['src/index.tsx'],
     bundle: true,
     outfile: 'dist/revenge.js',
     format: 'iife',

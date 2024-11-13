@@ -150,7 +150,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         storage: createStorage(`revenge/plugins/${definition.id}/storage.json`, {
             initial: definition.initializeStorage?.() ?? {},
         }),
-        revenge: lazyValue(() => window.revenge),
+        revenge: lazyValue(() => revenge),
         cleanup: (...funcs) => {
             for (const cleanup of funcs) cleanups.add(cleanup)
         },

@@ -27,7 +27,7 @@ function initialize() {
             const app = AppLibrary.new()
             const plugins = PluginsLibrary.new()
 
-            window.revenge = {
+            globalThis.revenge = {
                 app,
                 assets,
                 modules,
@@ -60,7 +60,7 @@ function onError(e: unknown) {
 
     console.error(`Failed to load Revenge: ${getErrorStack(e)}`)
 
-    if (window.ReactNative && !ReactNative.AppRegistry.getAppKeys().includes('Discord')) {
+    if (ReactNative && !ReactNative.AppRegistry.getAppKeys().includes('Discord')) {
         const styles = ReactNative.StyleSheet.create({
             view: {
                 flex: 1,
@@ -108,14 +108,14 @@ Libraries.create(
         cleanup(() => {
             // @ts-expect-error
             // biome-ignore lint/performance/noDelete: Only a one-time thing
-            if ('revenge' in window) delete window.revenge
+            if ('revenge' in globalThis) delete globalThis.revenge
         })
 
-        if (typeof globalThis.__r !== 'undefined') return initialize()
+        if (typeof __r !== 'undefined') return initialize()
 
         // We hold calls from the native side
         function onceIndexRequired() {
-            const batchedBridge = window.__fbBatchedBridge
+            const batchedBridge = __fbBatchedBridge
 
             // TODO: Check if this is needed
             // patcher.before(batchedBridge, 'callFunctionReturnFlushedQueue', noop)
@@ -141,7 +141,7 @@ Libraries.create(
                     // // We need this, for speed. See libraries/modules/src/metro/index.ts:125
                     // ^^^ I lied. It's actually not that much faster.
                     // logger.log('Importing index module...')
-                    // window.__r(IndexMetroModuleId)
+                    // __r(IndexMetroModuleId)
                     for (const queue of callQueue)
                         batchedBridge.getCallableModule(queue[0]) && batchedBridge.__callFunction(...queue)
                 })
@@ -170,7 +170,7 @@ Libraries.create(
             __d: {
                 configurable: true,
                 get() {
-                    if (!window.modules) window.modules = window.__c?.()
+                    globalThis.modules ??= __c?.()
                     return this.value
                 },
                 set(v) {

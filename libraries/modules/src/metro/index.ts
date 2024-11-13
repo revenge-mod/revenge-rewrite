@@ -13,7 +13,7 @@ export * from './patcher'
  * @internal
  */
 export function getMetroModules() {
-    return window.modules
+    return modules
 }
 
 let importingModuleId = -1
@@ -125,7 +125,7 @@ export async function initializeModules() {
     // TODO: Executing here slows down the app by ~1s but it ensures all modules are hooked
     // ! Do NOT use requireModule for this
     logger.log('Importing index module...')
-    window.__r(IndexMetroModuleId)
+    __r(IndexMetroModuleId)
 
     // if (!cacheRestored) createCache()
     metroCache.totalModules = metroDependencies.size
@@ -154,7 +154,7 @@ export function requireModule(id: Metro.ModuleID) {
 
     const metroModule = metroModules[id]
     // TODO: Would the modules be incomplete if we returned metroModule.publicModule.exports instead?
-    if (metroModule?.isInitialized && !metroModule.hasError) return window.__r(id)
+    if (metroModule?.isInitialized && !metroModule.hasError) return __r(id)
 
     const ogHandler = ErrorUtils.getGlobalHandler()
     ErrorUtils.setGlobalHandler((err, isFatal) => {
@@ -164,7 +164,7 @@ export function requireModule(id: Metro.ModuleID) {
 
     let moduleExports: unknown
     try {
-        moduleExports = window.__r(id)
+        moduleExports = __r(id)
     } catch (error) {
         logger.error(`Blacklisting module ${id} because it could not be imported: ${error}`)
         blacklistModule(id)
@@ -264,7 +264,7 @@ export function* modulesForFinder(key: string) {
 export function moduleHasBadExports(exports: Metro.ModuleExports) {
     return (
         !exports ||
-        exports === window ||
+        exports === globalThis ||
         exports[''] === null ||
         (exports.__proto__ === Object.prototype && Reflect.ownKeys(exports).length === 0)
     )

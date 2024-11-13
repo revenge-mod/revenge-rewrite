@@ -75,8 +75,8 @@ export const FluxDispatcher = findByProps.lazy('_interceptors') as DiscordModule
 
 /// REACT
 
-export const React = (window.React = findByProps.lazy('createElement') as typeof import('react'))
-export const ReactNative = (window.ReactNative = findByProps.lazy('AppRegistry') as typeof import('react-native'))
+export const React = (globalThis.React = findByProps.lazy('createElement') as typeof import('react'))
+export const ReactNative = (globalThis.ReactNative = findByProps.lazy('AppRegistry') as typeof import('react-native'))
 
 /// OTHERS
 
