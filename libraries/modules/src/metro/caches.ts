@@ -1,13 +1,12 @@
 import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
-import { ClientInfoModule, CacheModule } from '../native'
+import { findId } from '../finders'
+import { byProps } from '../filters'
 import { blacklistModule, getMetroModules, metroDependencies, requireModule, resolveModuleDependencies } from './index'
+import { ClientInfoModule, CacheModule } from '../native'
+import { logger } from '../shared'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
-import { logger } from '../shared'
 import type { Metro } from '../types'
-
-let resolveRestoreCachePromise: ((success: boolean) => unknown) | undefined
-let restoreCachePromise: Promise<boolean> | undefined
 
 const version = 1
 const mmkvKey = 'revenge-metro-cache'
@@ -41,24 +40,14 @@ export const metroCache = {
 
 /** @internal */
 export async function restoreCache() {
-    if (restoreCachePromise) {
-        logger.log('Cache is already being restored, awaiting restore...')
-        return await restoreCachePromise
-    }
-
     logger.log('Attempting to restore cache...')
-
-    restoreCachePromise = new Promise(r => (resolveRestoreCachePromise = r))
 
     resolveModuleDependencies(getMetroModules(), IndexMetroModuleId)
     // For testing:
     // invalidateCache()
 
     const savedCache = await CacheModule.getItem(mmkvKey)
-    if (!savedCache) {
-        resolveRestoreCachePromise!(false)
-        return false
-    }
+    if (!savedCache) return false
 
     const storedCache = JSON.parse(savedCache) as MetroCacheObject
     logger.log(
@@ -69,10 +58,8 @@ export async function restoreCache() {
         storedCache.v !== version ||
         storedCache.b !== ClientInfoModule.Build ||
         storedCache.t !== metroDependencies.size
-    ) {
-        resolveRestoreCachePromise!(false)
+    )
         return false
-    }
 
     logger.log(`Restoring cache of ${metroDependencies.size} modules`)
 
@@ -81,7 +68,6 @@ export async function restoreCache() {
     metroCache.lookupFlags = storedCache.l
     metroCache.assetModules = storedCache.a
 
-    resolveRestoreCachePromise!(true)
     return true
 }
 
@@ -100,6 +86,37 @@ export function createCache() {
         for (const id of metroDependencies) requireModule(id)
         saveCache()
     })
+}
+
+/**
+ * Filters all "asset" modules and requires them, making them cacheable
+ */
+export function requireAssetModules() {
+    const [assetsRegistryModuleId] = findId(byProps('registerAsset'))
+    if (!assetsRegistryModuleId)
+        return void logger.warn(
+            'Unable to create asset cache, cannot find assets-registry module ID, some assets may not load',
+        )
+
+    let assetsRegistryExporterModuleId = 0
+    for (const id of metroDependencies) {
+        const module = modules[id]
+        if (!module?.dependencyMap) continue
+        if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryModuleId)
+            assetsRegistryExporterModuleId = id
+    }
+
+    if (!assetsRegistryExporterModuleId)
+        return void logger.warn(
+            'Unable to create asset cache, cannot find assets-registry exporter module ID, some assets may not load',
+        )
+
+    for (const id of metroDependencies) {
+        const module = modules[id]
+        if (!module?.dependencyMap) continue
+        if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryExporterModuleId)
+            requireModule(id)
+    }
 }
 
 let saveCacheDebounceTimeoutId: number

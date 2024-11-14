@@ -1,6 +1,6 @@
 import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
 import { logger, patcher } from '../shared'
-import { cacheModule, cacheModuleAsBlacklisted, metroCache, restoreCache, saveCache } from './caches'
+import { cacheModule, cacheModuleAsBlacklisted, requireAssetModules, metroCache, restoreCache, saveCache } from './caches'
 import { patchModuleOnLoad } from './patcher'
 
 import type { Metro } from '../types'
@@ -62,7 +62,7 @@ export async function initializeModules() {
     const metroModules = getMetroModules()
     if (metroModules[IndexMetroModuleId]?.isInitialized) throw new Error('Metro modules has already been initialized')
 
-    await restoreCache()
+    const cacheRestored = await restoreCache()
 
     for (const key in metroModules) {
         const id = Number(key)
@@ -127,9 +127,14 @@ export async function initializeModules() {
     logger.log('Importing index module...')
     __r(IndexMetroModuleId)
 
-    // if (!cacheRestored) createCache()
     metroCache.totalModules = metroDependencies.size
     saveCache()
+
+    // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
+    const unpatch = patcher.before(ReactNative.AppRegistry, 'runApplication', () => {
+        unpatch()
+        if (!cacheRestored) requireAssetModules()
+    }, 'createAssetCache')
 }
 
 /**
