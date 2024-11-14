@@ -4,8 +4,16 @@ import { registerPlugin } from 'libraries/plugins/src/internals'
 
 import { TableRowIcon } from '@revenge-mod/modules/common/components'
 import { settings } from '@revenge-mod/settings'
-import { type RawRowConfig, customData, getCustomRows } from '@revenge-mod/ui/settings'
+import {
+    type PressableRowConfig,
+    type RawRowConfig,
+    type RowConfig,
+    type ToggleRowConfig,
+    customData,
+} from '@revenge-mod/ui/settings'
+
 import RevengeIcon from '../../assets/revenge.png'
+
 import AboutSettingsPage from './pages/About'
 import DeveloperSettingsPage from './pages/Developer'
 import RevengeSettingsPage from './pages/Revenge'
@@ -118,3 +126,40 @@ registerPlugin(
     },
     true,
 )
+
+export const getCustomRows = () => {
+    // OMG, UNBOUND REFERENCE????
+    return [...Object.values(customData.sections), { name: '(unbound)', settings: customData.rows }]
+        .map(section =>
+            Object.entries(section.settings).reduce<Record<string, RawRowConfig>>((rows, [key, row]) => {
+                rows[key] = transformRowToRawRow(key, row)
+                return rows
+            }, {}),
+        )
+        .reduce((rows, newRows) => Object.assign(rows, newRows), {})
+}
+
+const transformRowToRawRow = (key: string, row: RowConfig): RawRowConfig => {
+    return {
+        title: () => row.label,
+        parent: row.parent ?? null,
+        icon: row.icon,
+        IconComponent: () => TableRowIcon({ source: row.icon }),
+        unsearchable: row.unsearchable,
+        screen:
+            row.type === 'route'
+                ? {
+                      route: key,
+                      getComponent: () => row.component,
+                  }
+                : undefined!,
+        onPress: (row as PressableRowConfig).onPress,
+        useDescription: row.description ? () => row.description! : undefined,
+        useTrailing: row.trailing ? () => row.trailing! : undefined,
+        useIsDisabled: typeof row.disabled === 'boolean' ? () => row.disabled! : undefined,
+        usePredicate: row.predicate,
+        onValueChange: (row as ToggleRowConfig).onValueChange,
+        useValue: () => (row as ToggleRowConfig).value,
+        type: row.type,
+    } satisfies RawRowConfig
+}

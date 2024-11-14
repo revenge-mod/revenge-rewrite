@@ -1,4 +1,3 @@
-import { TableRowIcon } from '@revenge-mod/modules/common/components'
 import Libraries from '@revenge-mod/utils/library'
 
 import type { ComponentType } from 'react'
@@ -64,13 +63,11 @@ function createSettingsSection(section: (typeof customData.sections)[string]) {
     if (section.name in customData.sections)
         throw new Error(`The settings section with the name "${section.name}" already exists`)
     customData.sections[section.name] = section
-    cachedRawCustomRowsInvalidated = true
     return () => delete customData.sections[section.name]
 }
 
 function createSettingsRoute(key: string, route: RouteRowConfig) {
     customData.rows[key] = route
-    cachedRawCustomRowsInvalidated = true
     return () => delete customData.rows[key]
 }
 
@@ -91,52 +88,6 @@ export const customData = {
         }
     },
     rows: {} as Record<string, RowConfig>,
-}
-
-let cachedRawCustomRowsInvalidated = false
-let cachedRawCustomRows: Record<string, RawRowConfig>
-
-export const getCustomRows = () => {
-    if (!cachedRawCustomRowsInvalidated) return cachedRawCustomRows
-
-    cachedRawCustomRowsInvalidated = false
-    // OMG, UNBOUND REFERENCE????
-    return (cachedRawCustomRows = [
-        ...Object.values(customData.sections),
-        { name: '(unbound)', settings: customData.rows },
-    ]
-        .map(section =>
-            Object.entries(section.settings).reduce<Record<string, RawRowConfig>>((rows, [key, row]) => {
-                rows[key] = transformRowToRawRow(key, row)
-                return rows
-            }, {}),
-        )
-        .reduce((rows, newRows) => Object.assign(rows, newRows), {}))
-}
-
-const transformRowToRawRow = (key: string, row: RowConfig): RawRowConfig => {
-    return {
-        title: () => row.label,
-        parent: row.parent ?? null,
-        icon: row.icon,
-        IconComponent: () => TableRowIcon({ source: row.icon }),
-        unsearchable: row.unsearchable,
-        screen:
-            row.type === 'route'
-                ? {
-                      route: key,
-                      getComponent: () => row.component,
-                  }
-                : undefined!,
-        onPress: (row as PressableRowConfig).onPress,
-        useDescription: row.description ? () => row.description! : undefined,
-        useTrailing: row.trailing ? () => row.trailing! : undefined,
-        useIsDisabled: typeof row.disabled === 'boolean' ? () => row.disabled! : undefined,
-        usePredicate: row.predicate,
-        onValueChange: (row as ToggleRowConfig).onValueChange,
-        useValue: () => (row as ToggleRowConfig).value,
-        type: row.type,
-    } satisfies RawRowConfig
 }
 
 export const SettingsUILibrary = Libraries.create(
