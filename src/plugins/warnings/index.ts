@@ -4,10 +4,10 @@ import { registerPlugin } from 'libraries/plugins/src/internals'
 import { ReactNative } from '@revenge-mod/modules/common';
 
 // TODO: Is this iOS version actually a reasonable minimum?
-const TARGET_VERSION = ReactNative.Platform.select({ android: 250000, ios: 65235 })!
+const MinimumSupportedBuildNumber = ReactNative.Platform.select({ android: 250000, ios: 65235 })!
 
 registerPlugin<{
-    supportWarningDismissed?: number
+    supportWarningDismissedAt?: number
 }>(
     {
         name: 'Warnings',
@@ -20,16 +20,16 @@ registerPlugin<{
             const { legacy_alerts, toasts } = modules.common
 
             // Predicate is already used to indicate whether the plugin is enabled or not
-            if ((storage.supportWarningDismissed ?? Date.now()) + 6048e5 > Date.now()) {
+            if ((storage.supportWarningDismissedAt ?? Date.now()) + 6048e5 > Date.now()) {
                 legacy_alerts.show({
                     title: 'Support Warning',
                     body:
                         // biome-ignore lint/style/useTemplate: I can't see the whole message when not doing concatenation
                         'Revenge does not officially support this build of Discord. Please update to a newer version as some features may not work as expected.\n\n' +
-                        `Supported Builds: 250.0 (${TARGET_VERSION}) or after\nYour Build: ${ClientInfoModule.Version} (${ClientInfoModule.Build})`,
+                        `Supported Builds: 250.0 (${MinimumSupportedBuildNumber}) or after\nYour Build: ${ClientInfoModule.Version} (${ClientInfoModule.Build})`,
                     confirmText: 'Remind me in 7 days',
                     onConfirm: () => {
-                        storage.supportWarningDismissed = Date.now()
+                        storage.supportWarningDismissedAt = Date.now()
                         toasts.open({
                             key: 'revenge.toasts.support-warning.dismissed',
                             content: 'You will see this warning again in 7 days',
@@ -42,5 +42,5 @@ registerPlugin<{
     },
     true,
     // We do !> instead of < in case the value of the left is NaN
-    () => !(Number(ClientInfoModule.Build) > TARGET_VERSION),
+    () => !(Number(ClientInfoModule.Build) > MinimumSupportedBuildNumber),
 )
