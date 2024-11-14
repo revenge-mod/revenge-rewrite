@@ -1,11 +1,5 @@
 import { NavigationNative } from '@revenge-mod/modules/common'
-import {
-    Stack,
-    TableRow,
-    TableRowGroup,
-    TableRowIcon,
-    TableSwitchRow,
-} from '@revenge-mod/modules/common/components'
+import { Stack, TableRow, TableRowGroup, TableRowIcon, TableSwitchRow } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 
 import { settings } from '@revenge-mod/settings'
@@ -41,7 +35,7 @@ export default function RevengeSettingsPage() {
                     label="Show Developer Options"
                     icon={<TableRowIcon source={assets.getIndexByName('WrenchIcon')} />}
                     value={settings.developerSettingsEnabled}
-                    onValueChange={(v: boolean) => settings.developerSettingsEnabled = v}
+                    onValueChange={(v: boolean) => (settings.developerSettingsEnabled = v)}
                 />
                 {...rows.map((Row, index) => <Row key={index.toString()} />)}
             </TableRowGroup>

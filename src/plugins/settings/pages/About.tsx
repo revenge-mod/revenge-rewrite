@@ -6,11 +6,11 @@ import {
     TableRowIcon,
     TableRowTrailingText,
 } from '@revenge-mod/modules/common/components'
+import { ClientInfoModule } from '@revenge-mod/modules/native'
 import type { ComponentProps } from 'react'
 import RevengeIcon from '../../../assets/revenge.png'
-import { ClientInfoModule } from '@revenge-mod/modules/native'
 
-const { assets, modules } = revenge
+const { assets } = revenge
 
 export default function AboutSettingsPage() {
     const hermesProps = (HermesInternal as any).getRuntimeProperties()
@@ -73,7 +73,7 @@ function VersionRow(props: ComponentProps<typeof TableRow>) {
                 toasts.open({
                     key: `revenge.toasts.settings.about.copied:${props.label}`,
                     content: 'Copied to clipboard',
-                    icon: assets.getIndexByName("CopyIcon")
+                    icon: assets.getIndexByName('CopyIcon'),
                 })
             }}
         />

@@ -1,6 +1,7 @@
 import type { Patcher } from '@revenge-mod/patcher'
 import type { RevengeLibrary } from '@revenge-mod/revenge'
 import { internalSymbol } from '@revenge-mod/shared/symbols'
+import type { ExtendedObservable } from '@revenge-mod/storage'
 import Libraries from '@revenge-mod/utils/library'
 import type React from 'react'
 import {
@@ -12,7 +13,6 @@ import {
     registerPlugin,
 } from './internals'
 import { app } from './shared'
-import type { ExtendedObservable } from '@revenge-mod/storage'
 
 export const PluginsLibrary = Libraries.create(
     {
@@ -38,7 +38,6 @@ export const PluginsLibrary = Libraries.create(
                             throw new Error(`Core plugin "${id}" had an error while starting`, { cause: e })
                         }
                     }
-
                 },
             },
         }
@@ -92,9 +91,7 @@ export type PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> =
     afterAppRender?: (
         context: PluginContext<'BeforeAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>,
     ) => Promise<AppLaunchedReturn> | AppLaunchedReturn
-    onStop?: (
-        context: PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>,
-    ) => unknown
+    onStop?: (context: PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>) => unknown
 } & {
     //   } //       settings: PluginSettingSchema // | { // TODO: Support plugin defined settings with proper typings
     settings?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>

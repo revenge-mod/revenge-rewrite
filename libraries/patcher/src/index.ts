@@ -1,5 +1,5 @@
-import type { AnyObject } from '@revenge-mod/shared/types'
 import * as patcherImpl from '@marshift/strawberry'
+import type { AnyObject } from '@revenge-mod/shared/types'
 import type { AwaitedWrappableParams, UnpatchFunction, WrappableName } from './types'
 import { createExtendedPatchFunction, trapFunctionCallsRecursive } from './utils'
 

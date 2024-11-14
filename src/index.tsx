@@ -8,10 +8,10 @@ import { IndexMetroModuleId } from '@revenge-mod/modules/constants'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 import { PluginsLibrary } from '@revenge-mod/plugins'
 import { internalSymbol } from '@revenge-mod/shared/symbols'
-import Libraries from '@revenge-mod/utils/library'
-import { SettingsUILibrary } from '@revenge-mod/ui/settings'
 import { awaitStorage } from '@revenge-mod/storage'
+import { SettingsUILibrary } from '@revenge-mod/ui/settings'
 import { getErrorStack } from '@revenge-mod/utils/errors'
+import Libraries from '@revenge-mod/utils/library'
 
 // ! This function is BLOCKING, so we need to make sure it's as fast as possible
 function initialize() {
@@ -21,7 +21,7 @@ function initialize() {
         const promise = ModulesLibrary.new().then(modules => {
             // Initialize storages
             const promise = import('@revenge-mod/settings')
-            
+
             // Initializing this early (before modules module) can sometimes cause the app to be in a limbo state
             // Don't know how, and why
             const app = AppLibrary.new()

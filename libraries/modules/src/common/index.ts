@@ -55,12 +55,12 @@ export const messages = findByProps.lazy('sendBotMessage') as DiscordModules.Mes
 
 export const NavigationStack = findByProps.lazy('createStackNavigator') as typeof import('@react-navigation/stack')
 export const NavigationNative = findByProps.lazy('NavigationContainer') as Omit<
-typeof import('@react-navigation/native'),
-'useNavigation'
+    typeof import('@react-navigation/native'),
+    'useNavigation'
 > & {
     useNavigation: typeof import('@react-navigation/native').useNavigation<
-    // biome-ignore lint/suspicious/noExplicitAny: https://github.com/react-navigation/react-navigation/issues/9037
-    import('@react-navigation/stack').StackNavigationProp<any>
+        // biome-ignore lint/suspicious/noExplicitAny: https://github.com/react-navigation/react-navigation/issues/9037
+        import('@react-navigation/stack').StackNavigationProp<any>
     >
 }
 

@@ -66,7 +66,7 @@ function createLibrary<Name extends string, Features extends LibraryFeatures, Re
     }
 
     Object.defineProperty(registered.factory.new, 'name', {
-        value: `newLibrary:${registered.factory.id}`
+        value: `newLibrary:${registered.factory.id}`,
     })
 
     registeredLibraries.set(id, registered)

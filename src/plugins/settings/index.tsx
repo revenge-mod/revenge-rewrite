@@ -2,13 +2,13 @@ import { findInReactTree } from '@revenge-mod/utils/react'
 // TODO: Fix this path
 import { registerPlugin } from 'libraries/plugins/src/internals'
 
-import RevengeIcon from '../../assets/revenge.png'
-import RevengeSettingsPage from './pages/Revenge'
-import DeveloperSettingsPage from './pages/Developer'
-import { customData, getCustomRows, type RawRowConfig } from '@revenge-mod/ui/settings'
-import { settings } from '@revenge-mod/settings'
-import AboutSettingsPage from './pages/About'
 import { TableRowIcon } from '@revenge-mod/modules/common/components'
+import { settings } from '@revenge-mod/settings'
+import { type RawRowConfig, customData, getCustomRows } from '@revenge-mod/ui/settings'
+import RevengeIcon from '../../assets/revenge.png'
+import AboutSettingsPage from './pages/About'
+import DeveloperSettingsPage from './pages/Developer'
+import RevengeSettingsPage from './pages/Revenge'
 
 registerPlugin(
     {

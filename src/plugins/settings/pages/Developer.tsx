@@ -1,9 +1,4 @@
-import {
-    Stack,
-    TableRow,
-    TableRowGroup,
-    TableRowIcon,
-} from '@revenge-mod/modules/common/components'
+import { Stack, TableRow, TableRowGroup, TableRowIcon } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 
 export default function DeveloperSettingsPage() {

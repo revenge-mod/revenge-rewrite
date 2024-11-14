@@ -1,7 +1,7 @@
+import { ReactNative } from '@revenge-mod/modules/common'
 // TODO: Fix this path
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 import { registerPlugin } from 'libraries/plugins/src/internals'
-import { ReactNative } from '@revenge-mod/modules/common';
 
 // TODO: Is this iOS version actually a reasonable minimum?
 const MinimumSupportedBuildNumber = ReactNative.Platform.select({ android: 250000, ios: 65235 })!

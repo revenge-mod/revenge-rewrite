@@ -1,9 +1,9 @@
 import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
-import { findId } from '../finders'
 import { byProps } from '../filters'
-import { blacklistModule, getMetroModules, metroDependencies, requireModule, resolveModuleDependencies } from './index'
-import { ClientInfoModule, CacheModule } from '../native'
+import { findId } from '../finders'
+import { CacheModule, ClientInfoModule } from '../native'
 import { logger } from '../shared'
+import { blacklistModule, getMetroModules, metroDependencies, requireModule, resolveModuleDependencies } from './index'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { Metro } from '../types'

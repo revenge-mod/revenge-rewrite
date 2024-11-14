@@ -13,7 +13,9 @@ import type { DiscordNativeModules } from './types'
 const nmp = nativeModuleProxy
 
 export const CacheModule = lazyValue(() => nmp.NativeCacheModule ?? nmp.MMKVManager) as DiscordNativeModules.CacheModule
-export const FileModule = lazyValue(() => nmp.NativeFileModule ?? nmp.RTNFileManager ?? nmp.DCDFileManager) as DiscordNativeModules.FileModule
+export const FileModule = lazyValue(
+    () => nmp.NativeFileModule ?? nmp.RTNFileManager ?? nmp.DCDFileManager,
+) as DiscordNativeModules.FileModule
 export const ClientInfoModule = lazyValue(
     () => nmp.NativeClientInfoModule ?? nmp.RTNClientInfoManager ?? nmp.InfoDictionaryManager,
 ) as DiscordNativeModules.ClientInfoModule
