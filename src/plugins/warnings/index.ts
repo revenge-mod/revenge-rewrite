@@ -41,6 +41,6 @@ registerPlugin<{
         },
     },
     true,
-    // We do !>= instead of <= in case the value of the left is NaN
-    () => !(Number(ClientInfoModule.Build) >= TARGET_VERSION),
+    // We do !> instead of < in case the value of the left is NaN
+    () => !(Number(ClientInfoModule.Build) > TARGET_VERSION),
 )
