@@ -7,6 +7,8 @@ import RevengeSettingsPage from './pages/Revenge'
 import DeveloperSettingsPage from './pages/Developer'
 import { customData, getCustomRows, type RawRowConfig } from '@revenge-mod/ui/settings'
 import { settings } from '@revenge-mod/settings'
+import AboutSettingsPage from './pages/About'
+import { TableRowIcon } from '@revenge-mod/modules/common/components'
 
 registerPlugin(
     {
@@ -108,7 +110,7 @@ registerPlugin(
                 sui.createRoute('RevengeAbout', {
                     type: 'route',
                     label: 'About',
-                    component: () => null,
+                    component: AboutSettingsPage,
                     icon: assets.getIndexByName('CircleInformationIcon'),
                 }),
             )

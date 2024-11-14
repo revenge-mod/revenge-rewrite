@@ -4,19 +4,16 @@ import {
     TableRow,
     TableRowGroup,
     TableRowIcon,
-    TableRowTrailingText,
     TableSwitchRow,
 } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 
-import RevengeIcon from '../../../assets/revenge.png'
 import { settings } from '@revenge-mod/settings'
 import { useObservable } from '@revenge-mod/storage'
 import type { ComponentType } from 'react'
 
 export default function RevengeSettingsPage() {
-    const { assets, modules } = revenge
-    const { ClientInfoModule } = modules.native
+    const { assets } = revenge
     const navigation = NavigationNative.useNavigation()
 
     useObservable([settings])
@@ -24,27 +21,6 @@ export default function RevengeSettingsPage() {
     return (
         <Stack style={{ paddingHorizontal: 16, paddingVertical: 24 }} spacing={16} direction="vertical">
             <TableRowGroup title="Info">
-                {[
-                    {
-                        label: 'Revenge',
-                        icon: {
-                            uri: RevengeIcon,
-                        },
-                        trailing: __BUNDLE_RELEASE__,
-                    },
-                    {
-                        label: 'Discord',
-                        icon: assets.getIndexByName('Discord'),
-                        trailing: `${ClientInfoModule.Version} (${ClientInfoModule.Build})`,
-                    },
-                ].map(props => (
-                    // biome-ignore lint/correctness/useJsxKeyInIterable: This page never gets updated
-                    <TableRow
-                        label={props.label}
-                        icon={<TableRowIcon source={props.icon} />}
-                        trailing={<TableRowTrailingText text={props.trailing} />}
-                    />
-                ))}
                 <TableRow
                     label="About"
                     icon={<TableRowIcon source={assets.getIndexByName('CircleInformationIcon')} />}
