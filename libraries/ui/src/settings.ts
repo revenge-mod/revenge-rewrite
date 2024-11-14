@@ -1,3 +1,4 @@
+import { TableRowIcon } from '@revenge-mod/modules/common/components'
 import Libraries from '@revenge-mod/utils/library'
 
 import type { ComponentType } from 'react'
@@ -7,8 +8,9 @@ export type RawRowConfig<CT extends ComponentType = ComponentType> = {
     title: () => string
     parent: string | null
     unsearchable?: boolean
+    /** @deprecated Since 256.5 */
     icon?: ImageURISource | number
-    // IconComponent?: () => JSX.Element
+    IconComponent?: () => JSX.Element
     usePredicate?: () => boolean
     useTrailing?: () => string | JSX.Element
     useDescription?: () => string
@@ -117,6 +119,7 @@ const transformRowToRawRow = (key: string, row: RowConfig): RawRowConfig => {
         title: () => row.label,
         parent: row.parent ?? null,
         icon: row.icon,
+        IconComponent: () => TableRowIcon({ source: row.icon }),
         unsearchable: row.unsearchable,
         screen:
             row.type === 'route'
@@ -133,7 +136,7 @@ const transformRowToRawRow = (key: string, row: RowConfig): RawRowConfig => {
         onValueChange: (row as ToggleRowConfig).onValueChange,
         useValue: () => (row as ToggleRowConfig).value,
         type: row.type,
-    }
+    } satisfies RawRowConfig
 }
 
 export const SettingsUILibrary = Libraries.create(
