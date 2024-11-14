@@ -1,9 +1,8 @@
 import { ModulesLibrary } from '@revenge-mod/modules'
+import { assetsRegistry } from '@revenge-mod/modules/common'
 import { getImportingModuleId, metroCache, requireModule } from '@revenge-mod/modules/metro'
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import Libraries from '@revenge-mod/utils/library'
-
-let assetsModule: AssetsRegistry
 
 export const AssetsLibrary = Libraries.create(
     {
@@ -11,11 +10,9 @@ export const AssetsLibrary = Libraries.create(
         uses: ['patcher'],
     },
     ({ patcher }) => {
-        Libraries.instanceFor(ModulesLibrary).then(({ findByProps, metro }) => {
-            assetsModule = findByProps.lazy('registerAsset')
-
+        Libraries.instanceFor(ModulesLibrary).then(({ metro }) => {
             patcher.after(
-                assetsModule,
+                assetsRegistry,
                 'registerAsset',
                 ([asset], index) => {
                     // // A lot of duplicate assets are registered, so we need to check if it's already in the cache
@@ -39,16 +36,15 @@ export const AssetsLibrary = Libraries.create(
 export type AssetsLibrary = ReturnType<(typeof AssetsLibrary)['new']>
 
 type Asset = ReactNativeInternals.AssetsRegistry.PackagerAsset
-type AssetsRegistry = typeof ReactNativeInternals.AssetsRegistry
 
 const assets = new Proxy(
     Object.fromEntries(
-        Object.entries(metroCache.assets).map(([key, index]) => [key, assetsModule.getAssetByID(index)]),
+        Object.entries(metroCache.assets).map(([key, index]) => [key, assetsRegistry.getAssetByID(index)]),
     ) as Record<string, Asset | undefined>,
     {
         get(cache, prop: string) {
             if (cache[prop]) return cache[prop]
-            return assetsModule.getAssetByID(Number(prop))
+            return assetsRegistry.getAssetByID(Number(prop))
         },
     },
 ) as Record<string, Asset | undefined>
