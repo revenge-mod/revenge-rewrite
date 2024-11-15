@@ -5,6 +5,7 @@
     ".": "./src/index.ts",
     "./common": "./src/common/index.ts",
     "./common/components": "./src/common/components.ts",
+    "./finders": "./src/finders.ts",
     "./filters": "./src/filters.ts",
     "./constants": "./src/constants.ts",
     "./metro": "./src/metro/index.ts",
