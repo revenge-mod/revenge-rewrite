@@ -1,9 +1,9 @@
 import { NavigationNative } from '@revenge-mod/modules/common'
 import { Stack, TableRow, TableRowGroup, TableRowIcon, TableSwitchRow } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
-
-import { settings } from 'libraries/preferences/src'
+import { settings } from '@revenge-mod/preferences'
 import { useObservable } from '@revenge-mod/storage'
+
 import type { ComponentType } from 'react'
 
 export default function RevengeSettingsPage() {
