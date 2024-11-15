@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.exported",
   "compilerOptions": {
-    "types": ["./types", "./types.scoped"],
-  },
+    "types": ["./types", "./types.scoped"]
+  }
 }

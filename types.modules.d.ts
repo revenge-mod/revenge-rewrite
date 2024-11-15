@@ -5,3 +5,9 @@ declare module '*.png' {
     const src: string
     export = src
 }
+
+declare module '@revenge-mod/modules/finders' {
+    // We need this line for some reason...
+    const finders: import('./libraries/modules/src/finders')
+    export * from './libraries/modules/src/finders'
+}

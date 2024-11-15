@@ -96,6 +96,7 @@ function instanceForLibrary<L extends Library<string, LibraryFeatures, any>>(lib
     return instance
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: This is all fine
 function awaitedInstanceFor<L extends Library<string, LibraryFeatures, any>>(library: L) {
     if (!library) throw new Error('Cannot get an instance of an undefined library')
     if (!registeredLibraries.has(library.id))

@@ -1,8 +1,7 @@
 import '@revenge-mod/modules'
 
+import { findByProps } from '@revenge-mod/modules/finders'
 import { getProxyFactory } from '@revenge-mod/utils/lazy'
-// TODO: Fix this path
-import { findByProps } from 'libraries/modules/src/finders'
 
 const jsxRuntime = findByProps.lazy('jsx', 'jsxs', 'Fragment')
 
@@ -17,5 +16,5 @@ function unproxyFirstArg<T>(args: T[]) {
 }
 
 export const Fragment = Symbol.for('react.fragment')
-export const jsx = (...args: any[]) => jsxRuntime.jsx(...unproxyFirstArg(args))
-export const jsxs = (...args: any[]) => jsxRuntime.jsxs(...unproxyFirstArg(args))
+export const jsx = (...args: unknown[]) => jsxRuntime.jsx(...unproxyFirstArg(args))
+export const jsxs = (...args: unknown[]) => jsxRuntime.jsxs(...unproxyFirstArg(args))

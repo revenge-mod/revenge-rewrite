@@ -1,5 +1,4 @@
-// TODO: Fix this path
-import { findByProps } from 'libraries/modules/src/finders'
+import { findByProps } from '@revenge-mod/modules/finders'
 
 const ReactNative = findByProps.lazy('AppRegistry')
 

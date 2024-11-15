@@ -110,7 +110,7 @@ export const findByProps = Object.assign((prop: string, ...props: string[]) => f
     lazy: (prop: string, ...props: string[]) => createLazyModule(byProps(prop, ...props)),
     async(prop: string, ...propsAndOrTimeout: [...string[], number] | string[]) {
         const cloned = [...propsAndOrTimeout]
-        const timeout = typeof cloned.at(-1) === 'number' ? (cloned.pop() as number) : 1000
+        const timeout = typeof cloned[cloned.length - 1] === 'number' ? (cloned.pop() as number) : 1000
         return new Promise<Metro.ModuleExports>(resolve => {
             const id = setTimeout(resolve, timeout)
             this.lazy(prop, ...(propsAndOrTimeout as string[]))[lazyContextSymbol].getExports(
