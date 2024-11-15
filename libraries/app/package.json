@@ -2,6 +2,7 @@
   "name": "@revenge-mod/app",
   "module": "src/index.ts",
   "type": "module",
+  "main": "./src/index.tsx",
   "scripts": {},
   "exports": {
     ".": "./src/index.tsx"

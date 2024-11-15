@@ -2,6 +2,7 @@
   "name": "@revenge-mod/storage",
   "module": "src/index.ts",
   "type": "module",
+  "main": "./src/index.ts",
   "scripts": {},
   "exports": {
     ".": "./src/index.ts"

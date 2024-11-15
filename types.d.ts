@@ -81,61 +81,92 @@ export namespace ReactNativeInternals {
 }
 
 declare module '@revenge-mod/app' {
-    export default typeof import('./libraries/app')
+    const app: typeof import('./libraries/app')
+    export * from './libraries/app'
+    export default app
 }
 
 declare module '@revenge-mod/assets' {
-    export default typeof import('./libraries/asset')
+    const assets: typeof import('./libraries/assets')
+    export * from './libraries/assets'
+    export default assets
 }
 
 declare module '@revenge-mod/debug' {
-    export default typeof import('./libraries/debug')
+    const debug: typeof import('./libraries/debug')
+    export * from './libraries/debug'
+    export default debug
 }
 
 declare module '@revenge-mod/modules' {
-    export default typeof import('./libraries/modules')
+    const modules: typeof import('./libraries/modules')
+    export * from './libraries/modules'
+    export default modules
 }
 
 declare module '@revenge-mod/modules/common' {
-    export default typeof import('./libraries/modules/src/common')
+    const common: typeof import('./libraries/modules/src/common')
+    export * from './libraries/modules/src/common'
+    export default common
 }
 
 declare module '@revenge-mod/modules/common/components' {
-    export default typeof import('./libraries/modules/src/common/components')
+    const components: typeof import('./libraries/modules/src/common/components')
+    export * from './libraries/modules/src/common/components'
+    export default components
 }
 
 declare module '@revenge-mod/modules/constants' {
-    export default typeof import('./libraries/modules/src/constants')
+    const constants: typeof import('./libraries/modules/src/constants')
+    export * from './libraries/modules/src/constants'
+    export default constants
 }
 
 declare module '@revenge-mod/modules/filters' {
-    export default typeof import('./libraries/modules/src/filters')
+    const filters: typeof import('./libraries/modules/src/filters')
+    export * from './libraries/modules/src/filters'
+    export default filters
 }
 
 declare module '@revenge-mod/modules/metro' {
-    export default typeof import('./libraries/modules/src/metro')
+    const metro: typeof import('./libraries/modules/src/metro')
+    export * from './libraries/modules/src/metro'
+    export default metro
 }
 
 declare module '@revenge-mod/modules/native' {
-    export default typeof import('./libraries/modules/src/native')
+    const native: typeof import('./libraries/modules/src/native')
+    export * from './libraries/modules/src/native'
+    export default native
 }
 
 declare module '@revenge-mod/patcher' {
-    export default typeof import('./libraries/patcher')
+    const patcher: typeof import('./libraries/patcher')
+    export * from './libraries/patcher'
+    export default patcher
 }
 
 declare module '@revenge-mod/plugins' {
-    export default typeof import('./libraries/plugins')
+    const plugins: typeof import('./libraries/plugins')
+    export * from './libraries/plugins'
+    export default plugins
 }
 
 declare module '@revenge-mod/preferences' {
-    export default typeof import('./libraries/preferences')
+    const preferences: typeof import('./libraries/preferences')
+    export * from './libraries/preferences'
+    export default preferences
 }
 
 declare module '@revenge-mod/storage' {
-    export default typeof import('./libraries/storage')
+    const storage: typeof import('./libraries/storage')
+    export * from './libraries/storage'
+    export default storage
 }
 
 declare module 'events' {
-    export default typeof import('./shims/events')
+    const events: typeof import('./shims/events')
+    export * from './shims/events'
+    export default events
 }
+

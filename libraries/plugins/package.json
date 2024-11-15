@@ -2,6 +2,7 @@
   "name": "@revenge-mod/plugins",
   "module": "src/index.ts",
   "type": "module",
+  "main": "./src/index.ts",
   "scripts": {},
   "exports": {
     ".": "./src/index.ts"

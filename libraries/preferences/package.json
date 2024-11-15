@@ -2,6 +2,7 @@
   "name": "@revenge-mod/preferences",
   "module": "src/index.ts",
   "type": "module",
+  "main": "./src/index.ts",
   "scripts": {},
   "exports": {
     ".": "./src/index.ts"
