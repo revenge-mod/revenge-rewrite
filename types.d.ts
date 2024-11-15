@@ -13,15 +13,24 @@ declare global {
     var modules: Metro.ModuleList
     var __r: Metro.RequireFn
     var __c: Metro.ClearFn
+
     var revenge: RevengeLibrary
+    
     var React: typeof import('react')
     var ReactNative: typeof import('react-native')
+    const ErrorUtils: RNErrorUtils
+    
+    var performance: {
+        now(): number
+    }
 
+    declare function setTimeout(cb: (...args: unknown[]) => unknown, timeout?: number): number
     /**
      * Calls the garbage collector
      */
-    const gc: () => void
-    const ErrorUtils: RNErrorUtils
+    declare function gc(): void
+    declare function alert(message: unknown): void
+
 }
 
 /**
@@ -70,4 +79,64 @@ export namespace ReactNativeInternals {
         export function registerAsset(asset: PackagerAsset): number
         export function getAssetByID(assetId: number): PackagerAsset
     }
+}
+
+declare module "@revenge-mod/app" {
+    export default typeof import('./libraries/app')
+}
+
+declare module "@revenge-mod/assets" {
+    export default typeof import('./libraries/asset')
+}
+
+declare module "@revenge-mod/debug" {
+    export default typeof import('./libraries/debug')
+}
+
+declare module "@revenge-mod/modules" {
+    export default typeof import('./libraries/modules')
+}
+
+declare module "@revenge-mod/modules/common" {
+    export default typeof import('./libraries/modules/src/common')
+}
+
+declare module "@revenge-mod/modules/common/components" {
+    export default typeof import('./libraries/modules/src/common/components')
+}
+
+declare module "@revenge-mod/modules/constants" {
+    export default typeof import('./libraries/modules/src/constants')
+}
+
+declare module "@revenge-mod/modules/filters" {
+    export default typeof import('./libraries/modules/src/filters')
+}
+
+declare module "@revenge-mod/modules/metro" {
+    export default typeof import('./libraries/modules/src/metro')
+}
+
+declare module "@revenge-mod/modules/native" {
+    export default typeof import('./libraries/modules/src/native')
+}
+
+declare module "@revenge-mod/patcher" {
+    export default typeof import('./libraries/patcher')
+}
+
+declare module "@revenge-mod/plugins" {
+    export default typeof import('./libraries/plugins')
+}
+
+declare module "@revenge-mod/preferences" {
+    export default typeof import('./libraries/preferences')
+}
+
+declare module "@revenge-mod/storage" {
+    export default typeof import('./libraries/storage')
+}
+
+declare module "events" {
+    export default typeof import('./shims/events')
 }
