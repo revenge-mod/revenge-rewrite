@@ -1,3 +1,4 @@
+import { recordTime } from '@revenge-mod/debug'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import Libraries from '@revenge-mod/utils/library'
 
@@ -23,11 +24,14 @@ export const AppLibrary = Libraries.create(
         // We can assume that after the first element is created, it is immediately being rendered
         // Patching <App /> or <AppContainer /> is very slow for some reason (probably because large amounts of data being passed around?)
         // Patching AppRegistry.runApplication is too slow, while AppRegistry.registerComponent never gets called (because slow awaiting the modules library)
-        const unpatch = patcher.before(React, 'createElement', () => {
-            unpatch()
+        const unpatchBefore = patcher.before(React, 'createElement', () => {
+            unpatchBefore()
+            recordTime('App_CreateElementCalled')
             // Prevent from blocking
             setTimeout(() => {
+                recordTime('App_BeforeRunCallbacks')
                 for (const callback of initCbs) callback()
+                recordTime('App_AfterRunCallbacks')
             })
         })
 

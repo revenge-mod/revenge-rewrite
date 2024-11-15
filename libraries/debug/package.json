@@ -1,0 +1,7 @@
+{
+  "name": "@revenge-mod/debug",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

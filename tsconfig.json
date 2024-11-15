@@ -24,6 +24,7 @@
       "@revenge-mod/app": ["libraries/app/src/index.tsx"],
       "@revenge-mod/assets": ["libraries/assets/src/index.ts"],
       "@revenge-mod/compat/intl": ["libraries/compat/src/intl.ts"],
+      "@revenge-mod/debug": ["libraries/debug/src/index.ts"],
       "@revenge-mod/modules": ["libraries/modules/src/index.ts"],
       "@revenge-mod/modules/common": ["libraries/modules/src/common/index.ts"],
       "@revenge-mod/modules/common/components": [

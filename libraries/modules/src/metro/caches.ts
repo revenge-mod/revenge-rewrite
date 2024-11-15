@@ -111,6 +111,8 @@ export function requireAssetModules() {
             'Unable to create asset cache, cannot find assets-registry exporter module ID, some assets may not load',
         )
 
+    logger.log('Importing all assets modules...')
+
     for (const id of metroDependencies) {
         const module = modules[id]
         if (!module?.dependencyMap) continue

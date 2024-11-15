@@ -1,5 +1,6 @@
 // So objectSeal and objectFreeze contain the proper functions before we overwrite them
 import '@revenge-mod/utils/functions'
+import { recordTime } from '@revenge-mod/debug'
 
 import { AppLibrary } from '@revenge-mod/app'
 import { AssetsLibrary } from '@revenge-mod/assets'
@@ -15,12 +16,13 @@ import Libraries from '@revenge-mod/utils/library'
 
 // ! This function is BLOCKING, so we need to make sure it's as fast as possible
 function initialize() {
+    recordTime('Init_Initialize')
     Object.freeze = Object.seal = o => o
 
     try {
         const promise = ModulesLibrary.new().then(modules => {
+            const promise = import('@revenge-mod/preferences')
             // Initialize storages
-            const promise = import('libraries/preferences/src')
 
             // Initializing this early (before modules module) can sometimes cause the app to be in a limbo state
             // Don't know how, and why
@@ -37,8 +39,11 @@ function initialize() {
 
             promise.then(async ({ settings }) => {
                 await awaitStorage(settings)
+                recordTime('Storage_Initialized')
                 import('./plugins').then(() => {
+                    recordTime('Plugins_CoreImported')
                     revenge.plugins[internalSymbol].startCorePlugins()
+                    recordTime('Plugins_CoreStarted')
                 })
             })
         })
@@ -115,6 +120,8 @@ Libraries.create(
 
         // We hold calls from the native side
         function onceIndexRequired() {
+            recordTime('Native_RequiredIndex')
+
             const batchedBridge = __fbBatchedBridge
 
             // TODO: Check if this is needed
@@ -137,11 +144,8 @@ Libraries.create(
 
             initialize()
                 ?.then(() => {
+                    recordTime('Init_PromiseResolved')
                     unpatch()
-                    // // We need this, for speed. See libraries/modules/src/metro/index.ts:125
-                    // ^^^ I lied. It's actually not that much faster.
-                    // logger.log('Importing index module...')
-                    // __r(IndexMetroModuleId)
                     for (const queue of callQueue)
                         batchedBridge.getCallableModule(queue[0]) && batchedBridge.__callFunction(...queue)
                 })

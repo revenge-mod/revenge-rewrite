@@ -1,3 +1,5 @@
+import { recordTime } from '@revenge-mod/debug'
+
 import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
 import { logger, patcher } from '../shared'
 import {
@@ -62,6 +64,13 @@ export function resolveModuleDependencies(modules: Metro.ModuleList, id: Metro.M
     }
 }
 
+function importIndexModule() {
+    // ! Do NOT use requireModule for this
+    logger.log('Importing index module...')
+    __r(IndexMetroModuleId)
+    recordTime('Modules_IndexRequired')
+}
+
 /**
  * Initializes the Metro modules patches and caches
  */
@@ -70,6 +79,11 @@ export async function initializeModules() {
     if (metroModules[IndexMetroModuleId]?.isInitialized) throw new Error('Metro modules has already been initialized')
 
     const cacheRestored = await restoreCache()
+    recordTime('Modules_TriedRestoreCache')
+
+    // TODO: We've probably already cached important things
+    //       so it's likely safe to import before we hook everything here?
+    if (cacheRestored) importIndexModule()
 
     for (const key in metroModules) {
         const id = Number(key)
@@ -129,24 +143,27 @@ export async function initializeModules() {
         }
     }
 
-    // TODO: Executing here slows down the app by ~1s but it ensures all modules are hooked
-    // ! Do NOT use requireModule for this
-    logger.log('Importing index module...')
-    __r(IndexMetroModuleId)
+    recordTime('Modules_HookedFactories')
+
+    // If nothing was cached, we import AFTER all modules are hooked
+    if (!cacheRestored) importIndexModule()
 
     metroCache.totalModules = metroDependencies.size
     saveCache()
 
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
-    const unpatch = patcher.before(
-        ReactNative.AppRegistry,
-        'runApplication',
-        () => {
-            unpatch()
-            if (!cacheRestored) requireAssetModules()
-        },
-        'createAssetCache',
-    )
+    if (!cacheRestored) {
+        const unpatch = patcher.before(
+            ReactNative.AppRegistry,
+            'runApplication',
+            () => {
+                unpatch()
+                requireAssetModules()
+                recordTime('Modules_RequiredAssets')
+            },
+            'createAssetCache',
+        )
+    }
 }
 
 /**
