@@ -8,7 +8,9 @@ import {
 } from '@revenge-mod/modules/common/components'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 import type { ComponentProps } from 'react'
-import RevengeIcon from '../../../assets/revenge.png'
+import RevengeIcon from '../../../assets/revenge.webp'
+import ReactIcon from '../../../assets/react.webp'
+import HermesIcon from '../../../assets/hermes.webp'
 
 const { assets } = revenge
 
@@ -40,17 +42,23 @@ export default function AboutSettingsPage() {
                 {[
                     {
                         label: 'React',
-                        icon: assets.getIndexByName('ic_category_16px'),
+                        icon: {
+                            uri: ReactIcon
+                        },
                         trailing: React.version,
                     },
                     {
                         label: 'React Native',
-                        icon: assets.getIndexByName('mobile'),
+                        icon: {
+                            uri: ReactIcon
+                        },
                         trailing: hermesProps['OSS Release Version'].slice(7),
                     },
                     {
                         label: 'Hermes Bytecode',
-                        icon: assets.getIndexByName('ic_server_security_24px'),
+                        icon: {
+                            uri: HermesIcon,
+                        },
                         trailing: `${hermesProps['Bytecode Version']} (${hermesProps.Build})`,
                     },
                 ].map(props => (

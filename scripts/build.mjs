@@ -40,7 +40,7 @@ const config = {
         js: '//# sourceURL=revenge',
     },
     loader: {
-        '.png': 'dataurl',
+        '.webp': 'dataurl',
     },
     // inject: ["./shims/asyncIteratorSymbol.js", "./shims/promiseAllSettled.js"],
     legalComments: 'none',

@@ -12,7 +12,7 @@ import {
 } from '@revenge-mod/ui/settings'
 import { settings } from 'libraries/preferences/src'
 
-import RevengeIcon from '../../assets/revenge.png'
+import RevengeIcon from '../../assets/revenge.webp'
 
 import AboutSettingsPage from './pages/About'
 import CustomPageRenderer from './pages/CustomPageRenderer'
@@ -27,7 +27,7 @@ registerPlugin(
         description: 'Settings menus for Revenge',
         id: 'revenge.settings',
         version: '1.0.0',
-        icon: 'WarningIcon',
+        icon: 'SettingsIcon',
         afterAppRender({
             patcher,
             cleanup,
