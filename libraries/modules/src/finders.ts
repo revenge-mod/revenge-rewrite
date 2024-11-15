@@ -84,11 +84,11 @@ export const find = Object.assign(
          * @param filter The filter to match
          * @returns An array of exports
          */
-        all: function findModuleAll<A extends unknown[]>(filter: FilterFn<A>) {
-            return findId.all(filter).map(([id, isDefaultExport]) => {
+        all: function* findModuleAll<A extends unknown[]>(filter: FilterFn<A>) {
+            for (const [id, isDefaultExport] of findId.all(filter)) {
                 if (typeof id !== 'number') return
-                return isDefaultExport ? requireModule(id).default : requireModule(id)
-            })
+                yield isDefaultExport ? requireModule(id).default : requireModule(id)
+            }
         },
     },
 )
