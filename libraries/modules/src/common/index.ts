@@ -64,9 +64,9 @@ export const NavigationNative = findByProps.lazy('NavigationContainer') as Omit<
     >
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: https://github.com/react-navigation/react-navigation/issues/9037
 export type NavigationNativeStackParamList = {
     RevengeCustomPage: { title: string; render: ComponentType }
+    // biome-ignore lint/suspicious/noExplicitAny: https://github.com/react-navigation/react-navigation/issues/9037
     [Page: string]: any
 }
 

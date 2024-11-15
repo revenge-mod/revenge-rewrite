@@ -261,6 +261,7 @@ export namespace DiscordModules {
         export type RowButton = React.FC
         export type Stack = React.FC<ViewProps & { spacing?: number; direction?: 'vertical' | 'horizontal' }>
         export type TextInput = React.FC
+        export type TextArea = React.FC
         export type SegmentedControl = React.FC
         export type SegmentedControlPages = React.FC
         export type SegmentedControlStateArgs = {

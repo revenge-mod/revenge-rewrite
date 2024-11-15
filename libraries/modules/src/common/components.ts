@@ -1,5 +1,5 @@
 import { lazyDestructure } from '@revenge-mod/utils/lazy'
-import { findByName, findByProps, findBySingleProp, findProp } from '../finders'
+import { findByFilePath, findByName, findByProps, findBySingleProp, findProp } from '../finders'
 
 import type { DiscordModules } from '../types'
 
@@ -12,6 +12,9 @@ export const HelpMessage = findByName.lazy('HelpMessage') as DiscordModules.Comp
 export const { SafeAreaProvider, SafeAreaView } = lazyDestructure(() =>
     findByProps('useSafeAreaInsets'),
 ) as typeof import('react-native-safe-area-context')
+
+// Alerts
+export const { AlertModal, AlertActionButton } = lazyDestructure(() => findByProps('AlertModal', 'AlertActions'))
 
 // ActionSheet
 export const ActionSheetRow = findProp.lazy('ActionSheetRow')
@@ -47,7 +50,7 @@ export const RedesignCompat = findProp.lazy('RedesignCompat')
 export const Stack = findProp.lazy('Stack') as DiscordModules.Components.Stack
 
 // Inputs
-export const TextInput = findBySingleProp.lazy('TextInput') as DiscordModules.Components.TextInput
+export const { TextInput, TextArea } = lazyDestructure(() => findByProps('TextInput', 'ContextMenu')) as { TextInput: DiscordModules.Components.TextInput, TextArea: DiscordModules.Components.TextArea }
 
 // SegmentedControl
 export const SegmentedControl = findProp.lazy('SegmentedControl') as DiscordModules.Components.SegmentedControl
