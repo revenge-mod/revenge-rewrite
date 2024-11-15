@@ -3,7 +3,7 @@ import { findInReactTree } from '@revenge-mod/utils/react'
 import { registerPlugin } from 'libraries/plugins/src/internals'
 
 import { TableRowIcon } from '@revenge-mod/modules/common/components'
-import { settings } from '@revenge-mod/settings'
+import { settings } from 'libraries/preferences/src'
 import {
     type PressableRowConfig,
     type RawRowConfig,

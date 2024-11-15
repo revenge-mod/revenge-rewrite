@@ -35,7 +35,7 @@
       "@revenge-mod/modules/native": ["libraries/modules/src/native/index.ts"],
       "@revenge-mod/patcher": ["libraries/patcher/src/index.ts"],
       "@revenge-mod/plugins": ["libraries/plugins/src/index.ts"],
-      "@revenge-mod/settings": ["libraries/settings/src/index.ts"],
+      "@revenge-mod/preferences": ["libraries/preferences/src/index.ts"],
       "@revenge-mod/shared/*": ["libraries/shared/src/*"],
       "@revenge-mod/storage": ["libraries/storage/src/index.ts"],
       "@revenge-mod/utils/*": ["libraries/utils/src/*"],

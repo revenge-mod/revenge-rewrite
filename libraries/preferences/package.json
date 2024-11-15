@@ -1,5 +1,5 @@
 {
-  "name": "@revenge-mod/settings",
+  "name": "@revenge-mod/preferences",
   "module": "src/index.ts",
   "type": "module",
   "scripts": {},

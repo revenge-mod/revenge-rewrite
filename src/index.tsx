@@ -20,7 +20,7 @@ function initialize() {
     try {
         const promise = ModulesLibrary.new().then(modules => {
             // Initialize storages
-            const promise = import('@revenge-mod/settings')
+            const promise = import('libraries/preferences/src')
 
             // Initializing this early (before modules module) can sometimes cause the app to be in a limbo state
             // Don't know how, and why
