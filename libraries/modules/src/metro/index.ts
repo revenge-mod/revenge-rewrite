@@ -64,13 +64,6 @@ export function resolveModuleDependencies(modules: Metro.ModuleList, id: Metro.M
     }
 }
 
-function importIndexModule() {
-    // ! Do NOT use requireModule for this
-    logger.log('Importing index module...')
-    __r(IndexMetroModuleId)
-    recordTime('Modules_IndexRequired')
-}
-
 /**
  * Initializes the Metro modules patches and caches
  */
@@ -80,10 +73,6 @@ export async function initializeModules() {
 
     const cacheRestored = await restoreCache()
     recordTime('Modules_TriedRestoreCache')
-
-    // TODO: We've probably already cached important things
-    //       so it's likely safe to import before we hook everything here?
-    if (cacheRestored) importIndexModule()
 
     for (const key in metroModules) {
         const id = Number(key)
@@ -145,8 +134,12 @@ export async function initializeModules() {
 
     recordTime('Modules_HookedFactories')
 
-    // If nothing was cached, we import AFTER all modules are hooked
-    if (!cacheRestored) importIndexModule()
+    logger.log('Importing index module...')
+    // To be reliable in finding modules, we need to hook module factories before requiring index
+    // This slows down the app by a bit (~0.5s)
+    // ! Do NOT use requireModule for this
+    __r(IndexMetroModuleId)
+    recordTime('Modules_IndexRequired')
 
     metroCache.totalModules = metroDependencies.size
     saveCache()
