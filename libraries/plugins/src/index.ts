@@ -1,9 +1,11 @@
+import { internalSymbol } from '@revenge-mod/shared/symbols'
+import Libraries from '@revenge-mod/utils/library'
+
 import type { Patcher } from '@revenge-mod/patcher'
 import type { RevengeLibrary } from '@revenge-mod/revenge'
-import { internalSymbol } from '@revenge-mod/shared/symbols'
 import type { ExtendedObservable } from '@revenge-mod/storage'
-import Libraries from '@revenge-mod/utils/library'
 import type React from 'react'
+
 import {
     type InternalPluginDefinition,
     type WhitelistedPluginObjectKeys,

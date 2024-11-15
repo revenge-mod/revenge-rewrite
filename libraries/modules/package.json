@@ -11,8 +11,7 @@
     "./native": "./src/native/index.ts"
   },
   "dependencies": {
-    "@revenge-mod/assets": "workspace:*",
-    "@revenge-mod/patcher": "workspace:*",
+    "@revenge-mod/debug": "workspace:*",
     "@revenge-mod/utils": "workspace:*"
   },
   "devDependencies": {
@@ -20,6 +19,12 @@
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/stack": "^6.4.1",
     "@types/semver": "^7.5.8",
-    "react-native-safe-area-context": "^4.12.0"
+    "react-native-safe-area-context": "^4.12.0",
+    "@discord/intl": "^0.13.0",
+    "@types/react": "^18.3.12",
+    "@intrnl/xxhash64": "^0.1.2",
+    "react-native": "^0.75.4",
+    "typed-emitter": "^2.1.0",
+    "@noble/hashes": "^1.5.0"
   }
 }

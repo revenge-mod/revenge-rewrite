@@ -1,8 +1,9 @@
 import { ModulesLibrary } from '@revenge-mod/modules'
 import { assetsRegistry } from '@revenge-mod/modules/common'
 import { getImportingModuleId, metroCache, requireModule } from '@revenge-mod/modules/metro'
-import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import Libraries from '@revenge-mod/utils/library'
+
+import type { ReactNativeInternals } from '@revenge-mod/revenge'
 
 export const AssetsLibrary = Libraries.create(
     {

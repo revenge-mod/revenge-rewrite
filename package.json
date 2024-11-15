@@ -1,6 +1,6 @@
 {
   "name": "@revenge-mod/revenge",
-  "module": "src/entry.ts",
+  "module": "src/index.tsx",
   "type": "module",
   "scripts": {
     "serve": "node ./scripts/serve.mjs",
@@ -9,24 +9,21 @@
   "dependencies": {
     "@revenge-mod/app": "workspace:*",
     "@revenge-mod/assets": "workspace:*",
+    "@revenge-mod/debug": "workspace:*",
     "@revenge-mod/modules": "workspace:*",
-    "@revenge-mod/patcher": "workspace:*",
+    "@revenge-mod/plugins": "workspace:*",
+    "@revenge-mod/preferences": "workspace:*",
     "@revenge-mod/shared": "workspace:*",
+    "@revenge-mod/ui": "workspace:*",
     "@revenge-mod/utils": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@discord/intl": "^0.13.0",
-    "@intrnl/xxhash64": "^0.1.2",
-    "@noble/hashes": "^1.5.0",
     "@swc/core": "^1.7.39",
     "@swc/helpers": "^0.5.13",
     "@tsconfig/strictest": "^2.0.5",
-    "@types/react": "^18.3.12",
     "chalk": "^5.3.0",
     "esbuild": "^0.24.0",
-    "react-native": "^0.75.4",
-    "typed-emitter": "^2.1.0",
     "typescript": "^5.6.3",
     "yargs-parser": "^21.1.1"
   },

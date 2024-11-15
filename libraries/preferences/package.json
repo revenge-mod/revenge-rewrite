@@ -7,8 +7,6 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@revenge-mod/modules": "workspace:*",
-    "@revenge-mod/patcher": "workspace:*",
-    "@revenge-mod/shared": "workspace:*"
+    "@revenge-mod/storage": "workspace:*"
   }
 }
