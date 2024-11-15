@@ -3,7 +3,6 @@ import { findInReactTree } from '@revenge-mod/utils/react'
 import { registerPlugin } from 'libraries/plugins/src/internals'
 
 import { TableRowIcon } from '@revenge-mod/modules/common/components'
-import { settings } from 'libraries/preferences/src'
 import {
     type PressableRowConfig,
     type RawRowConfig,
@@ -11,10 +10,13 @@ import {
     type ToggleRowConfig,
     customData,
 } from '@revenge-mod/ui/settings'
+import { settings } from 'libraries/preferences/src'
 
 import RevengeIcon from '../../assets/revenge.png'
 
 import AboutSettingsPage from './pages/About'
+import CustomPageRenderer from './pages/CustomPageRenderer'
+import DebugPerformanceTimesSettingsPage from './pages/DebugPerformanceTimes'
 import DeveloperSettingsPage from './pages/Developer'
 import RevengeSettingsPage from './pages/Revenge'
 
@@ -120,6 +122,19 @@ registerPlugin(
                     label: 'About',
                     component: AboutSettingsPage,
                     icon: assets.getIndexByName('CircleInformationIcon'),
+                }),
+                sui.createRoute('RevengeDebugPerformanceTimes', {
+                    type: 'route',
+                    label: 'Debug Performance Times',
+                    component: DebugPerformanceTimesSettingsPage,
+                    icon: assets.getIndexByName('TImerIcon'),
+                }),
+                sui.createRoute('RevengeCustomPage', {
+                    type: 'route',
+                    label: 'Revenge Page',
+                    unsearchable: true,
+                    component: CustomPageRenderer,
+                    predicate: () => false,
                 }),
             )
         },

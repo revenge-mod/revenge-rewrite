@@ -1,4 +1,5 @@
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
+import type { ComponentType } from 'react'
 import { findByFilePath, findByName, findByProps } from '../finders'
 import type { DiscordModules } from '../types'
 
@@ -59,9 +60,14 @@ export const NavigationNative = findByProps.lazy('NavigationContainer') as Omit<
     'useNavigation'
 > & {
     useNavigation: typeof import('@react-navigation/native').useNavigation<
-        // biome-ignore lint/suspicious/noExplicitAny: https://github.com/react-navigation/react-navigation/issues/9037
-        import('@react-navigation/stack').StackNavigationProp<any>
+        import('@react-navigation/stack').StackNavigationProp<NavigationNativeStackParamList>
     >
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: https://github.com/react-navigation/react-navigation/issues/9037
+export type NavigationNativeStackParamList = {
+    RevengeCustomPage: { title: string; render: ComponentType }
+    [Page: string]: any
 }
 
 export const semver = findByProps.lazy('SEMVER_SPEC_VERSION') as typeof import('semver')
