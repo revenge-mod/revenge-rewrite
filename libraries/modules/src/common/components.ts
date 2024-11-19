@@ -1,38 +1,106 @@
 import { lazyDestructure } from '@revenge-mod/utils/lazy'
-import { findByFilePath, findByName, findByProps, findBySingleProp, findProp } from '../finders'
+import { findByProps, findBySingleProp, findProp } from '../finders'
 
 import type { DiscordModules } from '../types'
 
 // TODO: Type these things...
-
-// Discord
-export const HelpMessage = findByName.lazy('HelpMessage') as DiscordModules.Components.HelpMessage
 
 // React Native's included SafeAreaView only adds padding on iOS.
 export const { SafeAreaProvider, SafeAreaView } = lazyDestructure(() =>
     findByProps('useSafeAreaInsets'),
 ) as typeof import('react-native-safe-area-context')
 
-// Alerts
-export const { AlertModal, AlertActionButton } = lazyDestructure(() => findByProps('AlertModal', 'AlertActions'))
+/// DISCORD
 
-// ActionSheet
-export const ActionSheetRow = findProp.lazy('ActionSheetRow')
-
-// Buttons
-export const Button = findBySingleProp.lazy('Button') as DiscordModules.Components.Button
 export const TwinButtons = findProp.lazy('TwinButtons')
-export const IconButton = findBySingleProp.lazy('IconButton') as DiscordModules.Components.IconButton
-export const RowButton = findProp.lazy('RowButton') as DiscordModules.Components.RowButton
+export const {
+    // Styles
+
+    createStyles,
+
+    // Buttons
+
+    Button,
+    IconButton,
+    ImageButton,
+    FloatingActionButton,
+    RowButton,
+
+    // Tables
+
+    TableRow,
+    TableSwitchRow,
+    TableRowGroup,
+    TableRowIcon,
+    TableRadioGroup,
+    TableCheckboxRow,
+    TableRadioRow,
+
+    // Alerts
+
+    AlertModal,
+    AlertActionButton,
+    dismissAlerts,
+    openAlert,
+
+    // Inputs
+
+    TextInput,
+    TextArea,
+    GhostInput,
+
+    // Containers
+
+    Card,
+    Stack,
+
+    // Other
+
+    Slider,
+
+    // Text
+
+    Text,
+    TextStyleSheet,
+} = lazyDestructure(() => findByProps('TextInput', 'ContextMenu')) as {
+    Text: DiscordModules.Components.Text,
+
+    TextInput: DiscordModules.Components.TextInput,
+    TextArea: DiscordModules.Components.TextArea,
+    GhostInput: DiscordModules.Components.GhostInput,
+    
+    Button: DiscordModules.Components.Button,
+    IconButton: DiscordModules.Components.IconButton,
+    ImageButton: DiscordModules.Components.ImageButton,
+    FloatingActionButton: DiscordModules.Components.FloatingActionButton,
+    RowButton: DiscordModules.Components.RowButton,
+    
+    TableRow: DiscordModules.Components.TableRow,
+    TableSwitchRow: DiscordModules.Components.TableSwitchRow,
+    TableRowGroup: DiscordModules.Components.TableRowGroup,
+    TableRowIcon: DiscordModules.Components.TableRowIcon,
+    TableRadioGroup: DiscordModules.Components.TableRadioGroup,
+    TableCheckboxRow: DiscordModules.Components.TableCheckboxRow,
+    TableRadioRow: DiscordModules.Components.TableRadioRow,
+    
+    AlertModal: DiscordModules.Components.AlertModal,
+    AlertActionButton: DiscordModules.Components.AlertActionButton,
+    dismissAlerts: unknown,
+    openAlert: unknown,
+    
+    Card: DiscordModules.Components.Card,
+    Stack: DiscordModules.Components.Stack,
+
+    Slider: DiscordModules.Components.Slider,
+    
+    createStyles: unknown,
+    TextStyleSheet: unknown,
+}
 
 export const PressableScale = findProp.lazy('PressableScale')
 
 // Tables
-export const TableRow = findProp.lazy('TableRow')
-export const TableRowIcon = findProp.lazy('TableRowIcon')
 export const TableRowTrailingText = findProp.lazy('TableRowTrailingText')
-export const TableRowGroup = findProp.lazy('TableRowGroup')
-export const TableSwitchRow = findProp.lazy('TableSwitchRow')
 export const TableSwitch = findBySingleProp.lazy('FormSwitch')
 export const TableRadio = findBySingleProp.lazy('FormRadio')
 export const TableCheckbox = findBySingleProp.lazy('FormCheckbox')
@@ -40,33 +108,5 @@ export const TableCheckbox = findBySingleProp.lazy('FormCheckbox')
 export const FormSwitch = findBySingleProp.lazy('FormSwitch')
 export const FormRadio = findBySingleProp.lazy('FormRadio')
 export const FormCheckbox = findBySingleProp.lazy('FormCheckbox')
-
-// Card
-export const Card = findProp.lazy('Card')
-// TODO: Checkout what's this
-export const RedesignCompat = findProp.lazy('RedesignCompat')
-
-// Misc.
-export const Stack = findProp.lazy('Stack') as DiscordModules.Components.Stack
-
-// Inputs
-export const { TextInput, TextArea } = lazyDestructure(() => findByProps('TextInput', 'ContextMenu')) as { TextInput: DiscordModules.Components.TextInput, TextArea: DiscordModules.Components.TextArea }
-
-// SegmentedControl
-export const SegmentedControl = findProp.lazy('SegmentedControl') as DiscordModules.Components.SegmentedControl
-export const SegmentedControlPages = findProp.lazy(
-    'SegmentedControlPages',
-) as DiscordModules.Components.SegmentedControlPages
-export const useSegmentedControlState = findBySingleProp.lazy('useSegmentedControlState') as (
-    arg: DiscordModules.Components.SegmentedControlStateArgs,
-) => DiscordModules.Components.SegmentedControlState
-
-export const FloatingActionButton = findProp.lazy(
-    'FloatingActionButton',
-) as DiscordModules.Components.FloatingActionButton
-export const ActionSheet = findProp.lazy('ActionSheet') as DiscordModules.Components.ActionSheet
-export const BottomSheetTitleHeader = findProp.lazy('BottomSheetTitleHeader')
-
-export const Text = findProp.lazy('Text', 'LegacyText')
 
 export const FlashList = findProp.lazy('FlashList')

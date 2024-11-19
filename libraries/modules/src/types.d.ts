@@ -254,14 +254,37 @@ export namespace DiscordModules {
     }
 
     export namespace Components {
-        export type HelpMessage = React.FC
-        export type Button = React.FC
+        // Buttons
+        export type Button = React.FC<{
+            text: string
+            onPress: () => unknown
+            variant?: 'primary' | 'secondary' | 'destructive'
+        }>
         export type TwinButtons = React.FC
         export type IconButton = React.FC
         export type RowButton = React.FC
-        export type Stack = React.FC<ViewProps & { spacing?: number; direction?: 'vertical' | 'horizontal' }>
+        export type ImageButton = React.FC
+        export type FloatingActionButton = React.FC
+
+        // Layouts
+        export type Stack = React.FC<ViewProps & { 
+            spacing?: number
+            direction?: 'vertical' | 'horizontal' 
+        }>
+        export type Card = React.FC
+        export type PressableScale = React.FC
+
+        // Inputs
         export type TextInput = React.FC
         export type TextArea = React.FC
+        export type GhostInput = React.FC
+        
+        // Forms
+        export type FormSwitch = React.FC
+        export type FormRadio = React.FC
+        export type FormCheckbox = React.FC
+
+        // Segmented controls
         export type SegmentedControl = React.FC
         export type SegmentedControlPages = React.FC
         export type SegmentedControlStateArgs = {
@@ -271,7 +294,40 @@ export namespace DiscordModules {
         export type SegmentedControlState = {
             selectedIndex: number
         }
-        export type FloatingActionButton = React.FC
+
+        // Sheets
         export type ActionSheet = React.FC
+        export type ActionSheetCloseButton = React.FC
+        export type ActionSheetRow = React.FC
+        export type ActionSheetSwitchRow = React.FC
+        export type ActionSheetIconHeader = React.FC
+        export type ActionSheetHeaderBar = React.FC
+        export type BottomSheetTitleHeader = React.FC
+
+        // Tables
+        export type TableRow = React.FC
+        export type TableSwitchRow = React.FC
+        export type TableRowGroup = React.FC
+        export type TableRowIcon = React.FC
+        export type TableRadioGroup = React.FC
+        export type TableCheckboxRow = React.FC
+        export type TableRadioRow = React.FC
+        export type TableRowTrailingText = React.FC
+        export type TableSwitch = React.FC
+        export type TableRadio = React.FC
+        export type TableCheckbox = React.FC
+
+        // Alerts
+        export type AlertModal = React.FC
+        export type AlertActionButton = React.FC
+
+        // Menus
+        export type ContextMenu = React.FC
+        export type ContextMenuContainer = React.FC
+
+        // Other
+        export type Slider = React.FC
+        export type FlashList = React.FC
+        export type Text = React.FC
     }
 }
