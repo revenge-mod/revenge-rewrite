@@ -16,7 +16,7 @@ registerPlugin<{
         id: 'revenge.warnings',
         version: '1.0.0',
         icon: 'WarningIcon',
-        async afterAppRender({ revenge: { assets, modules }, storage }) {
+        afterAppRender({ revenge: { assets, modules }, storage }) {
             const { legacy_alerts, toasts } = modules.common
 
             // Predicate is already used to indicate whether the plugin is enabled or not
@@ -31,7 +31,7 @@ registerPlugin<{
                     onConfirm: () => {
                         storage.supportWarningDismissedAt = Date.now()
                         toasts.open({
-                            key: 'revenge.toasts.support-warning.dismissed',
+                            key: 'revenge.toasts.warnings.support-warning.dismissed',
                             content: 'You will see this warning again in 7 days',
                             icon: assets.getIndexByName('ic_warning_24px'),
                         })
