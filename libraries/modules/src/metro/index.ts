@@ -2,14 +2,7 @@ import { recordTime } from '@revenge-mod/debug'
 
 import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
 import { logger, patcher } from '../shared'
-import {
-    cacheModule,
-    cacheModuleAsBlacklisted,
-    metroCache,
-    requireAssetModules,
-    restoreCache,
-    saveCache,
-} from './caches'
+import { cacheModuleAsBlacklisted, metroCache, requireAssetModules, restoreCache, saveCache } from './caches'
 import { patchModuleOnLoad } from './patcher'
 
 import type { Metro } from '../types'
@@ -105,8 +98,6 @@ export async function initializeModules() {
                             ...exps,
                         }
                     }
-
-                    cacheModule(id)
 
                     try {
                         origFunc(...args)
