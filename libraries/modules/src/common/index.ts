@@ -7,11 +7,13 @@ import type { DiscordModules } from '../types'
 // ! If lazily loading things break, we'll need to dynamically import after initializeModules
 
 export * as components from './components'
+export * as stores from './stores'
 
 /// DISCORD
 
 export const constants = findByProps.lazy('Fonts') as Record<string, unknown>
-export const intlModule = findByProps.lazy('intl') as {
+export const tokens = findByProps.lazy('internal', 'colors')
+export const intl = findByProps.lazy('intl') as {
     intl: import('@discord/intl').IntlManager & {
         format: typeof import('@discord/intl').astFormatter['format']
         formatToPlainString: typeof import('@discord/intl').stringFormatter['format']
@@ -34,11 +36,7 @@ export const intlModule = findByProps.lazy('intl') as {
         }
     >
 }
-export const discordIntl = findByProps.lazy('runtimeHashMessageKey') as typeof import('@discord/intl')
-export const tokens = findByProps.lazy('unsafe_rawColors') as {
-    themes: Record<string, string>
-    colors: Record<string, Record<string, string>>
-}
+export const intlModule = findByProps.lazy('runtimeHashMessageKey') as typeof import('@discord/intl')
 
 export const Logger = findByName.lazy('Logger') as typeof DiscordModules.Logger
 
