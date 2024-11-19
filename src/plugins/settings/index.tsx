@@ -127,7 +127,7 @@ registerPlugin(
                     type: 'route',
                     label: 'Debug Performance Times',
                     component: DebugPerformanceTimesSettingsPage,
-                    icon: assets.getIndexByName('TImerIcon'),
+                    icon: assets.getIndexByName('TimerIcon'),
                 }),
                 sui.createRoute('RevengeCustomPage', {
                     type: 'route',
