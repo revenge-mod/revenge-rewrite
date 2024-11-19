@@ -90,6 +90,14 @@ export const find = Object.assign(
                 yield isDefaultExport ? requireModule(id).default : requireModule(id)
             }
         },
+        /**
+         * Finds the first exports lazily where the given filter returns a truthy value
+         * @param filter The filter to match
+         * @returns The exports of the first module which the given filter matches
+         */
+        lazy: function findLazy<A extends unknown[]>(filter: FilterFn<A>) {
+            return createLazyModule(filter)
+        }
     },
 )
 
@@ -107,7 +115,7 @@ export const find = Object.assign(
  * @returns The module exports
  */
 export const findByProps = Object.assign((prop: string, ...props: string[]) => find(byProps(prop, ...props)), {
-    lazy: (prop: string, ...props: string[]) => createLazyModule(byProps(prop, ...props)),
+    lazy: (prop: string, ...props: string[]) => find.lazy(byProps(prop, ...props)),
     async(prop: string, ...propsAndOrTimeout: [...string[], number] | string[]) {
         const cloned = [...propsAndOrTimeout]
         const timeout = typeof cloned[cloned.length - 1] === 'number' ? (cloned.pop() as number) : 1000
@@ -138,7 +146,7 @@ export const findByName = Object.assign(
     (name: string, returnDefaultExport = true) => find(returnDefaultExport ? byName(name) : byName.raw(name)),
     {
         lazy: (name: string, returnDefaultExport = true) =>
-            createLazyModule(returnDefaultExport ? byName(name) : byName.raw(name)),
+            find.lazy(returnDefaultExport ? byName(name) : byName.raw(name)),
         async(name: string, returnDefaultExport = true, timeout = 1000) {
             return new Promise<Metro.ModuleExports>(resolve => {
                 const id = setTimeout(resolve, timeout)
@@ -168,7 +176,7 @@ export const findByDisplayName = Object.assign(
         find(returnDefaultExport ? byDisplayName(name) : byDisplayName.raw(name)),
     {
         lazy: (name: string, returnDefaultExport = true) =>
-            createLazyModule(returnDefaultExport ? byDisplayName(name) : byDisplayName.raw(name)),
+            find.lazy(returnDefaultExport ? byDisplayName(name) : byDisplayName.raw(name)),
         async(name: string, returnDefaultExport = true, timeout = 1000) {
             return new Promise<Metro.ModuleExports>(resolve => {
                 const id = setTimeout(resolve, timeout)
@@ -197,7 +205,7 @@ export const findByTypeName = Object.assign(
     (name: string, returnDefaultExport = true) => find(returnDefaultExport ? byTypeName(name) : byTypeName.raw(name)),
     {
         lazy: (name: string, returnDefaultExport = true) =>
-            createLazyModule(returnDefaultExport ? byTypeName(name) : byTypeName.raw(name)),
+            find.lazy(returnDefaultExport ? byTypeName(name) : byTypeName.raw(name)),
         async(name: string, returnDefaultExport = true, timeout = 1000) {
             return new Promise<Metro.ModuleExports>(resolve => {
                 const id = setTimeout(resolve, timeout)
@@ -222,7 +230,7 @@ export const findByTypeName = Object.assign(
  * @returns The module exports
  */
 export const findByStoreName = Object.assign((name: string) => find(byStoreName(name)), {
-    lazy: (name: string) => createLazyModule(byStoreName(name)),
+    lazy: (name: string) => find.lazy(byStoreName(name)),
     async(name: string, timeout = 5000) {
         return new Promise<Metro.ModuleExports>(resolve => {
             const id = setTimeout(resolve, timeout)
@@ -244,10 +252,10 @@ export const findByStoreName = Object.assign((name: string) => find(byStoreName(
  * @returns The module exports
  */
 export const findByFilePath = Object.assign(
-    (path: string, returnDefaultExport = false) => find(byFilePath(path, returnDefaultExport)),
+    (path: string, returnDefaultExport = true) => find(byFilePath(path, returnDefaultExport)),
     {
-        lazy: (path: string, returnDefaultExport = false) => createLazyModule(byFilePath(path, returnDefaultExport)),
-        async(path: string, returnDefaultExport = false, timeout = 1000) {
+        lazy: (path: string, returnDefaultExport = true) => find.lazy(byFilePath(path, returnDefaultExport)),
+        async(path: string, returnDefaultExport = true, timeout = 1000) {
             return new Promise<Metro.ModuleExports>(resolve => {
                 const id = setTimeout(resolve, timeout)
                 this.lazy(path, returnDefaultExport)[lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
@@ -293,7 +301,7 @@ export const findBySingleProp = Object.assign(
         find(returnDefaultExport ? bySingleProp(name) : bySingleProp.raw(name)),
     {
         lazy: (name: string, returnDefaultExport = true) =>
-            createLazyModule(returnDefaultExport ? bySingleProp(name) : bySingleProp.raw(name)),
+            find.lazy(returnDefaultExport ? bySingleProp(name) : bySingleProp.raw(name)),
         async(name: string, returnDefaultExport = true, timeout = 1000) {
             return new Promise<Metro.ModuleExports>(resolve => {
                 const id = setTimeout(resolve, timeout)
