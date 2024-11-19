@@ -1,6 +1,6 @@
 // So objectSeal and objectFreeze contain the proper functions before we overwrite them
 import '@revenge-mod/utils/functions'
-import { recordTime } from '@revenge-mod/debug'
+import { recordTimestamp } from '@revenge-mod/debug'
 
 import { AppLibrary } from '@revenge-mod/app'
 import { AssetsLibrary } from '@revenge-mod/assets'
@@ -16,7 +16,7 @@ import Libraries from '@revenge-mod/utils/library'
 
 // ! This function is BLOCKING, so we need to make sure it's as fast as possible
 function initialize() {
-    recordTime('Init_Initialize')
+    recordTimestamp('Init_Initialize')
     Object.freeze = Object.seal = o => o
 
     try {
@@ -39,11 +39,11 @@ function initialize() {
 
             promise.then(async ({ settings }) => {
                 await awaitStorage(settings)
-                recordTime('Storage_Initialized')
+                recordTimestamp('Storage_Initialized')
                 import('./plugins').then(() => {
-                    recordTime('Plugins_CoreImported')
+                    recordTimestamp('Plugins_CoreImported')
                     revenge.plugins[internalSymbol].startCorePlugins()
-                    recordTime('Plugins_CoreStarted')
+                    recordTimestamp('Plugins_CoreStarted')
                 })
             })
         })
@@ -120,7 +120,7 @@ Libraries.create(
 
         // We hold calls from the native side
         function onceIndexRequired() {
-            recordTime('Native_RequiredIndex')
+            recordTimestamp('Native_RequiredIndex')
 
             const batchedBridge = __fbBatchedBridge
 
@@ -144,7 +144,7 @@ Libraries.create(
 
             initialize()
                 ?.then(() => {
-                    recordTime('Init_PromiseResolved')
+                    recordTimestamp('Init_PromiseResolved')
                     unpatch()
                     for (const queue of callQueue)
                         batchedBridge.getCallableModule(queue[0]) && batchedBridge.__callFunction(...queue)

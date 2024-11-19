@@ -14,16 +14,16 @@ export const PerformanceTimes = {
     App_AfterRunCallbacks: -1,
 }
 
-export function deltaTimeOf(time: keyof typeof PerformanceTimes) {
-    return timestampTimeOf(time) - PerformanceTimes.Native_RequiredIndex
+export function timeOf(time: keyof typeof PerformanceTimes) {
+    return timestampOf(time) - PerformanceTimes.Native_RequiredIndex
 }
 
-export function timestampTimeOf(time: keyof typeof PerformanceTimes) {
+export function timestampOf(time: keyof typeof PerformanceTimes) {
     const timestamp = PerformanceTimes[time]
     if (timestamp === -1) return Number.NaN
     return timestamp
 }
 
-export function recordTime(time: keyof typeof PerformanceTimes) {
-    return (PerformanceTimes[time] = performance.now())
+export function recordTimestamp(time: keyof typeof PerformanceTimes) {
+    return (PerformanceTimes[time] = nativePerformanceNow())
 }

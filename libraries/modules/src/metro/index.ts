@@ -1,4 +1,4 @@
-import { recordTime } from '@revenge-mod/debug'
+import { recordTimestamp } from '@revenge-mod/debug'
 
 import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
 import { logger, patcher } from '../shared'
@@ -123,7 +123,7 @@ export async function initializeModules() {
     if (metroModules[IndexMetroModuleId]?.isInitialized) throw new Error('Metro modules has already been initialized')
 
     const cacheRestored = await restoreCache()
-    recordTime('Modules_TriedRestoreCache')
+    recordTimestamp('Modules_TriedRestoreCache')
 
     for (const id of metroDependencies) tryHookModule(id, metroModules[id]!)
 
@@ -147,14 +147,14 @@ export async function initializeModules() {
     //     }
     // })
 
-    recordTime('Modules_HookedFactories')
+    recordTimestamp('Modules_HookedFactories')
 
     logger.log('Importing index module...')
     // To be reliable in finding modules, we need to hook module factories before requiring index
     // This slows down the app by a bit (~0.5s)
     // ! Do NOT use requireModule for this
     __r(IndexMetroModuleId)
-    recordTime('Modules_IndexRequired')
+    recordTimestamp('Modules_IndexRequired')
 
     metroCache.totalModules = metroDependencies.size
     saveCache()
@@ -167,7 +167,7 @@ export async function initializeModules() {
             () => {
                 unpatch()
                 requireAssetModules()
-                recordTime('Modules_RequiredAssets')
+                recordTimestamp('Modules_RequiredAssets')
             },
             'createAssetCache',
         )

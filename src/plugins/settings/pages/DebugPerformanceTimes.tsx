@@ -1,8 +1,8 @@
-import { PerformanceTimes, deltaTimeOf, timestampTimeOf } from '@revenge-mod/debug'
+import { PerformanceTimes, timeOf, timestampOf } from '@revenge-mod/debug'
 import { TableRow, Text } from '@revenge-mod/modules/common/components'
 
 const PerformanceTimesKeys = (Object.keys(PerformanceTimes) as (keyof typeof PerformanceTimes)[]).sort(
-    (a, b) => deltaTimeOf(a) - deltaTimeOf(b),
+    (a, b) => timeOf(a) - timeOf(b),
 )
 
 export default function DebugPerformanceTimesSettingsPage() {
@@ -12,23 +12,23 @@ export default function DebugPerformanceTimesSettingsPage() {
         <>
             <Text color="text-danger">
                 Some delta times may be inaccurate as some steps run concurrently to each other. Only look at delta
-                times when necessary. Steps that are marked in red were not skipped/not recorded.
+                times when necessary. Steps that are marked in red were skipped/not recorded.
             </Text>
             {PerformanceTimesKeys.map(key => {
-                const deltaNumber = deltaTimeOf(key)
-                previousTimestamp ??= timestampTimeOf(key)
+                const timeNumber = timeOf(key)
+                previousTimestamp ??= timestampOf(key)
 
-                const delta = deltaNumber.toFixed(4)
-                const deltaLastStep = (timestampTimeOf(key) - previousTimestamp).toFixed(4)
+                const time = timeNumber.toFixed(4)
+                const delta = (timestampOf(key) - previousTimestamp).toFixed(4)
 
-                if (!Number.isNaN(deltaNumber)) previousTimestamp = timestampTimeOf(key)
+                if (!Number.isNaN(timeNumber)) previousTimestamp = timestampOf(key)
 
                 return (
                     // biome-ignore lint/correctness/useJsxKeyInIterable: This never gets rerendered
                     <TableRow
-                        variant={Number.isNaN(deltaNumber) ? 'danger' : 'default'}
+                        variant={Number.isNaN(timeNumber) ? 'danger' : 'default'}
                         label={key}
-                        subLabel={`${delta}ms (Δ: ${deltaLastStep}ms)`}
+                        subLabel={`${time}ms (Δ: ${delta}ms)`}
                     />
                 )
             })}

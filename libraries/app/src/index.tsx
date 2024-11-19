@@ -1,4 +1,4 @@
-import { recordTime } from '@revenge-mod/debug'
+import { recordTimestamp } from '@revenge-mod/debug'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import Libraries from '@revenge-mod/utils/library'
 
@@ -26,12 +26,13 @@ export const AppLibrary = Libraries.create(
         // Patching AppRegistry.runApplication is too slow, while AppRegistry.registerComponent never gets called (because slow awaiting the modules library)
         const unpatchBefore = patcher.before(React, 'createElement', () => {
             unpatchBefore()
-            recordTime('App_CreateElementCalled')
+            recordTimestamp('App_CreateElementCalled')
             // Prevent from blocking
+            // TODO: setImmediate or setTimeout?
             setTimeout(() => {
-                recordTime('App_BeforeRunCallbacks')
+                recordTimestamp('App_BeforeRunCallbacks')
                 for (const callback of initCbs) callback()
-                recordTime('App_AfterRunCallbacks')
+                recordTimestamp('App_AfterRunCallbacks')
             })
         })
 
