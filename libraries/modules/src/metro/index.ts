@@ -204,12 +204,16 @@ export function requireModule(id: Metro.ModuleID) {
         blacklistModule(id)
     })
 
+    const originalImportingId = id
     let moduleExports: unknown
     try {
+        importingModuleId = id
         moduleExports = __r(id)
     } catch (error) {
         logger.error(`Blacklisting module ${id} because it could not be imported: ${error}`)
         blacklistModule(id)
+    } finally {
+        importingModuleId = originalImportingId
     }
 
     ErrorUtils.setGlobalHandler(ogHandler)
