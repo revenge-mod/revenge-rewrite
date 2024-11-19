@@ -109,13 +109,33 @@ function onError(e: unknown) {
 Libraries.create(
     {
         name: 'init',
-        uses: ['patcher'],
+        uses: ['patcher', 'logger'],
     },
-    ({ patcher, cleanup }) => {
+    ({ logger, patcher, cleanup }) => {
+        // Hermes doesn't natively support Promises, it instead has a polyfill for it which doesn't handle rejections very well
+        // It doesn't throw and never logs in a non-development environment, we are patching it to do so, so we can catch errors when using async functions
+        // https://github.com/facebook/hermes/blob/3332fa020cae0bab751f648db7c94e1d687eeec7/lib/InternalBytecode/01-Promise.js#L446
+        const originalPromiseRejectionHandler = Promise._m
+        const ErrorTypeWhitelist = [ReferenceError, TypeError, RangeError]
+        Promise._m = (promise, err) => {
+            // If the rejections are useful enough, we log them
+            if (err)
+                setTimeout(
+                    () => {
+                        // If still not handled...
+                        if (promise._h === 0) logger.error(`Unhandled promise rejection: ${getErrorStack(err)}`)
+                    },
+                    ErrorTypeWhitelist.some(it => err instanceof it) ? 0 : 2000,
+                    // The time is completely arbitary. I've picked what Hermes chose.
+                )
+        }
+
         cleanup(() => {
             // @ts-expect-error
             // biome-ignore lint/performance/noDelete: Only a one-time thing
             if ('revenge' in globalThis) delete globalThis.revenge
+
+            Promise._m = originalPromiseRejectionHandler
         })
 
         if (typeof __r !== 'undefined') return initialize()
