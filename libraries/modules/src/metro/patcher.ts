@@ -31,13 +31,19 @@ export function getPatchStatus(patch: keyof typeof MetroPatcherPatches) {
  * @param id The module ID
  */
 export function patchModuleOnLoad(exports: Metro.ModuleExports, id: Metro.ModuleID) {
-    // Prevent tracking
-    exports.initSentry &&= () => void (status |= MetroPatcherPatches.DisableSentry)
-    if (exports.default?.track && exports.default.trackMaker)
-        exports.default.track = () => Promise.resolve(void (status |= MetroPatcherPatches.DisableTracking))
-
-    // Prevent jank stats tracking (Android only)
-    exports.startTracking &&= () => void (status |= MetroPatcherPatches.DisableJankStatsTracking)
+    if (!getPatchStatus('TrackFilePath') && exports.fileFinishedImporting) {
+        patcher.before(
+            exports,
+            'fileFinishedImporting',
+            ([filePath]) => {
+                const importingModuleId = getImportingModuleId()
+                if (importingModuleId === -1 || !filePath) return
+                getMetroModules()[importingModuleId]![metroModuleFilePathKey] = filePath as string
+            },
+            'trackFilePath',
+        )
+        status |= MetroPatcherPatches.TrackFilePath
+    }
 
     // There are modules registering the same native component
     if (
@@ -58,34 +64,6 @@ export function patchModuleOnLoad(exports: Metro.ModuleExports, id: Metro.Module
         status |= MetroPatcherPatches.FixNativeComponentRegistryDuplicateRegister
     }
 
-    // TODO: Move to CORE plugin (normal plugins can't do this as they are loaded too late)
-    if (exports?.default?.constructor?.displayName === 'DeveloperExperimentStore') {
-        exports.default = new Proxy(exports.default, {
-            get(target, property, receiver) {
-                if (property === 'isDeveloper') {
-                    // TODO: Enable via settings?
-                    return true
-                }
-
-                return Reflect.get(target, property, receiver)
-            },
-        })
-    }
-
-    if (!getPatchStatus('TrackFilePath') && exports.fileFinishedImporting) {
-        patcher.before(
-            exports,
-            'fileFinishedImporting',
-            ([filePath]) => {
-                const importingModuleId = getImportingModuleId()
-                if (importingModuleId === -1 || !filePath) return
-                getMetroModules()[importingModuleId]![metroModuleFilePathKey] = filePath as string
-            },
-            'trackFilePath',
-        )
-        status |= MetroPatcherPatches.TrackFilePath
-    }
-
     // The module before cannot get initialized without causing a freeze
     // [NativeStartupFlagsModule, (Problematic), (OtherModule)]
     // We are gonna patch: NativeStartupFlagsModule
@@ -102,16 +80,13 @@ export function patchModuleOnLoad(exports: Metro.ModuleExports, id: Metro.Module
         }
     }
 
-    // Hindi timestamps
-    if (exports.isMoment) {
-        let origLocale: string
-        patcher.after(exports, 'defineLocale', ret => {
-            origLocale ??= exports.locale()
-            status |= MetroPatcherPatches.FixMomentLocale
-            exports.locale(origLocale)
-            return ret
-        })
-    }
+    // Prevent tracking
+    exports.initSentry &&= () => void (status |= MetroPatcherPatches.DisableSentry)
+    if (exports.default?.track && exports.default.trackMaker)
+        exports.default.track = () => Promise.resolve(void (status |= MetroPatcherPatches.DisableTracking))
+
+    // Prevent jank stats tracking (Android only)
+    exports.startTracking &&= () => void (status |= MetroPatcherPatches.DisableJankStatsTracking)
 }
 
 /**
