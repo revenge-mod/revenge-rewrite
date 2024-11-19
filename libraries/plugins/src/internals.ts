@@ -5,6 +5,7 @@ import { lazyValue } from '@revenge-mod/utils/lazy'
 import type React from 'react'
 import type { PluginContext, PluginDefinition, PluginStage, PluginStorage } from '.'
 import { app } from './shared'
+import { subscribeModule, type MetroModuleSubscriptionCallback } from '@revenge-mod/modules/metro'
 
 export const PluginIdRegex = /^[a-z0-9-_\.]{1,128}$/
 
@@ -35,7 +36,8 @@ export const PluginStatus = {
 
 /** @internal */
 export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void, AppInitializedReturn = void>(
-    definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>,
+    definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &
+        Partial<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>>,
     core = false,
     predicate?: () => boolean,
 ) {
@@ -72,6 +74,8 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
 
             this.status = PluginStatus.Starting
 
+            if (this.onMetroModuleLoad) subscribeModule.all(this.onMetroModuleLoad)
+
             const handleError = (e: unknown, stage: string) => {
                 this.errors.push(e)
                 this.stop()
@@ -105,7 +109,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             if (this.stopped) return
 
             try {
-                this.onStop?.(instance)
+                this.beforeStop?.(instance)
             } catch (e) {
                 this.errors.push(new Error(`Plugin "${this.id}" failed to stop`, { cause: e }))
             } finally {
@@ -168,6 +172,11 @@ export type InternalPluginDefinition<Storage = any, AppLaunchedReturn = any, App
     PluginDefinition<PluginStorage, AppLaunchedReturn, AppInitializedReturn>,
     'settings'
 > & {
+    /**
+     * Runs when a Metro module loads, useful for patching modules very early on.
+     * @internal
+     */
+    onMetroModuleLoad?: MetroModuleSubscriptionCallback
     /**
      * Disables the plugin
      */

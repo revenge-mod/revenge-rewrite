@@ -56,6 +56,7 @@ export type PluginsLibrary = ReturnType<(typeof PluginsLibrary)['new']>
 function definePlugin<Storage = PluginStorage, AppLaunchedReturn = void, AppInitializedReturn = void>(
     definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>,
 ) {
+    // @ts-expect-error: TODO
     return registerPlugin(definition)
 }
 
@@ -87,13 +88,28 @@ export type PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> =
     // TODO: Support plugin dependencies with proper typings
     // dependencies: Record<string, PluginDependency>
 
+    /**
+     * Runs before the app gets rendered AND even before the plugin is refetched and updated.
+     * If your plugin receives a new update, your old version will continue to run until the user decides to reload the app.
+     * @param context The context for this lifecycle
+     * @returns An additional context to give to the next lifecycles
+     */
     beforeAppRender?: (
         context: PluginContext<'Starting', Storage, AppLaunchedReturn, AppInitializedReturn>,
     ) => Promise<AppInitializedReturn> | AppInitializedReturn
+    /**
+     * Runs after the app gets rendered.
+     * @param context The context for this lifecycle
+     * @returns An additional context to give to the next lifecyles
+     */
     afterAppRender?: (
         context: PluginContext<'BeforeAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>,
     ) => Promise<AppLaunchedReturn> | AppLaunchedReturn
-    onStop?: (context: PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>) => unknown
+    /**
+     * Runs before your plugin is stopped
+     * @param context The context for this lifecycle
+     */
+    beforeStop?: (context: PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>) => unknown
 } & {
     //   } //       settings: PluginSettingSchema // | { // TODO: Support plugin defined settings with proper typings
     settings?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
