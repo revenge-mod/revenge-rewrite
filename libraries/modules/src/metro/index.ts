@@ -11,11 +11,11 @@ export * from './caches'
 export * from './patcher'
 
 /**
- * The Metro modules
+ * Gets the Metro modules. Such a function is needed because for some reason, accessing `globalThis.modules` directly is incredibly slow... but a function call to it is faster..?
  * @internal
  */
 export function getMetroModules() {
-    return modules
+    return globalThis.modules
 }
 
 let importingModuleId = -1
