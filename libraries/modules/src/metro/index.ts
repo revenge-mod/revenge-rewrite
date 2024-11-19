@@ -27,7 +27,11 @@ export function getImportingModuleId() {
     return importingModuleId
 }
 
-const subscriptions = new Map<Metro.ModuleID, Set<() => void>>()
+export type MetroModuleSubscriptionCallback = (id: Metro.ModuleID, exports: Metro.ModuleExports) => unknown
+
+const subscriptions = new Map<Metro.ModuleID | 'all', Set<MetroModuleSubscriptionCallback>>()
+const allSubscriptionSet = new Set<MetroModuleSubscriptionCallback>()
+subscriptions.set('all', allSubscriptionSet)
 
 /**
  * Metro dependencies to require, if no cache is available
@@ -98,6 +102,7 @@ function tryHookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) 
                 else {
                     const subs = subscriptions.get(id)
                     if (subs) for (const sub of subs) sub(id, moduleObject.exports)
+                    for (const sub of allSubscriptionSet) sub(id, moduleObject.exports)
 
                     // TODO: Move this to call subscribeModule.all instead?
                     patchModuleOnLoad(moduleObject.exports, id)
@@ -218,7 +223,7 @@ export function requireModule(id: Metro.ModuleID) {
  * @returns A function to unsubscribe
  */
 export const subscribeModule = Object.assign(
-    function subscribeModule(id: Metro.ModuleID, callback: () => void) {
+    function subscribeModule(id: Metro.ModuleID, callback: MetroModuleSubscriptionCallback) {
         if (!subscriptions.has(id)) subscriptions.set(id, new Set())
         const set = subscriptions.get(id)!
         set.add(callback)
@@ -231,13 +236,24 @@ export const subscribeModule = Object.assign(
          * @param callback The callback to call when the module is required
          * @returns A function to unsubscribe
          */
-        once: function subscribeModuleOnce(id: Metro.ModuleID, callback: () => void) {
-            const unsub = subscribeModule(id, () => {
+        once: function subscribeModuleOnce(id: Metro.ModuleID, callback: MetroModuleSubscriptionCallback) {
+            const unsub = subscribeModule(id, (...args) => {
                 unsub()
-                callback()
+                callback(...args)
             })
 
             return unsub
+        },
+    },
+    {
+        /**
+         * Subscribes to all modules, calling the callback when any modules are required
+         * @param callback The callback to call when any modules are required
+         * @returns A function to unsubscribe
+         */
+        all: function subscribeModuleAll(callback: MetroModuleSubscriptionCallback) {
+            allSubscriptionSet.add(callback)
+            return () => allSubscriptionSet.delete(callback)
         },
     },
 )
