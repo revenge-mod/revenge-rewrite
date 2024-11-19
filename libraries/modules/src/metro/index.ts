@@ -57,6 +57,59 @@ export function resolveModuleDependencies(modules: Metro.ModuleList, id: Metro.M
     }
 }
 
+function tryHookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
+    if (isModuleBlacklisted(id)) return
+
+    if (metroModule!.factory) {
+        const unpatch = patcher.instead(
+            metroModule as Metro.ModuleDefinition<false>,
+            'factory',
+            (args, origFunc) => {
+                const originalImportingId = importingModuleId
+                importingModuleId = id
+
+                const { 1: metroRequire, 4: moduleObject } = args
+
+                // metroImportDefault
+                args[2] = id => {
+                    const exps = metroRequire(id)
+                    return exps?.__esModule ? exps.default : exps
+                }
+
+                // metroImportAll
+                args[3] = id => {
+                    const exps = metroRequire(id)
+                    if (exps?.__esModule) return exps
+                    return {
+                        default: exps,
+                        ...exps,
+                    }
+                }
+
+                try {
+                    origFunc(...args)
+                } catch (error) {
+                    logger.log(`Blacklisted module ${id} because it could not be initialized: ${error}`)
+                    unpatch()
+                    blacklistModule(id)
+                }
+
+                if (moduleHasBadExports(moduleObject.exports)) blacklistModule(id)
+                else {
+                    const subs = subscriptions.get(id)
+                    if (subs) for (const sub of subs) sub(id, moduleObject.exports)
+
+                    // TODO: Move this to call subscribeModule.all instead?
+                    patchModuleOnLoad(moduleObject.exports, id)
+                }
+
+                importingModuleId = originalImportingId
+            },
+            'moduleFactory',
+        )
+    }
+}
+
 /**
  * Initializes the Metro modules patches and caches
  */
@@ -67,61 +120,27 @@ export async function initializeModules() {
     const cacheRestored = await restoreCache()
     recordTime('Modules_TriedRestoreCache')
 
-    for (const key in metroModules) {
-        const id = Number(key)
-        const metroModule = metroModules[id]
+    for (const id of metroDependencies) tryHookModule(id, metroModules[id]!)
 
-        if (isModuleBlacklisted(id)) continue
+    // TODO: Experimental
+    // const moduleIds = [...metroDependencies]
 
-        if (metroModule!.factory) {
-            const unpatch = patcher.instead(
-                metroModule as Metro.ModuleDefinition<false>,
-                'factory',
-                (args, origFunc) => {
-                    const originalImportingId = importingModuleId
-                    importingModuleId = id
+    // let lastHookedIndex = 0
+    // for (; lastHookedIndex < Math.min(moduleIds.length, SafeModuleHookAmountBeforeDefer); lastHookedIndex++) {
+    //     const id = moduleIds[lastHookedIndex]!
+    //     const metroModule = metroModules[id]!
 
-                    const { 1: metroRequire, 4: moduleObject } = args
+    //     tryHookModule(id, metroModule)
+    // }
 
-                    // metroImportDefault
-                    args[2] = id => {
-                        const exps = metroRequire(id)
-                        return exps?.__esModule ? exps.default : exps
-                    }
+    // setImmediate(() => {
+    //     for (; lastHookedIndex < moduleIds.length; lastHookedIndex++) {
+    //         const id = moduleIds[lastHookedIndex]!
+    //         const metroModule = metroModules[id]!
 
-                    // metroImportAll
-                    args[3] = id => {
-                        const exps = metroRequire(id)
-                        if (exps?.__esModule) return exps
-                        return {
-                            default: exps,
-                            ...exps,
-                        }
-                    }
-
-                    try {
-                        origFunc(...args)
-                    } catch (error) {
-                        logger.log(`Blacklisted module ${id} because it could not be initialized: ${error}`)
-                        unpatch()
-                        blacklistModule(id)
-                    }
-
-                    if (moduleHasBadExports(moduleObject.exports)) blacklistModule(id)
-                    else {
-                        const subs = subscriptions.get(id)
-                        if (subs) for (const sub of subs) sub()
-
-                        // TODO: Move this to call subscribeAllModules instead?
-                        patchModuleOnLoad(moduleObject.exports, id)
-                    }
-
-                    importingModuleId = originalImportingId
-                },
-                'moduleFactory',
-            )
-        }
-    }
+    //         tryHookModule(id, metroModule)
+    //     }
+    // })
 
     recordTime('Modules_HookedFactories')
 
