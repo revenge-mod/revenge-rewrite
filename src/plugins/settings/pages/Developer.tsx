@@ -41,8 +41,10 @@ export default function DeveloperSettingsPage() {
                                             text="Evaluate"
                                             variant="primary"
                                             onPress={() =>
-                                                // biome-ignore lint/security/noGlobalEval: This is intentional
-                                                alert(modules.findProp.lazy('inspect')(globalThis.eval(inputRef.current)))
+                                                alert(
+                                                    // biome-ignore lint/security/noGlobalEval: This is intentional
+                                                    modules.findProp.lazy('inspect')(globalThis.eval(inputRef.current), { depth: 5 }),
+                                                )
                                             }
                                         />
                                         <AlertActionButton text="Cancel" variant="secondary" />
@@ -53,7 +55,7 @@ export default function DeveloperSettingsPage() {
                     }}
                 />
             </TableRowGroup>
-            <TableRowGroup title="Navigation">
+            <TableRowGroup title="Tests">
                 <TableRow
                     label="Test CustomPageRenderer"
                     icon={<TableRowIcon source={assets.getIndexByName('ScreenArrowIcon')} />}
