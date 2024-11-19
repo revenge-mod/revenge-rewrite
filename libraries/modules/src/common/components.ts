@@ -14,10 +14,6 @@ export const { SafeAreaProvider, SafeAreaView } = lazyDestructure(() =>
 
 export const TwinButtons = findProp.lazy('TwinButtons')
 export const {
-    // Styles
-
-    createStyles,
-
     // Buttons
 
     Button,
@@ -61,7 +57,6 @@ export const {
     // Text
 
     Text,
-    TextStyleSheet,
 } = lazyDestructure(() => findByProps('TextInput', 'ContextMenu')) as {
     Text: DiscordModules.Components.Text,
 
@@ -92,9 +87,6 @@ export const {
     Stack: DiscordModules.Components.Stack,
 
     Slider: DiscordModules.Components.Slider,
-    
-    createStyles: unknown,
-    TextStyleSheet: unknown,
 }
 
 export const PressableScale = findProp.lazy('PressableScale')

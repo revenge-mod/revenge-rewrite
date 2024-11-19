@@ -1,6 +1,8 @@
+import { lazyDestructure } from '@revenge-mod/utils/lazy'
+import { findByFilePath, findByName, findByProps } from '../finders'
+
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { ComponentType } from 'react'
-import { findByFilePath, findByName, findByProps } from '../finders'
 import type { DiscordModules } from '../types'
 
 // ! Make sure everything is lazily loaded, otherwise the app will freeze
@@ -68,7 +70,10 @@ export type NavigationNativeStackParamList = {
     [Page: string]: any
 }
 
-export const semver = findByProps.lazy('SEMVER_SPEC_VERSION') as typeof import('semver')
+export const { TextStyleSheet, createStyles } = lazyDestructure(() => findByProps('TextInput', 'ContextMenu')) as {
+    createStyles: unknown
+    TextStyleSheet: unknown
+}
 
 /// FLUX
 
@@ -84,6 +89,7 @@ export const ReactNative = (globalThis.ReactNative = findByProps.lazy('AppRegist
 
 /// OTHERS
 
+export const semver = findByProps.lazy('SEMVER_SPEC_VERSION') as typeof import('semver')
 export const xxhash64 = findByProps.lazy('XXH64') as typeof import('@intrnl/xxhash64')
 export const nobleHashesUtils = findByProps.lazy('randomBytes') as typeof import('@noble/hashes/utils')
 export * from 'events'
