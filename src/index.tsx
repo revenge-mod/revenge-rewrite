@@ -13,6 +13,7 @@ import { awaitStorage } from '@revenge-mod/storage'
 import { SettingsUILibrary } from '@revenge-mod/ui/settings'
 import { getErrorStack } from '@revenge-mod/utils/errors'
 import Libraries from '@revenge-mod/utils/library'
+import * as uiColors from '@revenge-mod/ui/colors'
 
 // ! This function is BLOCKING, so we need to make sure it's as fast as possible
 function initialize() {
@@ -52,6 +53,7 @@ function initialize() {
         const assets = AssetsLibrary.new()
         const ui = {
             settings: SettingsUILibrary.new(),
+            colors: uiColors,
         }
 
         return promise

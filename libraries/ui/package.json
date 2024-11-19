@@ -3,6 +3,7 @@
   "type": "module",
   "scripts": {},
   "exports": {
+    "./colors": "./src/colors.ts",
     "./settings": "./src/settings.ts"
   },
   "dependencies": {
