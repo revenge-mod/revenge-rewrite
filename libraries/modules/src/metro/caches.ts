@@ -1,15 +1,12 @@
-import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
+import { MetroCacheKey, IndexMetroModuleId, MetroCacheVersion, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
 import { byProps } from '../filters'
 import { findId } from '../finders'
 import { CacheModule, ClientInfoModule } from '../native'
 import { logger } from '../shared'
-import { blacklistModule, getMetroModules, metroDependencies, requireModule, resolveModuleDependencies } from './index'
+import { blacklistModule, getMetroModules, metroDependencies, moduleHasBadExports, requireModule, resolveModuleDependencies } from './index'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { Metro } from '../types'
-
-const version = 1
-const mmkvKey = 'revenge-metro-cache'
 
 export const metroCache = {
     /**
@@ -46,16 +43,16 @@ export async function restoreCache() {
     // For testing:
     // invalidateCache()
 
-    const savedCache = await CacheModule.getItem(mmkvKey)
+    const savedCache = await CacheModule.getItem(MetroCacheKey)
     if (!savedCache) return false
 
     const storedCache = JSON.parse(savedCache) as MetroCacheObject
     logger.log(
-        `Cache found, validating... (compare: ${storedCache.v} === ${version}, ${storedCache.b} === ${ClientInfoModule.Build}, ${storedCache.t} === ${metroDependencies.size})`,
+        `Cache found, validating... (compare: ${storedCache.v} === ${MetroCacheVersion}, ${storedCache.b} === ${ClientInfoModule.Build}, ${storedCache.t} === ${metroDependencies.size})`,
     )
 
     if (
-        storedCache.v !== version ||
+        storedCache.v !== MetroCacheVersion ||
         storedCache.b !== ClientInfoModule.Build ||
         storedCache.t !== metroDependencies.size
     )
@@ -69,23 +66,6 @@ export async function restoreCache() {
     metroCache.assetModules = storedCache.a
 
     return true
-}
-
-/**
- * @internal
- * @deprecated We no longer need cold starts, modules are required as needed. \
- * We needed it before to blacklist a problematic module, but now due to loading index bundle after all module factories are hooked... \
- * We can blacklist the module by seeing its parent's exports, it was previously too late to look into the parent's exports.
- */
-export function createCache() {
-    // For some reason, running this next tick makes the app not crash
-    // Note that we should never wait for this to finish, this doesn't need to be awaited
-    setTimeout(() => {
-        metroCache.totalModules = metroDependencies.size
-        logger.log(`This is a cold start, importing ${metroCache.totalModules} dependencies...`)
-        for (const id of metroDependencies) requireModule(id)
-        saveCache()
-    })
 }
 
 /**
@@ -128,9 +108,9 @@ export function saveCache() {
     if (saveCacheDebounceTimeoutId) clearTimeout(saveCacheDebounceTimeoutId)
     saveCacheDebounceTimeoutId = setTimeout(() => {
         CacheModule.setItem(
-            mmkvKey,
+            MetroCacheKey,
             JSON.stringify({
-                v: version,
+                v: MetroCacheVersion,
                 b: ClientInfoModule.Build,
                 t: metroCache.totalModules,
                 e: metroCache.exportsFlags,
@@ -145,7 +125,7 @@ export function saveCache() {
 
 /** @internal */
 export function invalidateCache() {
-    CacheModule.removeItem(mmkvKey)
+    CacheModule.removeItem(MetroCacheKey)
     logger.warn('Cache invalidated')
 }
 
@@ -159,11 +139,10 @@ export function cacherFor(key: string) {
 
     return {
         cache: (id: Metro.ModuleIDKey, exports: Metro.ModuleExports) => {
-            registry[id] ??= MetroModuleFlags.Exists
             // We cannot do !exports here as exports may be a boolean or a number which is falsy
-            if (typeof exports === 'undefined' || exports === null) {
+            if (moduleHasBadExports(exports)) {
                 blacklistModule(id)
-                registry[id] |= MetroModuleFlags.Blacklisted
+                registry[id]! |= MetroModuleFlags.Blacklisted
             }
         },
         finish: (notFound: boolean) => {
@@ -177,14 +156,7 @@ export function cacherFor(key: string) {
 }
 
 /** @internal */
-export function cacheModule(id: Metro.ModuleIDKey) {
-    metroCache.exportsFlags[id] ??= MetroModuleFlags.Exists
-}
-
-/** @internal */
 export function cacheModuleAsBlacklisted(id: Metro.ModuleIDKey) {
-    // Module must exist to be blacklisted
-    cacheModule(id)
     metroCache.exportsFlags[id]! |= MetroModuleFlags.Blacklisted
 }
 
