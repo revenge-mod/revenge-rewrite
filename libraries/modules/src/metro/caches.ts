@@ -95,8 +95,10 @@ export function requireAssetModules() {
     for (const id of metroDependencies) {
         const module = modules[id]
         if (!module?.dependencyMap) continue
-        if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryModuleId)
+        if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryModuleId) {
             assetsRegistryExporterModuleId = id
+            break
+        }
     }
 
     if (!assetsRegistryExporterModuleId)
