@@ -10,10 +10,10 @@ import { ClientInfoModule } from '@revenge-mod/modules/native'
 import { PluginsLibrary } from '@revenge-mod/plugins'
 import { internalSymbol } from '@revenge-mod/shared/symbols'
 import { awaitStorage } from '@revenge-mod/storage'
+import * as uiColors from '@revenge-mod/ui/colors'
 import { SettingsUILibrary } from '@revenge-mod/ui/settings'
 import { getErrorStack } from '@revenge-mod/utils/errors'
 import Libraries from '@revenge-mod/utils/library'
-import * as uiColors from '@revenge-mod/ui/colors'
 
 // ! This function is BLOCKING, so we need to make sure it's as fast as possible
 function initialize() {
@@ -29,6 +29,10 @@ function initialize() {
             // Don't know how, and why
             const app = AppLibrary.new()
             const plugins = PluginsLibrary.new()
+            const corePluginsPromise = import('./plugins').then(() => {
+                recordTimestamp('Plugins_CoreImported')
+                revenge.plugins[internalSymbol].experimental_startCorePluginsMetroModuleSubscriptions()
+            })
 
             globalThis.revenge = {
                 app,
@@ -41,8 +45,7 @@ function initialize() {
             promise.then(async ({ settings }) => {
                 await awaitStorage(settings)
                 recordTimestamp('Storage_Initialized')
-                import('./plugins').then(() => {
-                    recordTimestamp('Plugins_CoreImported')
+                corePluginsPromise.then(() => {
                     revenge.plugins[internalSymbol].startCorePlugins()
                     recordTimestamp('Plugins_CoreStarted')
                 })

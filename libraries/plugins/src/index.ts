@@ -41,6 +41,9 @@ export const PluginsLibrary = Libraries.create(
                         }
                     }
                 },
+                experimental_startCorePluginsMetroModuleSubscriptions() {
+                    for (const plugin of plugins.values()) plugin.experimental_startMetroModuleSubscription()
+                },
             },
         }
     },

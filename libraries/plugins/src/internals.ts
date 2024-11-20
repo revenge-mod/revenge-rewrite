@@ -1,3 +1,4 @@
+import { type MetroModuleSubscriptionCallback, subscribeModule } from '@revenge-mod/modules/metro'
 import { type Patcher, createPatcherInstance } from '@revenge-mod/patcher'
 import { createStorage } from '@revenge-mod/storage'
 import { objectSeal } from '@revenge-mod/utils/functions'
@@ -5,7 +6,6 @@ import { lazyValue } from '@revenge-mod/utils/lazy'
 import type React from 'react'
 import type { PluginContext, PluginDefinition, PluginStage, PluginStorage } from '.'
 import { app } from './shared'
-import { subscribeModule, type MetroModuleSubscriptionCallback } from '@revenge-mod/modules/metro'
 
 export const PluginIdRegex = /^[a-z0-9-_\.]{1,128}$/
 
@@ -68,13 +68,14 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             this.enabled = true
             return !!this.beforeAppRender
         },
+        experimental_startMetroModuleSubscription() {
+            if (this.onMetroModuleLoad) subscribeModule.all(this.onMetroModuleLoad)
+        },
         async start() {
             if (!this.enabled) throw new Error(`Plugin "${this.id}" must be enabled before starting`)
             if (!this.stopped) throw new Error(`Plugin "${this.id}" is already started`)
 
             this.status = PluginStatus.Starting
-
-            if (this.onMetroModuleLoad) subscribeModule.all(this.onMetroModuleLoad)
 
             const handleError = (e: unknown, stage: string) => {
                 this.errors.push(e)
@@ -183,6 +184,8 @@ export type InternalPluginDefinition<Storage = any, AppLaunchedReturn = any, App
     disable(): void
     /** @internal */
     enable(): boolean
+    /** @internal */
+    experimental_startMetroModuleSubscription: () => void
     /** @internal */
     start(): Promise<void>
     /** @internal */
