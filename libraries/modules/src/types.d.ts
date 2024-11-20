@@ -267,10 +267,12 @@ export namespace DiscordModules {
         export type FloatingActionButton = React.FC
 
         // Layouts
-        export type Stack = React.FC<ViewProps & { 
-            spacing?: number
-            direction?: 'vertical' | 'horizontal' 
-        }>
+        export type Stack = React.FC<
+            ViewProps & {
+                spacing?: number
+                direction?: 'vertical' | 'horizontal'
+            }
+        >
         export type Card = React.FC
         export type PressableScale = React.FC
 
@@ -278,7 +280,7 @@ export namespace DiscordModules {
         export type TextInput = React.FC
         export type TextArea = React.FC
         export type GhostInput = React.FC
-        
+
         // Forms
         export type FormSwitch = React.FC
         export type FormRadio = React.FC

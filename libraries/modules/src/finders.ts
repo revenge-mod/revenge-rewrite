@@ -97,7 +97,7 @@ export const find = Object.assign(
          */
         lazy: function findLazy<A extends unknown[]>(filter: FilterFn<A>) {
             return createLazyModule(filter)
-        }
+        },
     },
 )
 

@@ -58,35 +58,35 @@ export const {
 
     Text,
 } = lazyDestructure(() => findByProps('TextInput', 'ContextMenu')) as {
-    Text: DiscordModules.Components.Text,
+    Text: DiscordModules.Components.Text
 
-    TextInput: DiscordModules.Components.TextInput,
-    TextArea: DiscordModules.Components.TextArea,
-    GhostInput: DiscordModules.Components.GhostInput,
-    
-    Button: DiscordModules.Components.Button,
-    IconButton: DiscordModules.Components.IconButton,
-    ImageButton: DiscordModules.Components.ImageButton,
-    FloatingActionButton: DiscordModules.Components.FloatingActionButton,
-    RowButton: DiscordModules.Components.RowButton,
-    
-    TableRow: DiscordModules.Components.TableRow,
-    TableSwitchRow: DiscordModules.Components.TableSwitchRow,
-    TableRowGroup: DiscordModules.Components.TableRowGroup,
-    TableRowIcon: DiscordModules.Components.TableRowIcon,
-    TableRadioGroup: DiscordModules.Components.TableRadioGroup,
-    TableCheckboxRow: DiscordModules.Components.TableCheckboxRow,
-    TableRadioRow: DiscordModules.Components.TableRadioRow,
-    
-    AlertModal: DiscordModules.Components.AlertModal,
-    AlertActionButton: DiscordModules.Components.AlertActionButton,
-    dismissAlerts: unknown,
-    openAlert: unknown,
-    
-    Card: DiscordModules.Components.Card,
-    Stack: DiscordModules.Components.Stack,
+    TextInput: DiscordModules.Components.TextInput
+    TextArea: DiscordModules.Components.TextArea
+    GhostInput: DiscordModules.Components.GhostInput
 
-    Slider: DiscordModules.Components.Slider,
+    Button: DiscordModules.Components.Button
+    IconButton: DiscordModules.Components.IconButton
+    ImageButton: DiscordModules.Components.ImageButton
+    FloatingActionButton: DiscordModules.Components.FloatingActionButton
+    RowButton: DiscordModules.Components.RowButton
+
+    TableRow: DiscordModules.Components.TableRow
+    TableSwitchRow: DiscordModules.Components.TableSwitchRow
+    TableRowGroup: DiscordModules.Components.TableRowGroup
+    TableRowIcon: DiscordModules.Components.TableRowIcon
+    TableRadioGroup: DiscordModules.Components.TableRadioGroup
+    TableCheckboxRow: DiscordModules.Components.TableCheckboxRow
+    TableRadioRow: DiscordModules.Components.TableRadioRow
+
+    AlertModal: DiscordModules.Components.AlertModal
+    AlertActionButton: DiscordModules.Components.AlertActionButton
+    dismissAlerts: unknown
+    openAlert: unknown
+
+    Card: DiscordModules.Components.Card
+    Stack: DiscordModules.Components.Stack
+
+    Slider: DiscordModules.Components.Slider
 }
 
 export const PressableScale = findProp.lazy('PressableScale')

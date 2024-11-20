@@ -1,6 +1,11 @@
 import { recordTimestamp } from '@revenge-mod/debug'
 
-import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
+import {
+    IndexMetroModuleId,
+    MetroModuleFlags,
+    MetroModuleLookupFlags,
+    SafeModuleHookAmountBeforeDefer,
+} from '../constants'
 import { logger, patcher } from '../shared'
 import { cacheModuleAsBlacklisted, metroCache, requireAssetModules, restoreCache, saveCache } from './caches'
 import { patchModuleOnLoad } from './patcher'
@@ -125,53 +130,56 @@ export async function initializeModules() {
     const cacheRestored = await restoreCache()
     recordTimestamp('Modules_TriedRestoreCache')
 
-    for (const id of metroDependencies) tryHookModule(id, metroModules[id]!)
+    // for (const id of metroDependencies) tryHookModule(id, metroModules[id]!)
 
     // TODO: Experimental
-    // const moduleIds = [...metroDependencies]
+    // To be reliable in finding modules, we need to hook module factories before requiring index
+    // This slows down the app by a bit (up to 1s), so we defer some of the later modules to be hooked later
+    const moduleIds = [...metroDependencies]
 
-    // let lastHookedIndex = 0
-    // for (; lastHookedIndex < Math.min(moduleIds.length, SafeModuleHookAmountBeforeDefer); lastHookedIndex++) {
-    //     const id = moduleIds[lastHookedIndex]!
-    //     const metroModule = metroModules[id]!
+    let lastHookedIndex = 0
+    // I've tested values, and I've found the best value for not missing any modules and being the fastest
+    for (; lastHookedIndex < Math.min(moduleIds.length, SafeModuleHookAmountBeforeDefer); lastHookedIndex++) {
+        const id = moduleIds[lastHookedIndex]!
+        const metroModule = metroModules[id]!
 
-    //     tryHookModule(id, metroModule)
-    // }
+        tryHookModule(id, metroModule)
+    }
 
-    // setImmediate(() => {
-    //     for (; lastHookedIndex < moduleIds.length; lastHookedIndex++) {
-    //         const id = moduleIds[lastHookedIndex]!
-    //         const metroModule = metroModules[id]!
+    // I'd use setTimeout here, but we missed a few modules due to that
+    setImmediate(() => {
+        for (; lastHookedIndex < moduleIds.length; lastHookedIndex++) {
+            const id = moduleIds[lastHookedIndex]!
+            const metroModule = metroModules[id]!
 
-    //         tryHookModule(id, metroModule)
-    //     }
-    // })
+            tryHookModule(id, metroModule)
+        }
+    })
 
     recordTimestamp('Modules_HookedFactories')
 
+    // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
+    if (!cacheRestored)
+        setImmediate(() => {
+            const unpatch = patcher.before(
+                ReactNative.AppRegistry,
+                'runApplication',
+                () => {
+                    unpatch()
+                    requireAssetModules()
+                    recordTimestamp('Modules_RequiredAssets')
+                },
+                'createAssetCache',
+            )
+        })
+
     logger.log('Importing index module...')
-    // To be reliable in finding modules, we need to hook module factories before requiring index
-    // This slows down the app by a bit (~0.5s)
     // ! Do NOT use requireModule for this
     __r(IndexMetroModuleId)
     recordTimestamp('Modules_IndexRequired')
 
     metroCache.totalModules = metroDependencies.size
     saveCache()
-
-    // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
-    if (!cacheRestored) {
-        const unpatch = patcher.before(
-            ReactNative.AppRegistry,
-            'runApplication',
-            () => {
-                unpatch()
-                requireAssetModules()
-                recordTimestamp('Modules_RequiredAssets')
-            },
-            'createAssetCache',
-        )
-    }
 }
 
 /**
@@ -296,8 +304,7 @@ export function* modulesForFinder(key: string) {
             }
     } else {
         for (const id of metroDependencies) {
-            // // TODO: Should we skip this?
-            // if (lookupCache?.[id]) continue
+            if (lookupCache?.[id]) continue
 
             const mid = Number(id)
             if (isModuleBlacklisted(mid)) continue

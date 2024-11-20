@@ -1,9 +1,22 @@
-import { MetroCacheKey, IndexMetroModuleId, MetroCacheVersion, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
+import {
+    IndexMetroModuleId,
+    MetroCacheKey,
+    MetroCacheVersion,
+    MetroModuleFlags,
+    MetroModuleLookupFlags,
+} from '../constants'
 import { byProps } from '../filters'
 import { findId } from '../finders'
 import { CacheModule, ClientInfoModule } from '../native'
 import { logger } from '../shared'
-import { blacklistModule, getMetroModules, metroDependencies, moduleHasBadExports, requireModule, resolveModuleDependencies } from './index'
+import {
+    blacklistModule,
+    getMetroModules,
+    metroDependencies,
+    moduleHasBadExports,
+    requireModule,
+    resolveModuleDependencies,
+} from './index'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { Metro } from '../types'
