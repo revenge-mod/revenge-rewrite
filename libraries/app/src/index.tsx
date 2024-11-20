@@ -1,8 +1,9 @@
 import { recordTimestamp } from '@revenge-mod/debug'
+import { ModulesLibrary } from '@revenge-mod/modules'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import Libraries from '@revenge-mod/utils/library'
 
-import React from 'react'
+import React, { type ReactNode } from 'react'
 
 const initCbs = new Set<AppGenericCallback>()
 
@@ -36,28 +37,32 @@ export const AppLibrary = Libraries.create(
             })
         })
 
-        // Libraries.instanceFor(ModulesLibrary).then(modules => {
-        //     afterInitialized(function patchErrorBoundary() {
-        //         // ! This patch takes a large amount of time (>0.5s)
-        //         patcher.after.await(
-        //             modules.findByName
-        //                 .async('ErrorBoundary')
-        //                 .then(it => it.prototype as ErrorBoundaryComponentPrototype),
-        //             'render',
-        //             function (this: ErrorBoundaryComponentPrototype) {
-        //                 if (this.state.error ?? true) return null
+        Libraries.instanceFor(ModulesLibrary).then(async modules => {
+            const { default: Screen } = await import('./components/ErrorBoundaryScreen')
 
-        //                 // TODO: Proper UI for ErrorBoundary
-        //                 return (
-        //                     <ReactNative.Text>
-        //                         {String(this.state.error.stack || String(this.state.error))}
-        //                     </ReactNative.Text>
-        //                 )
-        //             },
-        //             'patchErrorBoundary',
-        //         )
-        //     })
-        // })
+            afterInitialized(() => {
+                setImmediate(() => {
+                    patcher.instead.await(
+                        modules.findByName
+                            .async('ErrorBoundary')
+                            .then(it => it.prototype as ErrorBoundaryComponentPrototype),
+                        'render',
+                        function (this: ErrorBoundaryComponentPrototype) {
+                            if (this.state.error && this.discordErrorsSet)
+                                return (
+                                    <Screen
+                                        error={this.state.error}
+                                        rerender={() => this.setState({ error: null, info: null })}
+                                        reload={this.handleReload}
+                                    />
+                                )
+
+                            return this.props.children
+                        },
+                    )
+                })
+            })
+        })
 
         return {
             /**
@@ -83,7 +88,17 @@ export const { patcher } = Libraries.contextFor(AppLibrary)
 
 export type AppLibrary = ReturnType<(typeof AppLibrary)['new']>
 
-export type ErrorBoundaryComponentPrototype = (typeof React.Component)['prototype']
+export type ErrorBoundaryComponentPrototype = React.Component<
+    { children: ReactNode },
+    {
+        error: (Error & { componentStack?: string }) | unknown | null
+        info: { componentStack?: string } | null
+    }
+> & {
+    discordErrorsSet: boolean
+    handleReload(): void
+}
+
 export type AppComponentModuleType = { default: React.FC }
 export type AppGenericCallback = () => void
 export type AppErroredCallback = (error: unknown) => void

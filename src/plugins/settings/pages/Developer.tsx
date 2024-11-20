@@ -1,4 +1,4 @@
-import { alerts, NavigationNative } from '@revenge-mod/modules/common'
+import { NavigationNative, alerts } from '@revenge-mod/modules/common'
 import {
     AlertActionButton,
     AlertModal,
@@ -42,8 +42,11 @@ export default function DeveloperSettingsPage() {
                                             variant="primary"
                                             onPress={() =>
                                                 alert(
-                                                    // biome-ignore lint/security/noGlobalEval: This is intentional
-                                                    modules.findProp.lazy('inspect')(globalThis.eval(inputRef.current), { depth: 5 }),
+                                                    modules.findProp.lazy('inspect')(
+                                                        // biome-ignore lint/security/noGlobalEval: This is intentional
+                                                        globalThis.eval(inputRef.current),
+                                                        { depth: 5 },
+                                                    ),
                                                 )
                                             }
                                         />
@@ -63,6 +66,18 @@ export default function DeveloperSettingsPage() {
                         navigation.navigate('RevengeCustomPage', {
                             title: 'Custom Page Test',
                             render: () => null,
+                        })
+                    }
+                />
+                <TableRow
+                    variant="danger"
+                    label="Test ErrorBoundary"
+                    icon={<TableRowIcon variant="danger" source={assets.getIndexByName('ScreenXIcon')} />}
+                    onPress={() =>
+                        navigation.navigate('RevengeCustomPage', {
+                            title: 'ErrorBoundary Test',
+                            // @ts-expect-error: This will do it
+                            render: () => <undefined />,
                         })
                     }
                 />

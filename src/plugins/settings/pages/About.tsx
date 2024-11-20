@@ -8,14 +8,14 @@ import {
 } from '@revenge-mod/modules/common/components'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 import type { ComponentProps } from 'react'
-import RevengeIcon from '../../../assets/revenge.webp'
-import ReactIcon from '../../../assets/react.webp'
 import HermesIcon from '../../../assets/hermes.webp'
+import ReactIcon from '../../../assets/react.webp'
+import RevengeIcon from '../../../assets/revenge.webp'
 
 const { assets } = revenge
 
 export default function AboutSettingsPage() {
-    const hermesProps = (HermesInternal as any).getRuntimeProperties()
+    const hermesProps = HermesInternal.getRuntimeProperties()
 
     return (
         <Stack style={{ paddingHorizontal: 16, paddingVertical: 24 }} spacing={16} direction="vertical">
@@ -43,14 +43,14 @@ export default function AboutSettingsPage() {
                     {
                         label: 'React',
                         icon: {
-                            uri: ReactIcon
+                            uri: ReactIcon,
                         },
                         trailing: React.version,
                     },
                     {
                         label: 'React Native',
                         icon: {
-                            uri: ReactIcon
+                            uri: ReactIcon,
                         },
                         trailing: hermesProps['OSS Release Version'].slice(7),
                     },
