@@ -28,9 +28,8 @@ export const AppLibrary = Libraries.create(
         const unpatchBefore = patcher.before(React, 'createElement', () => {
             unpatchBefore()
             recordTimestamp('App_CreateElementCalled')
-            // Prevent from blocking
-            // TODO: setImmediate or setTimeout?
-            setTimeout(() => {
+            // Prevent from blocking the current event loop
+            setImmediate(() => {
                 recordTimestamp('App_BeforeRunCallbacks')
                 for (const callback of initCbs) callback()
                 recordTimestamp('App_AfterRunCallbacks')
