@@ -7,7 +7,7 @@ import {
     SafeModuleHookAmountBeforeDefer,
 } from '../constants'
 import { logger, patcher } from '../shared'
-import { cacheModuleAsBlacklisted, metroCache, requireAssetModules, restoreCache, saveCache } from './caches'
+import { cacheModuleAsBlacklisted, indexedModuleIdsForLookup, metroCache, requireAssetModules, restoreCache, saveCache } from './caches'
 import { patchModuleOnLoad } from './patcher'
 
 import type { Metro } from '../types'
@@ -289,18 +289,11 @@ export function* modulesForFinder(key: string) {
 
     if (lookupCache?.flags) {
         if (!(lookupCache.flags & MetroModuleLookupFlags.NotFound))
-            for (const id in lookupCache) {
-                if (id === 'flags') continue
-
+            for (const id in indexedModuleIdsForLookup(key)) {
                 if (isModuleBlacklisted(id)) continue
 
-                const exports = requireModule(Number(id))
-                if (moduleHasBadExports(exports)) {
-                    blacklistModule(id)
-                    continue
-                }
-
-                yield [id, exports]
+                // TODO: Extra blacklisting checks shouldn't be required here
+                yield [id, requireModule(Number(id))]
             }
     } else {
         for (const id of metroDependencies) {

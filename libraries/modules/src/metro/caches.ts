@@ -29,7 +29,7 @@ export const metroCache = {
     exportsFlags: {} as MetroCacheObject['e'],
     /**
      * Lookup registry for each filters, the key being the filter key, and the value being the registry
-     * @see {@link MetroCacheRegistry}
+     * @see {@link MetroLookupCacheRegistry}
      * @see {@link MetroModuleLookupFlags}
      */
     lookupFlags: {} as MetroCacheObject['l'],
@@ -151,21 +151,23 @@ export function invalidateCache() {
  */
 export function cacherFor(key: string) {
     const registry = (metroCache.lookupFlags[key] ??= {})
+    let invalidated = false
 
     return {
         cache: (id: Metro.ModuleIDKey, exports: Metro.ModuleExports) => {
-            // We cannot do !exports here as exports may be a boolean or a number which is falsy
+            // biome-ignore lint/style/noCommaOperator: Sets invalidated to true if this is a new module
+            registry[id] ??= (invalidated = true, 0)
+
             if (moduleHasBadExports(exports)) {
                 blacklistModule(id)
-                registry[id]! |= MetroModuleFlags.Blacklisted
+                invalidated = true
+                if (id in registry) delete registry[id]
             }
         },
         finish: (notFound: boolean) => {
-            const prevRegistryFlags = registry.flags
             registry.flags ??= 0
             if (notFound) registry.flags |= MetroModuleLookupFlags.NotFound
-            // Prevent saving too much
-            if (prevRegistryFlags !== registry.flags) saveCache()
+            if (invalidated) saveCache()
         },
     }
 }
@@ -184,6 +186,15 @@ export function cacheAsset(name: Asset['name'], index: number, moduleId: Metro.M
     saveCache()
 }
 
+export function* indexedModuleIdsForLookup(key: string) {
+    const modulesMap = metroCache.lookupFlags[key]
+    if (!modulesMap) return undefined
+
+    for (const k in modulesMap) {
+        if (k !== 'flags') yield Number(k)
+    }
+}
+
 /**
  * The cache object for Metro modules
  * @see {@link MetroCache}
@@ -193,16 +204,16 @@ export interface MetroCacheObject {
     b: string
     t: number
     e: Record<Metro.ModuleIDKey, number>
-    l: Record<string, MetroCacheRegistry | undefined>
+    l: Record<string, MetroLookupCacheRegistry | undefined>
     a: Record<Asset['name'], Metro.ModuleID>
 }
 
 /**
- * Registry for Metro cache
+ * Registry for Metro lookup cache, a glorified serializable Set if you will
  * @see {@link MetroCache}
  * @see {@link MetroModuleLookupFlags}
  */
-export type MetroCacheRegistry = Record<Metro.ModuleIDKey, number> & {
+export type MetroLookupCacheRegistry = Record<Metro.ModuleIDKey, number> & {
     /**
      * Lookup flags for this registry
      */

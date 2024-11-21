@@ -42,7 +42,7 @@ export default function DeveloperSettingsPage() {
                                             variant="primary"
                                             onPress={() =>
                                                 alert(
-                                                    modules.findProp.lazy('inspect')(
+                                                    modules.findProp('inspect')(
                                                         // biome-ignore lint/security/noGlobalEval: This is intentional
                                                         globalThis.eval(inputRef.current),
                                                         { depth: 5 },

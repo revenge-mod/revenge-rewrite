@@ -37,8 +37,8 @@ registerPlugin(
                 ui: { settings: sui },
             },
         }) {
-            const SettingsConstants = modules.findByProps.lazy('SETTING_RENDERER_CONFIG')
-            const SettingsOverviewScreen = modules.findByName.lazy('SettingsOverviewScreen', false)
+            const SettingsConstants = modules.findByProps('SETTING_RENDERER_CONFIG')
+            const SettingsOverviewScreen = modules.findByName('SettingsOverviewScreen', false)
 
             const originalRendererConfig = SettingsConstants.SETTING_RENDERER_CONFIG as Record<string, RawRowConfig>
             let rendererConfig = originalRendererConfig

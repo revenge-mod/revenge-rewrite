@@ -1,3 +1,3 @@
 import { findByStoreName } from '../finders'
 
-export const ThemeStore = findByStoreName.lazy('ThemeStore')
+export const ThemeStore = findByStoreName('ThemeStore')

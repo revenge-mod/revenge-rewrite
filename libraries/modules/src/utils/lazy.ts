@@ -3,21 +3,12 @@ import { noop } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
 import { find } from '../finders'
 import { getMetroModules, subscribeModule } from '../metro'
-import { metroCache } from '../metro/caches'
+import { indexedModuleIdsForLookup, metroCache } from '../metro/caches'
 
 import type { FilterFn, LazyModuleContext, Metro } from '../types'
 
 export const lazyContextSymbol = Symbol.for('revenge.modules.lazyContext')
 const lazyContexts = new WeakMap<Metro.ModuleExports, LazyModuleContext>()
-
-function* getIndexedModuleIdsForFilter<A extends unknown[]>(filter: FilterFn<A>) {
-    const modulesMap = metroCache.lookupFlags[filter.key]
-    if (!modulesMap) return undefined
-
-    for (const k in modulesMap) {
-        if (k !== 'flags') yield Number(k)
-    }
-}
 
 export function subscribeModuleLazy(proxy: Metro.ModuleExports, callback: (exports: Metro.ModuleExports) => void) {
     const info = getLazyContext(proxy)
@@ -29,7 +20,7 @@ export function subscribeModuleLazy(proxy: Metro.ModuleExports, callback: (expor
             `Lazy module has no module ID attached, check if your filter matches any modules: ${info.filter.key}`,
         )
 
-    return subscribeModule(moduleId, () => callback(find(info.filter)))
+    return subscribeModule(moduleId, () => callback(find.eager(info.filter)))
 }
 
 function getLazyContext<A extends unknown[]>(proxy: Metro.ModuleExports): LazyModuleContext<A> | undefined {
@@ -37,7 +28,7 @@ function getLazyContext<A extends unknown[]>(proxy: Metro.ModuleExports): LazyMo
 }
 
 export function createLazyModule<A extends unknown[]>(filter: FilterFn<A>) {
-    const moduleIds = getIndexedModuleIdsForFilter(filter)
+    const moduleIds = indexedModuleIdsForLookup(filter.key)
     let moduleId: number | undefined
     let cache: Metro.ModuleExports
 
@@ -83,7 +74,7 @@ export function createLazyModule<A extends unknown[]>(filter: FilterFn<A>) {
             return cache
         },
         forceLoad() {
-            cache ??= find(filter)
+            cache ??= find.eager(filter)
             // // TODO: Maybe return undefined here instead of throwing an error?
             // if (!cache) throw new Error(`Cannot find module with filter: ${filter.key}`)
             return cache

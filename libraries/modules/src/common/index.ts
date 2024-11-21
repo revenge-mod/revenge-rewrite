@@ -13,9 +13,9 @@ export * as stores from './stores'
 
 /// DISCORD
 
-export const constants = findByProps.lazy('Fonts') as Record<string, unknown>
-export const tokens = findByProps.lazy('internal', 'colors')
-export const intl = findByProps.lazy('intl') as {
+export const constants = findByProps('Fonts') as Record<string, unknown>
+export const tokens = findByProps('internal', 'colors')
+export const intl = findByProps('intl') as {
     intl: import('@discord/intl').IntlManager & {
         format: typeof import('@discord/intl').astFormatter['format']
         formatToPlainString: typeof import('@discord/intl').stringFormatter['format']
@@ -38,24 +38,24 @@ export const intl = findByProps.lazy('intl') as {
         }
     >
 }
-export const intlModule = findByProps.lazy('runtimeHashMessageKey') as typeof import('@discord/intl')
+export const intlModule = findByProps('runtimeHashMessageKey') as typeof import('@discord/intl')
 
-export const Logger = findByName.lazy('Logger') as typeof DiscordModules.Logger
+export const Logger = findByName('Logger') as typeof DiscordModules.Logger
 
-export const legacy_i18n = findByProps.lazy('Messages')
-export const legacy_alerts = findByProps.lazy('openLazy', 'close')
+export const legacy_i18n = findByProps('Messages')
+export const legacy_alerts = findByProps('openLazy', 'close')
 
-export const alerts = findByProps.lazy('openAlert', 'dismissAlert')
-export const channels = findByProps.lazy('getVoiceChannelId')
-export const links = findByProps.lazy('openDeeplink') as DiscordModules.LinkingUtils
-export const clipboard = findByProps.lazy('getImagePNG') as DiscordModules.ClipboardUtils
-export const invites = findByProps.lazy('createInvite') as DiscordModules.InviteUtils
-export const commands = findByProps.lazy('getBuiltInCommands')
-export const toasts = findByFilePath.lazy('modules/toast/native/ToastActionCreators.tsx', true)
-export const messages = findByProps.lazy('sendBotMessage') as DiscordModules.MessageUtils
+export const alerts = findByProps('openAlert', 'dismissAlert')
+export const channels = findByProps('getVoiceChannelId')
+export const links = findByProps('openDeeplink') as DiscordModules.LinkingUtils
+export const clipboard = findByProps('getImagePNG') as DiscordModules.ClipboardUtils
+export const invites = findByProps('createInvite') as DiscordModules.InviteUtils
+export const commands = findByProps('getBuiltInCommands')
+export const toasts = findByFilePath('modules/toast/native/ToastActionCreators.tsx', true)
+export const messages = findByProps('sendBotMessage') as DiscordModules.MessageUtils
 
-export const NavigationStack = findByProps.lazy('createStackNavigator') as typeof import('@react-navigation/stack')
-export const NavigationNative = findByProps.lazy('NavigationContainer') as Omit<
+export const NavigationStack = findByProps('createStackNavigator') as typeof import('@react-navigation/stack')
+export const NavigationNative = findByProps('NavigationContainer') as Omit<
     typeof import('@react-navigation/native'),
     'useNavigation'
 > & {
@@ -70,26 +70,26 @@ export type NavigationNativeStackParamList = {
     [Page: string]: any
 }
 
-export const { TextStyleSheet, createStyles } = lazyDestructure(() => findByProps('TextInput', 'ContextMenu')) as {
+export const { TextStyleSheet, createStyles } = lazyDestructure(() => findByProps.eager('TextInput', 'ContextMenu')) as {
     createStyles: unknown
     TextStyleSheet: unknown
 }
 
 /// FLUX
 
-export const Flux = findByProps.lazy('connectStores')
+export const Flux = findByProps('connectStores')
 // TODO: If this fucks up, remove lazy
-export const FluxDispatcher = findByProps.lazy('_interceptors') as DiscordModules.Flux.Dispatcher
+export const FluxDispatcher = findByProps('_interceptors') as DiscordModules.Flux.Dispatcher
 
 /// REACT
 
-export const assetsRegistry = findByProps.lazy('registerAsset') as typeof ReactNativeInternals.AssetsRegistry
-export const React = (globalThis.React = findByProps.lazy('createElement') as typeof import('react'))
-export const ReactNative = (globalThis.ReactNative = findByProps.lazy('AppRegistry') as typeof import('react-native'))
+export const assetsRegistry = findByProps('registerAsset') as typeof ReactNativeInternals.AssetsRegistry
+export const React = (globalThis.React = findByProps('createElement') as typeof import('react'))
+export const ReactNative = (globalThis.ReactNative = findByProps('AppRegistry') as typeof import('react-native'))
 
 /// OTHERS
 
-export const semver = findByProps.lazy('SEMVER_SPEC_VERSION') as typeof import('semver')
-export const xxhash64 = findByProps.lazy('XXH64') as typeof import('@intrnl/xxhash64')
-export const nobleHashesUtils = findByProps.lazy('randomBytes') as typeof import('@noble/hashes/utils')
+export const semver = findByProps('SEMVER_SPEC_VERSION') as typeof import('semver')
+export const xxhash64 = findByProps('XXH64') as typeof import('@intrnl/xxhash64')
+export const nobleHashesUtils = findByProps('randomBytes') as typeof import('@noble/hashes/utils')
 export * from 'events'

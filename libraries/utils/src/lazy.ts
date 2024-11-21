@@ -88,7 +88,7 @@ const lazyHandler: ProxyHandler<any> = {
  * @param opts.hint Hint for the lazy proxy, if it's an object or a function (default `'function'`)
  * @param opts.exemptedEntries Exempted entries that will be returned directly from the specified values
  * @returns A proxy that will call the factory function only when needed
- * @example const ChannelStore = lazyValue(() => findByProps("getChannelId"));
+ * @example const ChannelStore = lazyValue(() => findByProps.eager("getChannelId"));
  */
 export function lazyValue<T, I extends ExemptedEntries>(factory: () => T, opts: LazyOptions<I> = {}): T {
     let cache: T
@@ -120,7 +120,7 @@ export function lazyValue<T, I extends ExemptedEntries>(factory: () => T, opts: 
  * @param opts Options for the lazy destructure
  * @example
  *
- * const { uuid4 } = lazyDestructure(() => findByProps("uuid4"))
+ * const { uuid4 } = lazyDestructure(() => findByProps.eager("uuid4"))
  * uuid4; // <- is a lazy proxy!
  */
 export function lazyDestructure<T extends Record<PropertyKey, unknown>, I extends ExemptedEntries>(

@@ -116,8 +116,6 @@ export type FilterPredicate<A extends unknown[]> = (
     moduleId: Metro.ModuleID,
     /**
      * Whether the returned value should be unmodified
-     *
-     * Example scenerio: We usually return the default export of the module instead of the whole module itself, adding this flag allows us to return the whole module
      */
     raw: boolean,
 ) => boolean

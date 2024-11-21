@@ -7,12 +7,12 @@ import type { DiscordModules } from '../types'
 
 // React Native's included SafeAreaView only adds padding on iOS.
 export const { SafeAreaProvider, SafeAreaView } = lazyDestructure(() =>
-    findByProps('useSafeAreaInsets'),
+    findByProps.eager('useSafeAreaInsets'),
 ) as typeof import('react-native-safe-area-context')
 
 /// DISCORD
 
-export const TwinButtons = findProp.lazy('TwinButtons')
+export const TwinButtons = findProp('TwinButtons')
 export const {
     // Buttons
 
@@ -57,7 +57,7 @@ export const {
     // Text
 
     Text,
-} = lazyDestructure(() => findByProps('TextInput', 'ContextMenu')) as {
+} = lazyDestructure(() => findByProps.eager('TextInput', 'ContextMenu')) as {
     Text: DiscordModules.Components.Text
 
     TextInput: DiscordModules.Components.TextInput
@@ -89,16 +89,16 @@ export const {
     Slider: DiscordModules.Components.Slider
 }
 
-export const PressableScale = findProp.lazy('PressableScale')
+export const PressableScale = findProp('PressableScale')
 
 // Tables
-export const TableRowTrailingText = findProp.lazy('TableRowTrailingText')
-export const TableSwitch = findBySingleProp.lazy('FormSwitch')
-export const TableRadio = findBySingleProp.lazy('FormRadio')
-export const TableCheckbox = findBySingleProp.lazy('FormCheckbox')
+export const TableRowTrailingText = findProp('TableRowTrailingText')
+export const TableSwitch = findBySingleProp('FormSwitch')
+export const TableRadio = findBySingleProp('FormRadio')
+export const TableCheckbox = findBySingleProp('FormCheckbox')
 
-export const FormSwitch = findBySingleProp.lazy('FormSwitch')
-export const FormRadio = findBySingleProp.lazy('FormRadio')
-export const FormCheckbox = findBySingleProp.lazy('FormCheckbox')
+export const FormSwitch = findBySingleProp('FormSwitch')
+export const FormRadio = findBySingleProp('FormRadio')
+export const FormCheckbox = findBySingleProp('FormCheckbox')
 
-export const FlashList = findProp.lazy('FlashList')
+export const FlashList = findProp('FlashList')
