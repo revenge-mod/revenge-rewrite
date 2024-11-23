@@ -11,9 +11,9 @@ import { CacheModule, ClientInfoModule } from '../native'
 import { logger } from '../shared'
 import {
     blacklistModule,
+    dependencies,
     getMetroModules,
-    metroDependencies,
-    moduleHasBadExports,
+    isModuleExportsBad,
     requireModule,
     resolveModuleDependencies,
 } from './index'
@@ -21,7 +21,7 @@ import {
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { Metro } from '../types'
 
-export const metroCache = {
+export const cache = {
     /**
      * Flags for each module's exports
      * @see {@link MetroModuleFlags}
@@ -43,6 +43,16 @@ export const metroCache = {
      */
     assetModules: {} as MetroCacheObject['a'],
     /**
+     * Registry for patchable modules, the key being the patch, and the value being the module ID of the module to patch
+     *
+     * - `f`: File path tracking
+     * - `r`: Fix native component registry duplicate register
+     * - `b`: Blacklist freezing module
+     * - `d`: Block Discord analytics
+     * - `s`: Block Sentry initialization
+     */
+    patchableModules: {} as MetroCacheObject['p'],
+    /**
      * The total modules count
      */
     totalModules: 0,
@@ -61,22 +71,22 @@ export async function restoreCache() {
 
     const storedCache = JSON.parse(savedCache) as MetroCacheObject
     logger.log(
-        `Cache found, validating... (compare: ${storedCache.v} === ${MetroCacheVersion}, ${storedCache.b} === ${ClientInfoModule.Build}, ${storedCache.t} === ${metroDependencies.size})`,
+        `Cache found, validating... (compare: ${storedCache.v} === ${MetroCacheVersion}, ${storedCache.b} === ${ClientInfoModule.Build}, ${storedCache.t} === ${dependencies.size})`,
     )
 
     if (
         storedCache.v !== MetroCacheVersion ||
         storedCache.b !== ClientInfoModule.Build ||
-        storedCache.t !== metroDependencies.size
+        storedCache.t !== dependencies.size
     )
         return false
 
-    logger.log(`Restoring cache of ${metroDependencies.size} modules`)
+    logger.log(`Restoring cache of ${dependencies.size} modules`)
 
-    metroCache.totalModules = storedCache.t
-    metroCache.exportsFlags = storedCache.e
-    metroCache.lookupFlags = storedCache.l
-    metroCache.assetModules = storedCache.a
+    cache.totalModules = storedCache.t
+    cache.exportsFlags = storedCache.e
+    cache.lookupFlags = storedCache.l
+    cache.assetModules = storedCache.a
 
     return true
 }
@@ -92,7 +102,7 @@ export function requireAssetModules() {
         )
 
     let assetsRegistryExporterModuleId = 0
-    for (const id of metroDependencies) {
+    for (const id of dependencies) {
         const module = modules[id]
         if (!module?.dependencyMap) continue
         if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryModuleId) {
@@ -108,7 +118,7 @@ export function requireAssetModules() {
 
     logger.log('Importing all assets modules...')
 
-    for (const id of metroDependencies) {
+    for (const id of dependencies) {
         const module = modules[id]
         if (!module?.dependencyMap) continue
         if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryExporterModuleId)
@@ -127,14 +137,15 @@ export function saveCache() {
             JSON.stringify({
                 v: MetroCacheVersion,
                 b: ClientInfoModule.Build,
-                t: metroCache.totalModules,
-                e: metroCache.exportsFlags,
-                l: metroCache.lookupFlags,
-                a: metroCache.assetModules,
+                t: cache.totalModules,
+                e: cache.exportsFlags,
+                l: cache.lookupFlags,
+                a: cache.assetModules,
+                p: cache.patchableModules,
             } satisfies MetroCacheObject),
         )
 
-        logger.log(`Cache saved (${metroCache.totalModules} modules)`)
+        logger.log(`Cache saved (${cache.totalModules} modules)`)
     }, 1000)
 }
 
@@ -150,23 +161,24 @@ export function invalidateCache() {
  * @returns A cacher object
  */
 export function cacherFor(key: string) {
-    const registry = (metroCache.lookupFlags[key] ??= {})
+    const registry = (cache.lookupFlags[key] ??= {})
     let invalidated = false
 
     return {
         cache: (id: Metro.ModuleIDKey, exports: Metro.ModuleExports) => {
             // biome-ignore lint/style/noCommaOperator: Sets invalidated to true if this is a new module
-            registry[id] ??= (invalidated = true, 0)
+            registry[id] ??= ((invalidated = true), 0)
 
-            if (moduleHasBadExports(exports)) {
+            if (isModuleExportsBad(exports)) {
                 blacklistModule(id)
                 invalidated = true
                 if (id in registry) delete registry[id]
             }
         },
-        finish: (notFound: boolean) => {
+        finish: (notFound: boolean, fullLookup = false) => {
             registry.flags ??= 0
             if (notFound) registry.flags |= MetroModuleLookupFlags.NotFound
+            if (fullLookup) registry.flags |= MetroModuleLookupFlags.FullLookup
             if (invalidated) saveCache()
         },
     }
@@ -174,20 +186,20 @@ export function cacherFor(key: string) {
 
 /** @internal */
 export function cacheModuleAsBlacklisted(id: Metro.ModuleIDKey) {
-    metroCache.exportsFlags[id]! |= MetroModuleFlags.Blacklisted
+    cache.exportsFlags[id]! |= MetroModuleFlags.Blacklisted
 }
 
 type Asset = ReactNativeInternals.AssetsRegistry.PackagerAsset
 
 /** @internal */
 export function cacheAsset(name: Asset['name'], index: number, moduleId: Metro.ModuleID) {
-    metroCache.assets[name] = index
-    metroCache.assetModules[name] = moduleId
+    cache.assets[name] = index
+    cache.assetModules[name] = moduleId
     saveCache()
 }
 
 export function* indexedModuleIdsForLookup(key: string) {
-    const modulesMap = metroCache.lookupFlags[key]
+    const modulesMap = cache.lookupFlags[key]
     if (!modulesMap) return undefined
 
     for (const k in modulesMap) {
@@ -206,6 +218,7 @@ export interface MetroCacheObject {
     e: Record<Metro.ModuleIDKey, number>
     l: Record<string, MetroLookupCacheRegistry | undefined>
     a: Record<Asset['name'], Metro.ModuleID>
+    p: Record<'f' | 'r' | 'b' | 's' | 'd', number | undefined>
 }
 
 /**

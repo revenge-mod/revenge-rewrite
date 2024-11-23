@@ -7,13 +7,29 @@ import {
     SafeModuleHookAmountBeforeDefer,
 } from '../constants'
 import { logger, patcher } from '../shared'
-import { cacheModuleAsBlacklisted, indexedModuleIdsForLookup, metroCache, requireAssetModules, restoreCache, saveCache } from './caches'
-import { patchModuleOnLoad } from './patcher'
+
+import {
+    cache,
+    cacheModuleAsBlacklisted,
+    indexedModuleIdsForLookup,
+    requireAssetModules,
+    restoreCache,
+    saveCache,
+} from './caches'
+import { initializeModulePatches } from './patches'
 
 import type { Metro } from '../types'
 
-export * from './caches'
-export * from './patcher'
+export {
+    type MetroCacheObject,
+    type MetroLookupCacheRegistry,
+    cacheAsset,
+    cacheModuleAsBlacklisted,
+    cacherFor,
+    indexedModuleIdsForLookup,
+    invalidateCache,
+    cache,
+} from './caches'
 
 /**
  * Gets the Metro modules. Such a function is needed because for some reason, accessing `globalThis.modules` directly is incredibly slow... but a function call to it is faster..?
@@ -38,11 +54,13 @@ const subscriptions = new Map<Metro.ModuleID | 'all', Set<MetroModuleSubscriptio
 const allSubscriptionSet = new Set<MetroModuleSubscriptionCallback>()
 subscriptions.set('all', allSubscriptionSet)
 
+const metroDependencies = new Set<Metro.ModuleID>()
+
 /**
  * Metro dependencies to require, if no cache is available
  * @internal
  */
-export const metroDependencies = new Set<Metro.ModuleID>()
+export const dependencies = metroDependencies
 
 const resolvedModules = new Set<Metro.ModuleID>()
 
@@ -103,14 +121,11 @@ function tryHookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) 
                     blacklistModule(id)
                 }
 
-                if (moduleHasBadExports(moduleObject.exports)) blacklistModule(id)
+                if (isModuleExportsBad(moduleObject.exports)) blacklistModule(id)
                 else {
                     const subs = subscriptions.get(id)
                     if (subs) for (const sub of subs) sub(id, moduleObject.exports)
                     for (const sub of allSubscriptionSet) sub(id, moduleObject.exports)
-
-                    // TODO: Move this to call subscribeModule.all instead?
-                    patchModuleOnLoad(moduleObject.exports, id)
                 }
 
                 importingModuleId = originalImportingId
@@ -130,9 +145,18 @@ export async function initializeModules() {
     const cacheRestored = await restoreCache()
     recordTimestamp('Modules_TriedRestoreCache')
 
-    // for (const id of metroDependencies) tryHookModule(id, metroModules[id]!)
+    // Patches modules on load
+    initializeModulePatches(patcher, logger, metroModules)
 
-    // TODO: Experimental
+    /// OLD METHOD:
+
+    // for (const id of metroDependencies) {
+    //     const metroModule = metroModules[id]
+    //     if (metroModule) tryHookModule(id, metroModule)
+    // }
+
+    /// NEW METHOD:
+
     // To be reliable in finding modules, we need to hook module factories before requiring index
     // This slows down the app by a bit (up to 1s), so we defer some of the later modules to be hooked later
     const moduleIds = [...metroDependencies]
@@ -154,31 +178,30 @@ export async function initializeModules() {
 
             tryHookModule(id, metroModule)
         }
+
+        recordTimestamp('Modules_HookedFactories')
     })
-
-    recordTimestamp('Modules_HookedFactories')
-
-    // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
-    if (!cacheRestored)
-        setImmediate(() => {
-            const unpatch = patcher.before(
-                ReactNative.AppRegistry,
-                'runApplication',
-                () => {
-                    unpatch()
-                    requireAssetModules()
-                    recordTimestamp('Modules_RequiredAssets')
-                },
-                'createAssetCache',
-            )
-        })
 
     logger.log('Importing index module...')
     // ! Do NOT use requireModule for this
     __r(IndexMetroModuleId)
     recordTimestamp('Modules_IndexRequired')
 
-    metroCache.totalModules = metroDependencies.size
+    // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
+    if (!cacheRestored) {
+        const unpatch = patcher.before(
+            ReactNative.AppRegistry,
+            'runApplication',
+            () => {
+                unpatch()
+                requireAssetModules()
+                recordTimestamp('Modules_RequiredAssets')
+            },
+            'createAssetCache',
+        )
+    }
+
+    cache.totalModules = metroDependencies.size
     saveCache()
 }
 
@@ -200,7 +223,7 @@ export function blacklistModule(id: Metro.ModuleIDKey) {
 export function requireModule(id: Metro.ModuleID) {
     const metroModules = getMetroModules()
 
-    if (isModuleBlacklisted(id)) return false
+    if (isModuleBlacklisted(id)) return
 
     const metroModule = metroModules[id]
     // TODO: Would the modules be incomplete if we returned metroModule.publicModule.exports instead?
@@ -222,9 +245,9 @@ export function requireModule(id: Metro.ModuleID) {
         blacklistModule(id)
     } finally {
         importingModuleId = originalImportingId
+        ErrorUtils.setGlobalHandler(ogHandler)
     }
 
-    ErrorUtils.setGlobalHandler(ogHandler)
     return moduleExports
 }
 
@@ -276,34 +299,37 @@ export const subscribeModule = Object.assign(
  * @returns Whether the module is blacklisted (`0` means not blacklisted, any other integer means blacklisted)
  */
 export function isModuleBlacklisted(id: Metro.ModuleIDKey) {
-    if (!(id in metroCache.exportsFlags)) return 0
-    return metroCache.exportsFlags[id]! & MetroModuleFlags.Blacklisted
+    if (!(id in cache.exportsFlags)) return 0
+    return cache.exportsFlags[id]! & MetroModuleFlags.Blacklisted
 }
 
 /**
  * Yields the modules for a specific finder call
  * @param key Filter key
  */
-export function* modulesForFinder(key: string) {
-    const lookupCache = metroCache.lookupFlags[key]
+export function* modulesForFinder(key: string, fullLookup = false) {
+    const lookupCache = cache.lookupFlags[key]
 
-    if (lookupCache?.flags) {
-        if (!(lookupCache.flags & MetroModuleLookupFlags.NotFound))
-            for (const id in indexedModuleIdsForLookup(key)) {
-                if (isModuleBlacklisted(id)) continue
+    if (
+        lookupCache?.flags &&
+        // Check if any modules were found
+        !(lookupCache.flags & MetroModuleLookupFlags.NotFound) &&
+        // Pass immediately if it's not a full lookup, otherwise check if it's a full lookup
+        (!fullLookup || lookupCache.flags & MetroModuleLookupFlags.FullLookup)
+    )
+        for (const id in indexedModuleIdsForLookup(key)) {
+            if (isModuleBlacklisted(id)) continue
 
-                // TODO: Extra blacklisting checks shouldn't be required here
-                yield [id, requireModule(Number(id))]
-            }
-    } else {
+            // TODO: Extra blacklisting checks shouldn't be required here
+            yield [id, requireModule(Number(id))]
+        }
+    else {
         for (const id of metroDependencies) {
-            if (lookupCache?.[id]) continue
-
             const mid = Number(id)
             if (isModuleBlacklisted(mid)) continue
 
             const exports = requireModule(mid)
-            if (moduleHasBadExports(exports)) {
+            if (isModuleExportsBad(exports)) {
                 blacklistModule(id)
                 continue
             }
@@ -318,7 +344,7 @@ export function* modulesForFinder(key: string) {
  * @param exports The exports of the module
  * @returns Whether the module has bad exports
  */
-export function moduleHasBadExports(exports: Metro.ModuleExports) {
+export function isModuleExportsBad(exports: Metro.ModuleExports) {
     return (
         !exports ||
         exports === globalThis ||
