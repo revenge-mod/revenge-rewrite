@@ -31,11 +31,11 @@ export default function ErrorBoundaryScreen(props: {
     rerender: () => void
     reload: () => void
 }) {
-    const styles = useErrorBoundaryStyles()
+    const errorBoundaryStyles = useErrorBoundaryStyles()
     const error = props.error
 
     return (
-        <SafeAreaView style={styles.view}>
+        <SafeAreaView style={errorBoundaryStyles.view}>
             <ReactNative.View style={{ gap: 4 }}>
                 <Text variant="display-lg">Error!</Text>
                 <Text variant="text-md/normal">
@@ -86,7 +86,12 @@ export default function ErrorBoundaryScreen(props: {
                 )}
             </LabeledCard>
             {error instanceof Error && 'componentStack' in error && (
-                <LabeledCard scrollable label="Component Stack" style={{ flex: 1 }} rawContent={error.componentStack}>
+                <LabeledCard
+                    scrollable
+                    label="Component Stack"
+                    style={{ flex: 1 }}
+                    rawContent={error.componentStack as string}
+                >
                     <Text selectable variant="text-md/medium">
                         {...(error.componentStack as string)
                             .slice(1)
@@ -124,7 +129,7 @@ export function LabeledCard(props: LabeledCardProps) {
                         variant="secondary"
                         size="sm"
                         text="Copy"
-                        onPress={() => clipboard.setString(props.rawContent)}
+                        onPress={() => clipboard.setString(props.rawContent as string)}
                     />
                 )}
             </ReactNative.View>
@@ -142,7 +147,7 @@ interface StackFrame {
     column: number | null
 }
 
-const IndexBundleFilePath = HermesInternal.getFunctionLocation(__r).fileName
+const IndexBundleFilePath = (HermesInternal as HermesInternalObject).getFunctionLocation(__r).fileName
 const StackFrameRegex = /at (.+) \(([^:]+):(\d+):(\d+)\)|at (.+)? \(([^)]+)\)/
 
 function parseStackTrace(stackTrace: string): StackFrame[] {
