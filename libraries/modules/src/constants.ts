@@ -7,7 +7,7 @@ export const MetroModuleFlags = createBitFlagEnum('Blacklisted')
 /**
  * The module lookup flags
  */
-export const MetroModuleLookupFlags = createBitFlagEnum('NotFound')
+export const MetroModuleLookupFlags = createBitFlagEnum('NotFound', 'FullLookup')
 
 /**
  * The module ID for the index module
@@ -30,3 +30,8 @@ export const MetroCacheVersion = 1
  * The storage key for the Metro cache
  */
 export const MetroCacheKey = 'RevengeMetroCache'
+
+/**
+ * The key for a module's file path (using a symbol does not work for some reason)
+ */
+export const MetroModuleFilePathKey = '__moduleFilePath'

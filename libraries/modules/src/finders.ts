@@ -52,7 +52,7 @@ export const findId = Object.assign(
 
             let found = false
 
-            for (const [id, moduleExports] of modulesForFinder(filter.key)) {
+            for (const [id, moduleExports] of modulesForFinder(filter.key, true)) {
                 const { exports, isDefaultExport } = filterExports(moduleExports, id, filter)
                 if (typeof exports !== 'undefined') {
                     cache(id, exports)
@@ -61,7 +61,7 @@ export const findId = Object.assign(
                 }
             }
 
-            finish(found)
+            finish(found, true)
         },
     },
 )
