@@ -9,8 +9,8 @@ export const PerformanceTimes = {
     Plugins_CoreImported: -1,
     Storage_Initialized: -1,
     Plugins_CoreStarted: -1,
+    App_RunApplicationCalled: -1,
     App_CreateElementCalled: -1,
-    App_BeforeRunCallbacks: -1,
     App_AfterRunCallbacks: -1,
 }
 

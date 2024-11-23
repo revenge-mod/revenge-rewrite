@@ -3,11 +3,13 @@ import { ModulesLibrary } from '@revenge-mod/modules'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import Libraries from '@revenge-mod/utils/library'
 
-import React, { type ReactNode } from 'react'
+import type { Component, FC, ReactNode } from 'react'
 
 const initCbs = new Set<AppGenericCallback>()
+const rndrCbs = new Set<AppGenericCallback>()
 
 let isInitialized = false
+let isAppContainerRendered = false
 
 export const AppLibrary = Libraries.create(
     {
@@ -20,46 +22,51 @@ export const AppLibrary = Libraries.create(
             initCbs.add(callback)
         }
 
-        afterInitialized(() => (isInitialized = true))
+        const afterRendered = (callback: AppGenericCallback) => {
+            if (isAppContainerRendered)
+                throw new Error('Cannot attach a callback after the App component has been rendered')
+            rndrCbs.add(callback)
+        }
 
-        // We can assume that after the first element is created, it is immediately being rendered
-        // Patching <App /> or <AppContainer /> is very slow for some reason (probably because large amounts of data being passed around?)
-        // Patching AppRegistry.runApplication is too slow, while AppRegistry.registerComponent never gets called (because slow awaiting the modules library)
-        const unpatchBefore = patcher.before(React, 'createElement', () => {
-            unpatchBefore()
-            recordTimestamp('App_CreateElementCalled')
-            // Prevent from blocking the current event loop
-            setImmediate(() => {
-                recordTimestamp('App_BeforeRunCallbacks')
-                for (const callback of initCbs) callback()
-                recordTimestamp('App_AfterRunCallbacks')
-            })
+        afterInitialized(() => (isInitialized = true))
+        afterRendered(() => (isAppContainerRendered = true))
+
+        const unpatchRunApplication = patcher.after(ReactNative.AppRegistry, 'runApplication', () => {
+            unpatchRunApplication()
+            recordTimestamp('App_RunApplicationCalled')
+            for (const callback of initCbs) callback()
+            recordTimestamp('App_AfterRunCallbacks')
         })
 
-        Libraries.instanceFor(ModulesLibrary).then(async modules => {
-            const { default: Screen } = await import('./components/ErrorBoundaryScreen')
+        const unpatchCreateElement = patcher.after(React, 'createElement', () => {
+            unpatchCreateElement()
+            recordTimestamp('App_CreateElementCalled')
+            for (const callback of rndrCbs) callback()
+        })
 
-            afterInitialized(() => {
-                setImmediate(() => {
-                    patcher.instead.await(
-                        modules.findByName
-                            .async('ErrorBoundary')
-                            .then(it => it.prototype as ErrorBoundaryComponentPrototype),
-                        'render',
-                        function (this: ErrorBoundaryComponentPrototype) {
-                            if (this.state.error && this.discordErrorsSet)
-                                return (
-                                    <Screen
-                                        error={this.state.error}
-                                        rerender={() => this.setState({ error: null, info: null })}
-                                        reload={this.handleReload}
-                                    />
-                                )
+        const unpatchRegisterComponent = patcher.before(ReactNative.AppRegistry, 'registerComponent', () => {
+            unpatchRegisterComponent()
 
-                            return this.props.children
-                        },
-                    )
-                })
+            setImmediate(async () => {
+                const { default: Screen } = await import('./components/ErrorBoundaryScreen')
+                const modules = await Libraries.instanceFor(ModulesLibrary)
+
+                patcher.after.await(
+                    modules.findByName
+                        .async('ErrorBoundary')
+                        .then(it => it.prototype as ErrorBoundaryComponentPrototype),
+                    'render',
+                    function (this: ErrorBoundaryComponentPrototype) {
+                        if (this.state.error)
+                            return (
+                                <Screen
+                                    error={this.state.error}
+                                    rerender={() => this.setState({ error: null, info: null })}
+                                    reload={this.handleReload}
+                                />
+                            )
+                    },
+                )
             })
         })
 
@@ -70,6 +77,17 @@ export const AppLibrary = Libraries.create(
             get initialized() {
                 return isInitialized
             },
+            /**
+             * Whether the App component has been rendered
+             */
+            get rendered() {
+                return isAppContainerRendered
+            },
+            /**
+             * Attaches a callback to be called when the app has been rendered
+             * @param callback The callback to be called
+             */
+            afterRendered,
             /**
              * Attaches a callback to be called when the app has been initialized
              * @param callback The callback to be called
@@ -87,7 +105,7 @@ export const { patcher } = Libraries.contextFor(AppLibrary)
 
 export type AppLibrary = ReturnType<(typeof AppLibrary)['new']>
 
-export type ErrorBoundaryComponentPrototype = React.Component<
+export type ErrorBoundaryComponentPrototype = Component<
     { children: ReactNode },
     {
         error: (Error & { componentStack?: string }) | unknown | null
@@ -98,6 +116,6 @@ export type ErrorBoundaryComponentPrototype = React.Component<
     handleReload(): void
 }
 
-export type AppComponentModuleType = { default: React.FC }
+export type AppComponentModuleType = { default: FC }
 export type AppGenericCallback = () => void
 export type AppErroredCallback = (error: unknown) => void
