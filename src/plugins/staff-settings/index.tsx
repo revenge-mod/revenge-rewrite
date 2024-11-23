@@ -1,14 +1,11 @@
 import { TableRowIcon, TableSwitchRow } from '@revenge-mod/modules/common/components'
-import { createFilter } from '@revenge-mod/modules/filters'
+import { registerPlugin } from '@revenge-mod/plugins/internals'
 import { storageContextSymbol, useObservable } from '@revenge-mod/storage'
-// TODO: Fix this path
-import { registerPlugin } from 'libraries/plugins/src/internals'
 import { internal_addTableRowsToAdvancedSectionInRevengePage } from '../settings/pages/Revenge'
 
-let patchedStore = false
+let originalValue: boolean
 let isStaffSettingsShown = () => true
 
-// TODO: Fix Dev Widget not enabling
 registerPlugin<{
     enabled: boolean
 }>(
@@ -20,17 +17,22 @@ registerPlugin<{
         version: '1.0.0',
         icon: 'ic_progress_wrench_24px',
         onMetroModuleLoad(_, exports) {
-            if (!patchedStore && exports.default?.constructor?.displayName === 'DeveloperExperimentStore') {
-                patchedStore = true
+            if (exports.default?.constructor?.displayName === 'DeveloperExperimentStore') {
                 exports.default = new Proxy(exports.default, {
                     get(target, property, receiver) {
-                        if (property === 'isDeveloper') return isStaffSettingsShown()
+                        if (property === 'isDeveloper') {
+                            originalValue &&= Reflect.get(target, property, receiver)
+                            return isStaffSettingsShown()
+                        }
+
                         return Reflect.get(target, property, receiver)
                     },
                 })
             }
         },
-        beforeAppRender({ storage, revenge: { assets } }) {
+        beforeAppRender({ cleanup, storage, revenge: { assets } }) {
+            cleanup(() => (isStaffSettingsShown = () => originalValue))
+
             isStaffSettingsShown = () => (storage[storageContextSymbol].ready ? storage.enabled : true)
 
             internal_addTableRowsToAdvancedSectionInRevengePage(() => {
@@ -49,10 +51,4 @@ registerPlugin<{
         initializeStorage: () => ({ enabled: false }),
     },
     true,
-    // () => false,
-)
-
-const byConstructorDisplayName = createFilter<[name: string]>(
-    ([name], m) => m.constructor?.displayName === name,
-    name => `revenge.plugins.staff-settings.byConstructorDisplayName(${name})`,
 )
