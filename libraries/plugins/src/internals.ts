@@ -9,7 +9,7 @@ import { app } from './shared'
 
 export const PluginIdRegex = /^[a-z0-9-_\.]{1,128}$/
 
-export const appInitCallbacks = new Set<() => Promise<unknown>>()
+export const appRenderedCallbacks = new Set<() => Promise<unknown>>()
 
 export const corePluginIds = new Set<string>()
 export const highPriorityPluginIds = new Set<InternalPluginDefinition['id']>()
@@ -80,10 +80,10 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             const handleError = (e: unknown, stage: string) => {
                 this.errors.push(e)
                 this.stop()
-                throw new Error(`Plugin "${this.id}" failed to start at "${stage}"`, { cause: e })
+                throw new Error(`Plugin "${this.id}" failed to start at "${stage}":\n${String(e)}`, { cause: e })
             }
 
-            if (app.initialized && this.beforeAppRender)
+            if (app.rendered && this.beforeAppRender)
                 handleError(
                     new Error(`Plugin "${this.id}" requires running before app is initialized`),
                     'beforeAppRender',
@@ -96,7 +96,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             }
 
             if (this.afterAppRender)
-                appInitCallbacks.add(async () => {
+                appRenderedCallbacks.add(async () => {
                     try {
                         instance.context.afterAppRender = await this.afterAppRender!(instance)
                         this.status = PluginStatus.Started

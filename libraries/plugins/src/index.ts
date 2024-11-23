@@ -9,7 +9,7 @@ import type React from 'react'
 import {
     type InternalPluginDefinition,
     type WhitelistedPluginObjectKeys,
-    appInitCallbacks,
+    appRenderedCallbacks,
     corePluginIds,
     plugins,
     registerPlugin,
@@ -21,9 +21,13 @@ export const PluginsLibrary = Libraries.create(
         name: 'plugins',
         uses: [],
     },
-    () => {
-        app.afterInitialized(() => {
-            for (const cb of appInitCallbacks) cb()
+    ({ cleanup }) => {
+        app.afterRendered(() => {
+            for (const cb of appRenderedCallbacks) cb()
+        })
+
+        cleanup(() => {
+            for (const plugin of plugins.values()) plugin.stop()
         })
 
         return {
