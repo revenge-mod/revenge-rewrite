@@ -3,7 +3,8 @@ import { byDisplayName, byFilePath, byName, byProps, byQuery, bySingleProp, bySt
 import { cacherFor, modulesForFinder, requireModule } from './metro'
 import { createLazyModule, lazyContextSymbol } from './utils/lazy'
 
-import type { FilterFn, Metro } from './types'
+import type { If, Nullable as Undefinable } from '@revenge-mod/shared/types'
+import type { FilterFn, LazyModule, Metro } from './types'
 
 function filterExports<A extends unknown[]>(moduleExports: Metro.ModuleExports, moduleId: number, filter: FilterFn<A>) {
     if (moduleExports.default && moduleExports.__esModule && filter(moduleExports.default, moduleId, true)) {
@@ -83,21 +84,29 @@ export const find = Object.assign(
          */
         all: function* findModuleAll<A extends unknown[]>(filter: FilterFn<A>) {
             for (const [id, isDefaultExport] of findId.all(filter)) {
-                if (typeof id !== 'number') return
+                if (typeof id !== 'number') return null
                 yield isDefaultExport ? requireModule(id).default : requireModule(id)
             }
         },
         eager: function findModuleEager<A extends unknown[]>(filter: FilterFn<A>) {
             const [id, defaultExport] = findId(filter)
             // id can be 0
-            if (typeof id !== 'number') return
+            if (typeof id !== 'number') return null
             return defaultExport ? requireModule(id).default : requireModule(id)
         },
     },
 )
 
-// TODO: Type all of these, properly, with generics
-// TODO: Convert to functions, so stack traces look good
+export type ByProps<
+    Struct = Record<string, Metro.ModuleExports[string]>,
+    AdditionalProps extends string = string,
+> = Undefinable<
+    Struct & {
+        [Key in AdditionalProps[number]]: Metro.ModuleExports[Key]
+    } & {
+        [Key in PropertyKey]: Metro.ModuleExports[Key]
+    }
+>
 
 /**
  * Finds an export with specified properties
@@ -109,56 +118,107 @@ export const find = Object.assign(
  * @param props Additional properties to search for
  * @returns The module exports
  */
-export const findByProps = Object.assign((prop: string, ...props: string[]) => find(byProps(prop, ...props)), {
-    async(prop: string, ...propsAndOrTimeout: [...string[], number] | string[]) {
-        const cloned = [...propsAndOrTimeout]
-        const timeout = typeof cloned[cloned.length - 1] === 'number' ? (cloned.pop() as number) : 1000
-        return new Promise<Metro.ModuleExports>(resolve => {
-            const id = setTimeout(resolve, timeout)
-            findByProps(prop, ...(cloned as string[]))[lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
-                clearTimeout(id)
-                resolve(exp)
-            })
-        })
+export const findByProps = Object.assign(
+    function findByPropsLazy<T = Record<string, Metro.ModuleExports[string]>, P extends string = string>(
+        prop: keyof T,
+        ...props: P[]
+    ) {
+        return find(byProps(prop as string, ...(props as string[]))) as LazyModule<ByProps<T, P>>
     },
-    eager: (prop: string, ...props: string[]) => find.eager(byProps(prop, ...props)),
-    /**
-     * Yield all exports with specified properties
-     *
-     * - Filter: `m[prop] && props.every(p => m[p])`
-     * - Returns: `m`
-     *
-     * @param prop The property to search for
-     * @param props Additional properties to search for
-     * @returns The module exports
-     */
-    all: (prop: string, ...props: string[]) => find.all(byProps(prop, ...props)),
-})
+    {
+        async: function findByPropsAsync<T = Record<string, Metro.ModuleExports[string]>, P extends string = string>(
+            prop: keyof T,
+            ...propsAndOrTimeout: [...P[], number] | P[]
+        ) {
+            const cloned = [...propsAndOrTimeout]
+            const timeout = typeof cloned[cloned.length - 1] === 'number' ? (cloned.pop() as number) : 1000
+            return new Promise<ByProps<T, P>>(resolve => {
+                const id = setTimeout(() => resolve(undefined), timeout)
+                findByProps(prop, ...(cloned as string[]))![lazyContextSymbol].getExports(
+                    (exp: Metro.ModuleExports) => {
+                        clearTimeout(id)
+                        resolve(exp)
+                    },
+                )
+            })
+        },
+        eager: function findByPropsEager<T = Record<string, Metro.ModuleExports[string]>, P extends string = string>(
+            prop: keyof T,
+            ...props: P[]
+        ) {
+            return find.eager(byProps(prop as string, ...(props as string[]))) as ByProps<T, P>
+        },
+        /**
+         * Yield all exports with specified properties
+         *
+         * - Filter: `m[prop] && props.every(p => m[p])`
+         * - Returns: `m`
+         *
+         * @param prop The property to search for
+         * @param props Additional properties to search for
+         * @returns The module exports
+         */
+        all: function findByPropsAll<T = Record<string, Metro.ModuleExports[string]>, K extends string = string>(
+            prop: keyof T,
+            ...props: K[]
+        ) {
+            type IteratorValue = Undefinable<
+                T & {
+                    [Key in K]: Metro.ModuleExports[Key]
+                }
+            >
+            return find.all(byProps(prop as string, ...(props as string[]))) as Iterator<
+                IteratorValue,
+                IteratorValue,
+                IteratorValue
+            >
+        },
+    },
+)
+
+export type ByName<Value extends { name: string }, DefaultExport extends boolean> = Undefinable<
+    If<DefaultExport, ByNameDefaultExport<Value>, { default: ByNameDefaultExport<Value> }>
+>
+
+type ByNameDefaultExport<V extends { name: string }> = NonNullable<ByProps<V>>
 
 /**
- * Finds an export by its name
+ * Returns an export with matching name
  *
  * - Filter: `m.name === name`
- * - Returns: `m`, or `{ default: m }` if `returnDefaultExport` is `false`
+ * - Yields: `m`, or `{ default: m }` if `returnDefaultExport` is `false`
  *
  * @param name The name to search for
  * @param returnDefaultExport Whether to return the default export instead of the whole module
  * @returns The module exports
  */
 export const findByName = Object.assign(
-    (name: string, returnDefaultExport = true) => find(returnDefaultExport ? byName(name) : byName.raw(name)),
+    function findByNameLazy<V extends { name: string }, D extends boolean>(
+        name: V['name'],
+        returnDefaultExport: D = true as D,
+    ) {
+        return find(returnDefaultExport ? byName(name) : byName.raw(name)) as LazyModule<ByName<V, D>>
+    },
     {
-        async(name: string, returnDefaultExport = true, timeout = 1000) {
-            return new Promise<Metro.ModuleExports>(resolve => {
-                const id = setTimeout(resolve, timeout)
-                findByName(name, returnDefaultExport)[lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
+        async: function findByNameAsync<V extends { name: string }, D extends boolean>(
+            name: V['name'],
+            returnDefaultExport: D = true as D,
+            timeout = 1000,
+        ) {
+            return new Promise<ByName<V, D>>(resolve => {
+                const id = setTimeout(() => resolve(undefined), timeout)
+                findByName(name, returnDefaultExport)![lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
                     clearTimeout(id)
                     resolve(exp)
                 })
             })
         },
-        eager: (name: string, returnDefaultExport = true) =>
-            find.eager(returnDefaultExport ? byName(name) : byName.raw(name)),
+        eager: function findByNameEager<V extends { name: string }, D extends boolean>(
+            name: V['name'],
+            returnDefaultExport: D = true as D,
+        ) {
+            return find.eager(returnDefaultExport ? byName(name) : byName.raw(name)) as ByName<V, D>
+        },
         /**
          * Yields all exports with matching name
          *
@@ -169,10 +229,26 @@ export const findByName = Object.assign(
          * @param returnDefaultExport Whether to return the default export instead of the whole module
          * @returns The module exports
          */
-        all: (name: string, returnDefaultExport = true) =>
-            find.all(returnDefaultExport ? byName(name) : byName.raw(name)),
+        all: function findByNameAll<V extends { name: string }, D extends boolean>(
+            name: V['name'],
+            returnDefaultExport: D = true as D,
+        ) {
+            type IteratorValue = ByName<V, D>
+
+            return find.all(returnDefaultExport ? byName(name) : byName.raw(name)) as Iterator<
+                IteratorValue,
+                IteratorValue,
+                IteratorValue
+            >
+        },
     },
 )
+
+export type ByDisplayName<Value extends { displayName: string }, DefaultExport extends boolean> = Undefinable<
+    If<DefaultExport, ByDisplayNameDefaultExport<Value>, { default: ByDisplayNameDefaultExport<Value> }>
+>
+
+type ByDisplayNameDefaultExport<V extends { displayName: string }> = NonNullable<ByProps<V>>
 
 /**
  * Finds an export by its display name
@@ -185,13 +261,23 @@ export const findByName = Object.assign(
  * @returns The module exports
  */
 export const findByDisplayName = Object.assign(
-    (name: string, returnDefaultExport = true) =>
-        find(returnDefaultExport ? byDisplayName(name) : byDisplayName.raw(name)),
+    function findByDisplayNameLazy<V extends { displayName: string }, D extends boolean>(
+        name: V['displayName'],
+        returnDefaultExport: D = true as D,
+    ) {
+        return find(returnDefaultExport ? byDisplayName(name) : byDisplayName.raw(name)) as LazyModule<
+            ByDisplayName<V, D>
+        >
+    },
     {
-        async(name: string, returnDefaultExport = true, timeout = 1000) {
-            return new Promise<Metro.ModuleExports>(resolve => {
-                const id = setTimeout(resolve, timeout)
-                findByDisplayName(name, returnDefaultExport)[lazyContextSymbol].getExports(
+        async: function findByDisplayNameAsync<V extends { displayName: string }, D extends boolean>(
+            name: V['displayName'],
+            returnDefaultExport: D = true as D,
+            timeout = 1000,
+        ) {
+            return new Promise<ByDisplayName<V, D>>(resolve => {
+                const id = setTimeout(() => resolve(undefined), timeout)
+                findByDisplayName(name, returnDefaultExport)![lazyContextSymbol].getExports(
                     (exp: Metro.ModuleExports) => {
                         clearTimeout(id)
                         resolve(exp)
@@ -199,8 +285,15 @@ export const findByDisplayName = Object.assign(
                 )
             })
         },
-        eager: (name: string, returnDefaultExport = true) =>
-            find.eager(returnDefaultExport ? byDisplayName(name) : byDisplayName.raw(name)),
+        eager: function findByDisplayNameEager<V extends { displayName: string }, D extends boolean>(
+            name: V['displayName'],
+            returnDefaultExport: D = true as D,
+        ) {
+            return find.eager(returnDefaultExport ? byDisplayName(name) : byDisplayName.raw(name)) as ByDisplayName<
+                V,
+                D
+            >
+        },
         /**
          * Yields all exports with matching display name
          *
@@ -211,10 +304,26 @@ export const findByDisplayName = Object.assign(
          * @param returnDefaultExport Whether to return the default export instead of the whole module
          * @returns The module exports
          */
-        all: (name: string, returnDefaultExport = true) =>
-            find.all(returnDefaultExport ? byDisplayName(name) : byDisplayName.raw(name)),
+        all: function findByDisplayNameAll<V extends { displayName: string }, D extends boolean>(
+            name: V['displayName'],
+            returnDefaultExport: D = true as D,
+        ) {
+            type IteratorValue = ByDisplayName<V, D>
+
+            return find.all(returnDefaultExport ? byDisplayName(name) : byDisplayName.raw(name)) as Iterator<
+                IteratorValue,
+                IteratorValue,
+                IteratorValue
+            >
+        },
     },
 )
+
+export type ByTypeName<Value extends { type: { name: string } }, DefaultExport extends boolean> = Undefinable<
+    If<DefaultExport, ByTypeNameDefaultExport<Value>, { default: ByTypeNameDefaultExport<Value> }>
+>
+
+type ByTypeNameDefaultExport<V extends { type: { name: string } }> = NonNullable<ByProps<V>>
 
 /**
  * Finds an export by its type name (`x.type.name`)
@@ -227,19 +336,32 @@ export const findByDisplayName = Object.assign(
  * @returns The module exports
  */
 export const findByTypeName = Object.assign(
-    (name: string, returnDefaultExport = true) => find(returnDefaultExport ? byTypeName(name) : byTypeName.raw(name)),
+    function findByTypeNameLazy<V extends { type: { name: string } }, D extends boolean>(
+        name: V['type']['name'],
+        returnDefaultExport: D = true as D,
+    ) {
+        return find(returnDefaultExport ? byTypeName(name) : byTypeName.raw(name)) as LazyModule<ByTypeName<V, D>>
+    },
     {
-        async(name: string, returnDefaultExport = true, timeout = 1000) {
-            return new Promise<Metro.ModuleExports>(resolve => {
-                const id = setTimeout(resolve, timeout)
-                findByTypeName(name, returnDefaultExport)[lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
+        async: function findByTypeNameAsync<V extends { type: { name: string } }, D extends boolean>(
+            name: V['type']['name'],
+            returnDefaultExport: D = true as D,
+            timeout = 1000,
+        ) {
+            return new Promise<ByTypeName<V, D>>(resolve => {
+                const id = setTimeout(() => resolve(undefined), timeout)
+                findByTypeName(name, returnDefaultExport)![lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
                     clearTimeout(id)
                     resolve(exp)
                 })
             })
         },
-        eager: (name: string, returnDefaultExport = true) =>
-            find.eager(returnDefaultExport ? byTypeName(name) : byTypeName.raw(name)),
+        eager: function findByTypeNameEager<V extends { type: { name: string } }, D extends boolean>(
+            name: V['type']['name'],
+            returnDefaultExport: D = true as D,
+        ) {
+            return find.eager(returnDefaultExport ? byTypeName(name) : byTypeName.raw(name)) as ByTypeName<V, D>
+        },
         /**
          * Yields all exports by its type name (`x.type.name`)
          *
@@ -250,10 +372,22 @@ export const findByTypeName = Object.assign(
          * @param returnDefaultExport Whether to return the default export instead of the whole module
          * @returns The module exports
          */
-        all: (name: string, returnDefaultExport = true) =>
-            find.all(returnDefaultExport ? byTypeName(name) : byTypeName.raw(name)),
+        all: function findByTypeNameAll<V extends { type: { name: string } }, D extends boolean>(
+            name: V['type']['name'],
+            returnDefaultExport: D = true as D,
+        ) {
+            type IteratorValue = ByTypeName<V, D>
+
+            return find.all(returnDefaultExport ? byTypeName(name) : byTypeName.raw(name)) as Iterator<
+                IteratorValue,
+                IteratorValue,
+                IteratorValue
+            >
+        },
     },
 )
+
+export type ByStoreName<Value extends { getName(): string }> = ByProps<Value>
 
 /**
  * Finds an export by its store name
@@ -264,18 +398,32 @@ export const findByTypeName = Object.assign(
  * @param name The store name to search for
  * @returns The module exports
  */
-export const findByStoreName = Object.assign((name: string) => find(byStoreName(name)), {
-    async(name: string, timeout = 5000) {
-        return new Promise<Metro.ModuleExports>(resolve => {
-            const id = setTimeout(resolve, timeout)
-            findByStoreName(name)[lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
-                clearTimeout(id)
-                resolve(exp)
-            })
-        })
+export const findByStoreName = Object.assign(
+    function findByStoreNameLazy<V extends { getName(): string }>(name: ReturnType<V['getName']>) {
+        return find(byStoreName(name)) as LazyModule<ByStoreName<V>>
     },
-    eager: (name: string) => find.eager(byStoreName(name)),
-})
+    {
+        async: function findByStoreNameAsync<V extends { getName(): string }>(
+            name: ReturnType<V['getName']>,
+            timeout = 5000,
+        ) {
+            return new Promise<ByStoreName<V>>(resolve => {
+                const id = setTimeout(() => resolve(undefined), timeout)
+                findByStoreName(name)![lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
+                    clearTimeout(id)
+                    resolve(exp)
+                })
+            })
+        },
+        eager: function findByStoreNameEager<V extends { getName(): string }>(name: ReturnType<V['getName']>) {
+            return find.eager(byStoreName(name)) as ByStoreName<V>
+        },
+    },
+)
+
+export type ByFilePath<T extends Metro.ModuleExports, DefaultExport extends boolean> = ByProps<
+    If<DefaultExport, T, { default: T }>
+>
 
 /**
  * Finds an export by its imported file path. Useful for finding modules whose properties are not very unique.
@@ -287,18 +435,32 @@ export const findByStoreName = Object.assign((name: string) => find(byStoreName(
  * @returns The module exports
  */
 export const findByFilePath = Object.assign(
-    (path: string, returnDefaultExport = true) => find(byFilePath(path, returnDefaultExport)),
+    function findByFilePathLazy<T extends Metro.ModuleExports, D extends boolean>(
+        path: string,
+        returnDefaultExport: D = true as D,
+    ) {
+        return find(byFilePath(path, returnDefaultExport)) as LazyModule<ByFilePath<T, D>>
+    },
     {
-        async(path: string, returnDefaultExport = true, timeout = 1000) {
-            return new Promise<Metro.ModuleExports>(resolve => {
-                const id = setTimeout(resolve, timeout)
-                findByFilePath(path, returnDefaultExport)[lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
+        async: function findByFilePathAsync<T extends Metro.ModuleExports, D extends boolean>(
+            path: string,
+            returnDefaultExport: D = true as D,
+            timeout = 1000,
+        ) {
+            return new Promise<ByFilePath<T, D>>(resolve => {
+                const id = setTimeout(() => resolve(undefined), timeout)
+                findByFilePath(path, returnDefaultExport)![lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
                     clearTimeout(id)
                     resolve(exp)
                 })
             })
         },
-        eager: (path: string, returnDefaultExport = true) => find.eager(byFilePath(path, returnDefaultExport)),
+        eager: function findByFilePathEager<T extends Metro.ModuleExports, D extends boolean>(
+            path: string,
+            returnDefaultExport = true,
+        ) {
+            return find.eager(byFilePath(path, returnDefaultExport)) as ByFilePath<T, D>
+        },
     },
 )
 
@@ -313,13 +475,32 @@ export const findByFilePath = Object.assign(
  * @returns The value of the module's exports' property
  */
 export const findProp = Object.assign(
-    (prop: string, ...filterProps: string[]) => lazyValue(() => findByProps(prop, ...filterProps)[prop]),
+    function findPropLazy<T extends Metro.ModuleExports>(prop: string, ...filterProps: string[]) {
+        return lazyValue(() => findByProps(prop, ...filterProps)?.[prop]) as LazyModule<Undefinable<T>>
+    },
     {
-        async: (prop: string, ...filterPropsAndOrTimeout: [...string[], number] | string[]) =>
-            findByProps.async(prop, ...filterPropsAndOrTimeout).then(exports => exports[prop]),
-        eager: (prop: string, ...filterProps: string[]) => findByProps.eager(prop, ...filterProps)[prop],
+        async: function findPropAsync<T extends Metro.ModuleExports>(
+            prop: string,
+            ...filterPropsAndOrTimeout: [...string[], number] | string[]
+        ) {
+            return findByProps.async(prop, ...filterPropsAndOrTimeout).then(exports => exports?.[prop]) as Promise<
+                Undefinable<T>
+            >
+        },
+        eager: function findPropEager<T extends Metro.ModuleExports>(prop: string, ...filterProps: string[]) {
+            return findByProps.eager(prop, ...filterProps)?.[prop] as Undefinable<T>
+        },
     },
 )
+
+export type BySingleProp<
+    Struct extends { [K in string]: Metro.ModuleExports },
+    DefaultExport extends boolean,
+> = Undefinable<If<DefaultExport, BySinglePropDefaultExport<Struct>, { default: BySinglePropDefaultExport<Struct> }>>
+
+type BySinglePropDefaultExport<Struct = { [K in string]: Metro.ModuleExports }> = {
+    [K in keyof Struct]: Metro.ModuleExports
+}
 
 /**
  * Finds an export by its single property
@@ -332,13 +513,23 @@ export const findProp = Object.assign(
  * @returns The module exports
  */
 export const findBySingleProp = Object.assign(
-    (name: string, returnDefaultExport = true) =>
-        find(returnDefaultExport ? bySingleProp(name) : bySingleProp.raw(name)),
+    function findBySinglePropLazy<S extends Record<string, Metro.ModuleExports>, D extends boolean>(
+        name: keyof S,
+        returnDefaultExport: D = true as D,
+    ) {
+        return find(
+            returnDefaultExport ? bySingleProp(name as string) : bySingleProp.raw(name as string),
+        ) as LazyModule<BySingleProp<S, D>>
+    },
     {
-        async(name: string, returnDefaultExport = true, timeout = 1000) {
-            return new Promise<Metro.ModuleExports>(resolve => {
-                const id = setTimeout(resolve, timeout)
-                findBySingleProp(name, returnDefaultExport)[lazyContextSymbol].getExports(
+        async: function findBySinglePropAsync<S extends Record<string, Metro.ModuleExports>, D extends boolean>(
+            name: keyof S,
+            returnDefaultExport: D = true as D,
+            timeout = 1000,
+        ) {
+            return new Promise<BySingleProp<S, D>>(resolve => {
+                const id = setTimeout(() => resolve(undefined), timeout)
+                findBySingleProp(name, returnDefaultExport)![lazyContextSymbol].getExports(
                     (exp: Metro.ModuleExports) => {
                         clearTimeout(id)
                         resolve(exp)
@@ -346,8 +537,14 @@ export const findBySingleProp = Object.assign(
                 )
             })
         },
-        eager: (name: string, returnDefaultExport = true) =>
-            find.eager(returnDefaultExport ? bySingleProp(name) : bySingleProp.raw(name)),
+        eager: function findBySinglePropEager<S extends Record<string, Metro.ModuleExports>, D extends boolean>(
+            name: keyof S,
+            returnDefaultExport: D = true as D,
+        ) {
+            return find.eager(
+                returnDefaultExport ? bySingleProp(name as string) : bySingleProp.raw(name as string),
+            ) as BySingleProp<S, D>
+        },
     },
 )
 
@@ -358,17 +555,21 @@ export const findBySingleProp = Object.assign(
  * @returns The module exports
  */
 export const findByQuery = Object.assign(
-    () => {
+    function findByQueryLazy() {
         throw new Error('Lazy finding for byQuery(...) is not supported, use findByQuery.eager(...) instead')
     },
     {
-        eager: (query: string, caseSensitive = false) => find(byQuery(query, caseSensitive)),
+        eager: function findByQueryEager(query: string, caseSensitive = false) {
+            return find(byQuery(query, caseSensitive))
+        },
         /**
          * Yields all exports that match a query string **(very expensive, only use for debugging)**
          * @param query The query string to search for
          * @param caseSensitive Whether the search should be case-sensitive
          * @returns All module exports
          */
-        all: (query: string, caseSensitive = false) => find.all(byQuery(query, caseSensitive)),
+        all: function findByQueryAll(query: string, caseSensitive = false) {
+            return find.all(byQuery(query, caseSensitive))
+        },
     },
 )

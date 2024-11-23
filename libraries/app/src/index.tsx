@@ -59,7 +59,7 @@ const unpatchRegisterComponent = patcher.before(
             const { default: Screen } = await import('./components/ErrorBoundaryScreen')
 
             patcher.after.await(
-                findByName.async('ErrorBoundary').then(it => it.prototype as ErrorBoundaryComponentPrototype),
+                findByName.async<ErrorBoundaryComponentPrototype, true>('ErrorBoundary').then(it => it!.prototype),
                 'render',
                 function (this: ErrorBoundaryComponentPrototype) {
                     if (this.state.error)
@@ -115,6 +115,7 @@ export type ErrorBoundaryComponentPrototype = Component<
         info: { componentStack?: string } | null
     }
 > & {
+    name: 'ErrorBoundary'
     discordErrorsSet: boolean
     handleReload(): void
 }

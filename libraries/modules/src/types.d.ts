@@ -13,6 +13,7 @@ import type {
     ViewStyle,
 } from 'react-native'
 import type { MetroModuleFilePathKey } from './constants'
+import type { lazyContextSymbol } from './utils/lazy'
 
 /// METRO
 
@@ -165,6 +166,16 @@ export interface LazyModuleContext<A extends unknown[] = unknown[]> {
     forceLoad(): ModuleExports
     get cache(): ModuleExports
 }
+
+export type LazyModule<T> = T extends unknown | undefined
+    ?
+          | undefined
+          | (NonNullable<T> & {
+                [lazyContextSymbol]: LazyModuleContext
+            })
+    : T & {
+          [lazyContextSymbol]: LazyModuleContext
+      }
 
 /// COMMON
 

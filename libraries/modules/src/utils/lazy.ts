@@ -75,8 +75,6 @@ export function createLazyModule<A extends unknown[]>(filter: FilterFn<A>) {
         },
         forceLoad() {
             cachedValue ??= find.eager(filter)
-            // // TODO: Maybe return undefined here instead of throwing an error?
-            // if (!cache) throw new Error(`Cannot find module with filter: ${filter.key}`)
             return cachedValue
         },
     }

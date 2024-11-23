@@ -46,7 +46,9 @@ export default function DeveloperSettingsPage() {
                                             variant="primary"
                                             onPress={() =>
                                                 alert(
-                                                    modules.findProp('inspect')(
+                                                    modules.findProp<
+                                                        (val: unknown, opts?: { depth?: number }) => string
+                                                    >('inspect')!(
                                                         // biome-ignore lint/security/noGlobalEval: This is intentional
                                                         globalThis.eval(evalCodeRef.current),
                                                         { depth: 5 },

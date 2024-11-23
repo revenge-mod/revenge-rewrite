@@ -1,12 +1,5 @@
-/**
- * @internal
- */
 export type Nullish = null | undefined
-/**
- * @internal
- */
 export type If<T, Then, Else> = T extends true ? Then : Else
-/**
- * @internal
- */
+// biome-ignore lint/suspicious/noExplicitAny: shuddhup
 export type AnyObject = Record<any, any>
+export type Nullable<T> = T | undefined

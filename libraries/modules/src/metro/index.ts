@@ -228,7 +228,6 @@ export function requireModule(id: Metro.ModuleID) {
     if (isModuleBlacklisted(id)) return
 
     const metroModule = metroModules[id]
-    // TODO: Would the modules be incomplete if we returned metroModule.publicModule.exports instead?
     if (metroModule?.isInitialized && !metroModule.hasError) return __r(id)
 
     const ogHandler = ErrorUtils.getGlobalHandler()
@@ -321,8 +320,6 @@ export function* modulesForFinder(key: string, fullLookup = false) {
     )
         for (const id in indexedModuleIdsForLookup(key)) {
             if (isModuleBlacklisted(id)) continue
-
-            // TODO: Extra blacklisting checks shouldn't be required here
             yield [id, requireModule(Number(id))]
         }
     else {

@@ -20,6 +20,8 @@ import DebugPerformanceTimesSettingsPage from './pages/DebugPerformanceTimes'
 import DeveloperSettingsPage from './pages/Developer'
 import RevengeSettingsPage from './pages/Revenge'
 
+import type { FC } from 'react'
+
 registerPlugin(
     {
         name: 'Settings',
@@ -38,8 +40,8 @@ registerPlugin(
             },
         }) {
             setTimeout(() => {
-                const SettingsConstants = modules.findByProps('SETTING_RENDERER_CONFIG')
-                const SettingsOverviewScreen = modules.findByName('SettingsOverviewScreen', false)
+                const SettingsConstants = modules.findByProps('SETTING_RENDERER_CONFIG')!
+                const SettingsOverviewScreen = modules.findByName<FC, false>('SettingsOverviewScreen', false)!
 
                 const originalRendererConfig = SettingsConstants.SETTING_RENDERER_CONFIG as Record<string, RawRowConfig>
                 let rendererConfig = originalRendererConfig
@@ -70,7 +72,10 @@ registerPlugin(
                             Object.values(customData.sections).flatMap(({ settings }) => Object.keys(settings)),
                         )
 
-                        const { sections } = findInReactTree(children, i => i.props?.sections).props as {
+                        const { sections } = findInReactTree(
+                            children as Extract<typeof children, { props: unknown }>,
+                            i => i.props?.sections,
+                        ).props as {
                             sections: Array<{ label: string; settings: string[] }>
                         }
 

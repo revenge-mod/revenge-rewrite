@@ -54,6 +54,11 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             if (!this.enabled) throw new Error(`Plugin "${this.id}" must be enabled before starting`)
             if (!this.stopped) throw new Error(`Plugin "${this.id}" is already started`)
 
+            instance.patcher = createPatcherInstance(`revenge.plugins.plugin#${this.id}`)
+            instance.storage = createStorage(`revenge/plugins/${definition.id}/storage.json`, {
+                initial: definition.initializeStorage?.() ?? {},
+            })
+
             this.status = PluginStatus.Starting
 
             const handleError = (e: unknown, stage: string) => {
@@ -122,7 +127,6 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         },
     })
 
-    // TODO: Only init a few other things when plugin is starting (like storage, patcher, etc.)
     // biome-ignore lint/suspicious/noExplicitAny: Defaulting types to something else doesn't end very well
     const instance: PluginContext<PluginStage, any, any, any> = {
         context: {
@@ -130,10 +134,8 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             afterAppRender: null,
         },
         plugin: proxy,
-        patcher: internalPlugin.patcher,
-        storage: createStorage(`revenge/plugins/${definition.id}/storage.json`, {
-            initial: definition.initializeStorage?.() ?? {},
-        }),
+        patcher: null as unknown as Patcher,
+        storage: null,
         revenge: lazyValue(() => revenge),
         cleanup: (...funcs) => {
             for (const cleanup of funcs) cleanups.add(cleanup)

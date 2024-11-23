@@ -16,9 +16,9 @@ export * as stores from './stores'
 
 /// DISCORD
 
-export const constants = findByProps('Fonts') as Record<string, unknown>
-export const tokens = findByProps('internal', 'colors')
-export const intl = findByProps('intl') as {
+export const constants = findByProps<Record<string, unknown>>('Fonts')!
+export const tokens = findByProps('internal', 'colors')!
+export const intl = findByProps<{
     intl: import('@discord/intl').IntlManager & {
         format: typeof import('@discord/intl').astFormatter['format']
         formatToPlainString: typeof import('@discord/intl').stringFormatter['format']
@@ -40,32 +40,30 @@ export const intl = findByProps('intl') as {
             __phantom: unknown
         }
     >
-}
-export const intlModule = findByProps('runtimeHashMessageKey') as typeof import('@discord/intl')
+}>('intl')!
+export const intlModule = findByProps<typeof import('@discord/intl')>('runtimeHashMessageKey')!
 
-export const Logger = findByName('Logger') as typeof DiscordModules.Logger
+export const Logger = findByName('Logger') as unknown as typeof DiscordModules.Logger
 
-export const legacy_i18n = findByProps('Messages')
-export const legacy_alerts = findByProps('openLazy', 'close')
+export const legacy_alerts = findByProps('openLazy', 'close')!
 
-export const alerts = findByProps('openAlert', 'dismissAlert')
-export const channels = findByProps('getVoiceChannelId')
-export const links = findByProps('openDeeplink') as DiscordModules.LinkingUtils
-export const clipboard = findByProps('getImagePNG') as DiscordModules.ClipboardUtils
-export const invites = findByProps('createInvite') as DiscordModules.InviteUtils
-export const commands = findByProps('getBuiltInCommands')
-export const toasts = findByFilePath('modules/toast/native/ToastActionCreators.tsx', true)
-export const messages = findByProps('sendBotMessage') as DiscordModules.MessageUtils
+export const alerts = findByProps('openAlert', 'dismissAlert')!
+export const channels = findByProps('getVoiceChannelId')!
+export const links = findByProps<DiscordModules.LinkingUtils>('openDeepLink')!
+export const clipboard = findByProps<DiscordModules.ClipboardUtils>('getImagePNG')!
+export const invites = findByProps<DiscordModules.InviteUtils>('createInvite')!
+export const commands = findByProps('getBuiltInCommands')!
+export const toasts = findByFilePath('modules/toast/native/ToastActionCreators.tsx', true)!
+export const messages = findByProps<DiscordModules.MessageUtils>('sendBotMessage')!
 
-export const NavigationStack = findByProps('createStackNavigator') as typeof import('@react-navigation/stack')
-export const NavigationNative = findByProps('NavigationContainer') as Omit<
-    typeof import('@react-navigation/native'),
-    'useNavigation'
-> & {
-    useNavigation: typeof import('@react-navigation/native').useNavigation<
-        import('@react-navigation/stack').StackNavigationProp<NavigationNativeStackParamList>
-    >
-}
+export const NavigationStack = findByProps<typeof import('@react-navigation/stack')>('createStackNavigator')!
+export const NavigationNative = findByProps<
+    Omit<typeof import('@react-navigation/native'), 'useNavigation'> & {
+        useNavigation: typeof import('@react-navigation/native').useNavigation<
+            import('@react-navigation/stack').StackNavigationProp<NavigationNativeStackParamList>
+        >
+    }
+>('NavigationContainer')!
 
 export type NavigationNativeStackParamList = {
     RevengeCustomPage: { title: string; render: ComponentType }
@@ -73,28 +71,28 @@ export type NavigationNativeStackParamList = {
     [Page: string]: any
 }
 
-export const { TextStyleSheet, createStyles } = lazyDestructure(() =>
-    findByProps.eager('TextInput', 'ContextMenu'),
-) as {
-    createStyles: DiscordModules.Styles.CreateStylesFn
-    TextStyleSheet: DiscordModules.Styles.TextStyleSheet
-}
+export const { TextStyleSheet, createStyles } = lazyDestructure(
+    () =>
+        findByProps.eager<{
+            createStyles: DiscordModules.Styles.CreateStylesFn
+            TextStyleSheet: DiscordModules.Styles.TextStyleSheet
+        }>('createStyles', 'TextStyleSheet')!,
+)
 
 /// FLUX
 
 export const Flux = findByProps('connectStores')
-// TODO: If this fucks up, remove lazy
-export const FluxDispatcher = findByProps('_interceptors') as DiscordModules.Flux.Dispatcher
+export const FluxDispatcher = findByProps<DiscordModules.Flux.Dispatcher>('_interceptors')
 
 /// REACT
 
-export const assetsRegistry = findByProps('registerAsset') as typeof ReactNativeInternals.AssetsRegistry
+export const assetsRegistry = findByProps<typeof ReactNativeInternals.AssetsRegistry>('registerAsset')!
 export const React = (globalThis.React = ImportedReact)
 export const ReactNative = (globalThis.ReactNative = ImportedReactNative)
 
 /// OTHERS
 
-export const semver = findByProps('SEMVER_SPEC_VERSION') as typeof import('semver')
-export const xxhash64 = findByProps('XXH64') as typeof import('@intrnl/xxhash64')
-export const nobleHashesUtils = findByProps('randomBytes') as typeof import('@noble/hashes/utils')
+export const semver = findByProps<typeof import('semver')>('SEMVER_SPEC_VERSION')!
+export const xxhash64 = findByProps<typeof import('@intrnl/xxhash64')>('XXH64')!
+export const nobleHashesUtils = findByProps<typeof import('@noble/hashes/utils')>('randomBytes')!
 export * from 'events'
