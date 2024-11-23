@@ -19,12 +19,12 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@swc/core": "^1.7.39",
-    "@swc/helpers": "^0.5.13",
+    "@swc/core": "^1.9.3",
+    "@swc/helpers": "^0.5.15",
     "@tsconfig/strictest": "^2.0.5",
     "chalk": "^5.3.0",
     "esbuild": "^0.24.0",
-    "typescript": "^5.6.3",
+    "typescript": "^5.7.2",
     "yargs-parser": "^21.1.1"
   },
   "workspaces": ["libraries/*"]
