@@ -2,6 +2,7 @@
   "name": "@revenge-mod/revenge",
   "module": "src/index.tsx",
   "type": "module",
+  "license": "BSD-3-Clause",
   "scripts": {
     "serve": "node ./scripts/serve.mjs",
     "build": "node ./scripts/build.mjs"
