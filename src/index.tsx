@@ -1,33 +1,44 @@
 // So objectSeal and objectFreeze contain the proper functions before we overwrite them
 import '@revenge-mod/utils/functions'
-import { recordTimestamp } from '@revenge-mod/debug'
 
-import { AppLibrary } from '@revenge-mod/app'
-import { AssetsLibrary } from '@revenge-mod/assets'
-import { type Metro, ModulesLibrary } from '@revenge-mod/modules'
-import { IndexMetroModuleId } from '@revenge-mod/modules/constants'
-import { ClientInfoModule } from '@revenge-mod/modules/native'
-import { PluginsLibrary } from '@revenge-mod/plugins'
-import { internalSymbol } from '@revenge-mod/shared/symbols'
-import { awaitStorage } from '@revenge-mod/storage'
-import * as uiColors from '@revenge-mod/ui/colors'
-import { SettingsUILibrary } from '@revenge-mod/ui/settings'
-import { getErrorStack } from '@revenge-mod/utils/errors'
 import Libraries from '@revenge-mod/utils/library'
 
+import { recordTimestamp } from '@revenge-mod/debug'
+import { IndexMetroModuleId } from '@revenge-mod/modules/constants'
+import { ClientInfoModule } from '@revenge-mod/modules/native'
+import { internalSymbol } from '@revenge-mod/shared/symbols'
+import { getErrorStack } from '@revenge-mod/utils/errors'
+
+import type { Metro } from '@revenge-mod/modules'
+
 // ! This function is BLOCKING, so we need to make sure it's as fast as possible
-function initialize() {
+async function initialize() {
+    const [
+        { AppLibrary },
+        { AssetsLibrary },
+        { ModulesLibrary },
+        { PluginsLibrary },
+        { awaitStorage },
+        UIColorsLibrary,
+        { SettingsUILibrary },
+    ] = await Promise.all([
+        import('@revenge-mod/app'),
+        import('@revenge-mod/assets'),
+        import('@revenge-mod/modules'),
+        import('@revenge-mod/plugins'),
+        import('@revenge-mod/storage'),
+        import('@revenge-mod/ui/colors'),
+        import('@revenge-mod/ui/settings'),
+    ])
+
     recordTimestamp('Init_Initialize')
     Object.freeze = Object.seal = o => o
 
     try {
         const promise = ModulesLibrary.new().then(modules => {
-            const promise = import('@revenge-mod/preferences')
             // Initialize storages
+            const preferencesPromise = import('@revenge-mod/preferences')
 
-            // Initializing this early (before modules module) can sometimes cause the app to be in a limbo state
-            // Don't know how, and why
-            const app = AppLibrary.new()
             const plugins = PluginsLibrary.new()
             const corePluginsPromise = import('./plugins').then(() => {
                 recordTimestamp('Plugins_CoreImported')
@@ -42,7 +53,7 @@ function initialize() {
                 ui,
             }
 
-            promise.then(async ({ settings }) => {
+            preferencesPromise.then(async ({ settings }) => {
                 await awaitStorage(settings)
                 recordTimestamp('Storage_Initialized')
                 corePluginsPromise.then(() => {
@@ -54,9 +65,10 @@ function initialize() {
 
         // Initialize libraries that don't need the whole instance of @revenge-mod/modules
         const assets = AssetsLibrary.new()
+        const app = AppLibrary.new()
         const ui = {
             settings: SettingsUILibrary.new(),
-            colors: uiColors,
+            colors: UIColorsLibrary,
         }
 
         return promise
@@ -67,46 +79,8 @@ function initialize() {
 
 function onError(e: unknown) {
     Libraries.destroyAll()
-
     console.error(`Failed to load Revenge: ${getErrorStack(e)}`)
-
-    if (ReactNative && !ReactNative.AppRegistry.getAppKeys().includes('Discord')) {
-        const styles = ReactNative.StyleSheet.create({
-            view: {
-                flex: 1,
-                backgroundColor: '#000b',
-                padding: 16,
-            },
-            head: {
-                fontSize: 24,
-                fontWeight: 'bold',
-                color: 'white',
-            },
-            desc: {
-                fontSize: 16,
-                color: 'white',
-            },
-            stack: {
-                fontSize: 16,
-                fontFamily: 'monospace',
-                color: 'white',
-            },
-        })
-
-        ReactNative.AppRegistry.registerComponent('Discord', () => () => (
-            <ReactNative.View style={styles.view}>
-                <ReactNative.Text style={styles.head}>Failed to load Revenge, and Discord!</ReactNative.Text>
-                <ReactNative.Text style={[styles.desc, { marginBottom: 16 }]}>
-                    The app is unable to start at this stage, as the index module (module 0) could not be imported in
-                    time. This will result in a native crash if not caught by Revenge!
-                </ReactNative.Text>
-                <ReactNative.Text style={styles.desc}>Stack trace (scrollable):</ReactNative.Text>
-                <ReactNative.ScrollView style={{ flex: 1 }}>
-                    <ReactNative.Text style={styles.stack}>{getErrorStack(e)}</ReactNative.Text>
-                </ReactNative.ScrollView>
-            </ReactNative.View>
-        ))
-    } else alert(['Failed to load Revenge\n', `Build Number: ${ClientInfoModule.Build}`, getErrorStack(e)].join('\n'))
+    alert(['Failed to load Revenge\n', `Build Number: ${ClientInfoModule.Build}`, getErrorStack(e)].join('\n'))
 }
 
 Libraries.create(
@@ -120,7 +94,7 @@ Libraries.create(
         // https://github.com/facebook/hermes/blob/3332fa020cae0bab751f648db7c94e1d687eeec7/lib/InternalBytecode/01-Promise.js#L446
         const originalPromiseRejectionHandler = Promise._m
         const ErrorTypeWhitelist = [ReferenceError, TypeError, RangeError]
-        Promise._m = (promise, err) => {
+        ;(HermesInternal as HermesInternalObject).setPromiseRejectionTrackingHook((promise, err) => {
             // If the rejections are useful enough, we log them
             if (err)
                 setTimeout(
@@ -131,7 +105,7 @@ Libraries.create(
                     ErrorTypeWhitelist.some(it => err instanceof it) ? 0 : 2000,
                     // The time is completely arbitary. I've picked what Hermes chose.
                 )
-        }
+        })
 
         cleanup(() => {
             // @ts-expect-error
@@ -149,9 +123,7 @@ Libraries.create(
 
             const batchedBridge = __fbBatchedBridge
 
-            // TODO: Check if this is needed
-            // patcher.before(batchedBridge, 'callFunctionReturnFlushedQueue', noop)
-
+            // biome-ignore lint/suspicious/noExplicitAny: Too lazy to type this
             const callQueue: any[] = []
             const unpatch = patcher.instead(
                 batchedBridge,
