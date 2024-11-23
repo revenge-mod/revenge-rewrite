@@ -1,6 +1,9 @@
 import { lazyDestructure } from '@revenge-mod/utils/lazy'
 import { findByFilePath, findByName, findByProps } from '../finders'
 
+import ImportedReact from 'react'
+import ImportedReactNative from 'react-native'
+
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { ComponentType } from 'react'
 import type { DiscordModules } from '../types'
@@ -86,8 +89,8 @@ export const FluxDispatcher = findByProps('_interceptors') as DiscordModules.Flu
 /// REACT
 
 export const assetsRegistry = findByProps('registerAsset') as typeof ReactNativeInternals.AssetsRegistry
-export const React = (globalThis.React = findByProps('createElement') as typeof import('react'))
-export const ReactNative = (globalThis.ReactNative = findByProps('AppRegistry') as typeof import('react-native'))
+export const React = (globalThis.React = ImportedReact)
+export const ReactNative = (globalThis.ReactNative = ImportedReactNative)
 
 /// OTHERS
 
