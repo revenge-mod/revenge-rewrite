@@ -1,17 +1,17 @@
 import Libraries from '@revenge-mod/utils/library'
 
-import type { ComponentType } from 'react'
-import type { ImageURISource } from 'react-native'
+import type { ComponentType, ReactNode } from 'react'
+import type { ImageSourcePropType } from 'react-native'
 
 export type RawRowConfig<CT extends ComponentType = ComponentType> = {
     title: () => string
     parent: string | null
     unsearchable?: boolean
     /** @deprecated Since 256.5 */
-    icon?: ImageURISource | number
-    IconComponent?: () => JSX.Element
+    icon?: ImageSourcePropType
+    IconComponent?: () => ReactNode
     usePredicate?: () => boolean
-    useTrailing?: () => string | JSX.Element
+    useTrailing?: () => ReactNode
     useDescription?: () => string
     useIsDisabled?: () => boolean
 } & (
@@ -31,7 +31,7 @@ export type RawRowConfig<CT extends ComponentType = ComponentType> = {
 )
 
 export type BaseRowConfig = {
-    icon?: ImageURISource | number
+    icon?: ImageSourcePropType
     label: string
     description?: string
     trailing?: string | JSX.Element
