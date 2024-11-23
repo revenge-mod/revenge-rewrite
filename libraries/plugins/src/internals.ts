@@ -1,3 +1,4 @@
+import { isAppRendered } from '@revenge-mod/app'
 import { type MetroModuleSubscriptionCallback, subscribeModule } from '@revenge-mod/modules/metro'
 import { type Patcher, createPatcherInstance } from '@revenge-mod/patcher'
 import { createStorage } from '@revenge-mod/storage'
@@ -5,7 +6,6 @@ import { objectSeal } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
 import type React from 'react'
 import type { PluginContext, PluginDefinition, PluginStage, PluginStorage } from '.'
-import { isAppRendered } from '@revenge-mod/app'
 import { PluginIdRegex, PluginStatus } from './constants'
 
 export const appRenderedCallbacks = new Set<() => Promise<unknown>>()

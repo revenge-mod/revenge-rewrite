@@ -26,41 +26,56 @@ export function afterAppRendered(callback: AppGenericCallback) {
 afterAppInitialized(() => (isAppInitialized = true))
 afterAppRendered(() => (isAppRendered = true))
 
-const unpatchRunApplication = patcher.after(ReactNative.AppRegistry, 'runApplication', () => {
-    unpatchRunApplication()
-    recordTimestamp('App_RunApplicationCalled')
-    for (const callback of initializeCallbacks) callback()
-    recordTimestamp('App_AfterRunCallbacks')
-}, 'runInitializeCallbacks')
+const unpatchRunApplication = patcher.after(
+    ReactNative.AppRegistry,
+    'runApplication',
+    () => {
+        unpatchRunApplication()
+        recordTimestamp('App_RunApplicationCalled')
+        for (const callback of initializeCallbacks) callback()
+        recordTimestamp('App_AfterRunCallbacks')
+    },
+    'runInitializeCallbacks',
+)
 
-const unpatchCreateElement = patcher.after(React, 'createElement', () => {
-    unpatchCreateElement()
-    recordTimestamp('App_CreateElementCalled')
-    for (const callback of renderCallbacks) callback()
-}, 'runRenderCallbacks')
+const unpatchCreateElement = patcher.after(
+    React,
+    'createElement',
+    () => {
+        unpatchCreateElement()
+        recordTimestamp('App_CreateElementCalled')
+        for (const callback of renderCallbacks) callback()
+    },
+    'runRenderCallbacks',
+)
 
-const unpatchRegisterComponent = patcher.before(ReactNative.AppRegistry, 'registerComponent', () => {
-    unpatchRegisterComponent()
+const unpatchRegisterComponent = patcher.before(
+    ReactNative.AppRegistry,
+    'registerComponent',
+    () => {
+        unpatchRegisterComponent()
 
-    setImmediate(async () => {
-        const { default: Screen } = await import('./components/ErrorBoundaryScreen')
+        setImmediate(async () => {
+            const { default: Screen } = await import('./components/ErrorBoundaryScreen')
 
-        patcher.after.await(
-            findByName.async('ErrorBoundary').then(it => it.prototype as ErrorBoundaryComponentPrototype),
-            'render',
-            function (this: ErrorBoundaryComponentPrototype) {
-                if (this.state.error)
-                    return (
-                        <Screen
-                            error={this.state.error}
-                            rerender={() => this.setState({ error: null, info: null })}
-                            reload={this.handleReload}
-                        />
-                    )
-            },
-        )
-    })
-}, 'patchErrorBoundary')
+            patcher.after.await(
+                findByName.async('ErrorBoundary').then(it => it.prototype as ErrorBoundaryComponentPrototype),
+                'render',
+                function (this: ErrorBoundaryComponentPrototype) {
+                    if (this.state.error)
+                        return (
+                            <Screen
+                                error={this.state.error}
+                                rerender={() => this.setState({ error: null, info: null })}
+                                reload={this.handleReload}
+                            />
+                        )
+                },
+            )
+        })
+    },
+    'patchErrorBoundary',
+)
 
 export const AppLibrary = {
     /**
