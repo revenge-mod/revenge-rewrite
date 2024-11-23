@@ -1,9 +1,20 @@
 import type { If, Nullish } from '@revenge-mod/shared/types'
 import type React from 'react'
 
-import type { ViewProps } from 'react-native'
+import type { ReactNode } from 'react'
+import type {
+    ImageProps,
+    ImageSourcePropType,
+    ImageStyle,
+    PressableProps,
+    TextProps,
+    TextStyle,
+    ViewProps,
+    ViewStyle,
+} from 'react-native'
+import type { MetroModuleFilePathKey } from './constants'
+
 /// METRO
-import type { metroModuleFilePathKey } from './metro/patcher'
 
 /** @see {@link https://github.com/facebook/metro/blob/c2d7539dfc10aacb2f99fcc2f268a3b53e867a90/packages/metro-runtime/src/polyfills/require.js} */
 export namespace Metro {
@@ -59,7 +70,7 @@ export namespace Metro {
         /**
          * This is set by us. Should be available for all Discord's tsx modules!
          */
-        [metroModuleFilePathKey]?: string
+        [MetroModuleFilePathKey]?: string
     }
 
     export type ModuleList = Record<ModuleID, ModuleDefinition | Nullish>
@@ -251,13 +262,60 @@ export namespace DiscordModules {
         verbose(...args: unknown[]): void
     }
 
+    export namespace Styles {
+        export type TextType = 'heading' | 'text'
+        export type BasicTextSize = 'sm' | 'md' | 'lg'
+        export type BasicTextSizeWithExtraLarges = BasicTextSize | 'xl' | 'xxl'
+        export type TextSize = BasicTextSizeWithExtraLarges | 'xs' | 'xxs'
+        export type TextWeight = 'normal' | 'medium' | 'semibold' | 'bold'
+        export type TextWeightWithExtraBold = TextWeight | 'extrabold'
+        export type RedesignTextCategory = 'message-preview' | 'channel-title'
+
+        export type TextVariant =
+            | `heading-${BasicTextSizeWithExtraLarges}/${TextWeightWithExtraBold}`
+            | `text-${TextSize}/${TextWeight}`
+            | `display-${BasicTextSize}`
+            | `redesign/${RedesignTextCategory}/${TextWeight}`
+            | 'redesign/heading-18/bold'
+            | 'eyebrow'
+
+        export type TextStyleSheet = Record<TextVariant, TextProps>
+        export type CreateStylesFn = <const S extends Record<string, TextStyle | ViewStyle | ImageStyle>>(
+            styles: S,
+        ) => () => S
+    }
+
     export namespace Components {
         // Buttons
-        export type Button = React.FC<{
-            text: string
-            onPress: () => unknown
-            variant?: 'primary' | 'secondary' | 'destructive'
-        }>
+        export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg'
+        export type Button = React.FC<
+            PressableProps & {
+                renderIcon?(): ReactNode
+                renderRightIcon?(): ReactNode
+                renderShine?(): ReactNode
+                renderLinearGradient?(): ReactNode
+                cornerRadius?: number
+                textStyle?: TextStyle
+                loadingColorLight?: string
+                loadingColorDark?: string
+                disabled?: boolean
+                size?: ButtonSize
+                text: string
+                onPress?: () => unknown
+                variant?:
+                    | 'primary'
+                    | 'secondary'
+                    | 'destructive'
+                    | 'active'
+                    | 'primary-overlay'
+                    | 'green'
+                    | 'red'
+                    | 'grey'
+                    | 'lightgrey'
+                    | 'transparent'
+                    | 'white'
+            }
+        >
         export type TwinButtons = React.FC
         export type IconButton = React.FC
         export type RowButton = React.FC
@@ -271,7 +329,17 @@ export namespace DiscordModules {
                 direction?: 'vertical' | 'horizontal'
             }
         >
-        export type Card = React.FC
+        export type Card = React.FC<
+            ViewProps & {
+                start?: boolean
+                end?: boolean
+                variant?: 'primary' | 'secondary'
+                border?: 'faint' | 'normal' | 'strong' | 'subtle'
+                // TODO
+                shadow?: 'none'
+                children: ReactNode
+            }
+        >
         export type PressableScale = React.FC
 
         // Inputs
@@ -304,22 +372,99 @@ export namespace DiscordModules {
         export type ActionSheetHeaderBar = React.FC
         export type BottomSheetTitleHeader = React.FC
 
+        export type IconSize =
+            | 'extraSmall10'
+            | 'extraSmall'
+            | 'small'
+            | 'small20'
+            | 'medium'
+            | 'large'
+            | 'custom'
+            | 'refreshSmall16'
+            | 'small14'
+
         // Tables
-        export type TableRow = React.FC
-        export type TableSwitchRow = React.FC
-        export type TableRowGroup = React.FC
-        export type TableRowIcon = React.FC
-        export type TableRadioGroup = React.FC
-        export type TableCheckboxRow = React.FC
-        export type TableRadioRow = React.FC
-        export type TableRowTrailingText = React.FC
-        export type TableSwitch = React.FC
-        export type TableRadio = React.FC
-        export type TableCheckbox = React.FC
+        export type TableRowVariant = 'default' | 'danger'
+        export type TableRowProps = {
+            label: string
+            subLabel?: string
+            icon?: ReactNode
+            trailing?: ReactNode
+            arrow?: boolean
+            onPress?: PressableProps['onPress']
+            disabled?: boolean
+            draggable?: boolean
+            dragHandlePressableProps?: PressableProps
+            labelLineClamp?: number
+            subLabelLineClamp?: number
+            // TODO
+            start?: unknown
+            end?: unknown
+            variant?: TableRowVariant
+        }
+        export type TableRowGroupProps = {
+            title?: string
+            description?: string
+            hasIcons?: boolean
+            accessibilityLabel?: string
+            accessibilityRole?: string
+            children: React.ReactNode
+        }
+        export type TableRow = React.FC<TableRowProps> & {
+            Arrow: React.FC
+            Icon: TableRowIcon
+        }
+        export type TableSwitchRow = React.FC<
+            Omit<TableRowProps, 'trailing'> & {
+                accessibilityHint?: string
+                value: boolean
+                onValueChange(value: boolean): void
+            }
+        >
+        export type TableRowGroup = React.FC<TableRowGroupProps>
+        export type TableRowIconVariant =
+            | 'default'
+            | 'blurple'
+            | 'boosting-pink'
+            | 'status-online'
+            | 'status-idle'
+            | 'status-dnd'
+            | 'status-offline'
+            | 'xbox'
+            | 'playstation'
+            | 'danger'
+            | 'secondary'
+            | 'translucent'
+        export type TableRowIcon = React.FC<{
+            source: ImageSourcePropType
+            variant?: TableRowIconVariant
+        }>
+        export type TableRadioGroup<T = unknown> = React.FC<
+            TableRowGroupProps & {
+                onChange(value: T): void
+            }
+        >
+        export type TableCheckboxRow = React.FC<
+            Omit<TableRowProps, 'trailing'> & {
+                accessibilityHint?: string
+                checked: boolean
+                // TODO
+                onPress: unknown
+            }
+        >
+        export type TableRadioRow<T = unknown> = React.FC<
+            Omit<TableRowProps, 'trailing'> & {
+                accessibilityHint?: string
+                value: T
+            }
+        >
+        export type TableRowTrailingText = React.FC<{
+            text: string
+        }>
 
         // Alerts
         export type AlertModal = React.FC
-        export type AlertActionButton = React.FC
+        export type AlertActionButton = Button
 
         // Menus
         export type ContextMenu = React.FC
@@ -328,6 +473,16 @@ export namespace DiscordModules {
         // Other
         export type Slider = React.FC
         export type FlashList = React.FC
-        export type Text = React.FC
+        export type Text = React.FC<
+            TextProps & {
+                variant?: DiscordModules.Styles.TextVariant
+                color?: string
+                style?: TextStyle
+                lineClamp?: number
+                ellipsizeMode?: 'head' | 'middle' | 'tail' | 'clip'
+                tabularNumbers?: boolean
+                children?: ReactNode
+            }
+        >
     }
 }

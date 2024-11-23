@@ -70,9 +70,11 @@ export type NavigationNativeStackParamList = {
     [Page: string]: any
 }
 
-export const { TextStyleSheet, createStyles } = lazyDestructure(() => findByProps.eager('TextInput', 'ContextMenu')) as {
-    createStyles: unknown
-    TextStyleSheet: unknown
+export const { TextStyleSheet, createStyles } = lazyDestructure(() =>
+    findByProps.eager('TextInput', 'ContextMenu'),
+) as {
+    createStyles: DiscordModules.Styles.CreateStylesFn
+    TextStyleSheet: DiscordModules.Styles.TextStyleSheet
 }
 
 /// FLUX

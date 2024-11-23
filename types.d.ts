@@ -13,6 +13,7 @@ declare global {
     var modules: Metro.ModuleList
     var __r: Metro.RequireFn
     var __c: Metro.ClearFn
+    var nativePerformanceNow: typeof performance.now
 
     var revenge: RevengeLibrary
 
@@ -30,6 +31,31 @@ declare global {
      */
     declare function gc(): void
     declare function alert(message: unknown): void
+
+    interface Promise {
+        /// PROMISE POLYFILLS FROM: https://github.com/then/promise
+        _h: 0 | 1 | 2
+    }
+    // biome-ignore lint/suspicious/noExplicitAny: explode
+    type HermesPromiseRejectionHandler = (promise: Promise<any>, error: any) => void
+
+    interface PromiseConstructor {
+        _m: HermesPromiseRejectionHandler
+    }
+
+    interface HermesInternalObject {
+        getRuntimeProperties(): Record<string, string>
+        // biome-ignore lint/complexity/noBannedTypes: Don't complain
+        getFunctionLocation(fn: Function): {
+            fileName: string
+            lineNumber: number
+            columnNumber: number
+            segmentID: number
+            virtualOffset: number
+            isNative: boolean
+        }
+        setPromiseRejectionTrackingHook(handler: HermesPromiseRejectionHandler): void
+    }
 }
 
 /**
@@ -53,9 +79,6 @@ export interface RevengeLibrary {
     ui: {
         settings: SettingsUILibrary
     }
-    /** @internal */
-    // TODO:
-    // settings: typeof import('@revenge-mod/settings').default
 }
 
 export namespace ReactNativeInternals {
@@ -169,4 +192,3 @@ declare module 'events' {
     export * from './shims/events'
     export default events
 }
-
