@@ -3,7 +3,7 @@ import { noop } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
 import { find } from '../finders'
 import { getMetroModules, subscribeModule } from '../metro'
-import { indexedModuleIdsForLookup, metroCache } from '../metro/caches'
+import { cache, indexedModuleIdsForLookup } from '../metro/caches'
 
 import type { FilterFn, LazyModuleContext, Metro } from '../types'
 
@@ -30,7 +30,7 @@ function getLazyContext<A extends unknown[]>(proxy: Metro.ModuleExports): LazyMo
 export function createLazyModule<A extends unknown[]>(filter: FilterFn<A>) {
     const moduleIds = indexedModuleIdsForLookup(filter.key)
     let moduleId: number | undefined
-    let cache: Metro.ModuleExports
+    let cachedValue: Metro.ModuleExports
 
     const context: LazyModuleContext<A> = {
         filter,
@@ -41,13 +41,13 @@ export function createLazyModule<A extends unknown[]>(filter: FilterFn<A>) {
 
                 // If the module hasn't been indexed, or it has already been initialized (indexed is inferred)
                 if (getMetroModules()[moduleId]?.isInitialized) {
-                    if (!cache && !this.forceLoad()) {
+                    if (!cachedValue && !this.forceLoad()) {
                         // This module apparently doesn't exist, so we remove it from the cache
-                        delete metroCache.lookupFlags[filter.key]?.[moduleId]
+                        delete cache.lookupFlags[filter.key]?.[moduleId]
                         continue
                     }
 
-                    cb(cache)
+                    cb(cachedValue)
                     return noop
                 }
 
@@ -58,8 +58,8 @@ export function createLazyModule<A extends unknown[]>(filter: FilterFn<A>) {
                 return this.subscribe(cb)
             }
 
-            if (cache || this.forceLoad()) {
-                cb(cache)
+            if (cachedValue || this.forceLoad()) {
+                cb(cachedValue)
                 return noop
             }
 
@@ -71,13 +71,13 @@ export function createLazyModule<A extends unknown[]>(filter: FilterFn<A>) {
             return subscribeModuleLazy(proxy, cb)
         },
         get cache() {
-            return cache
+            return cachedValue
         },
         forceLoad() {
-            cache ??= find.eager(filter)
+            cachedValue ??= find.eager(filter)
             // // TODO: Maybe return undefined here instead of throwing an error?
             // if (!cache) throw new Error(`Cannot find module with filter: ${filter.key}`)
-            return cache
+            return cachedValue
         },
     }
 
