@@ -24,11 +24,11 @@ function createLibrary<Name extends string, Features extends LibraryFeatures, Re
 
     const patcher = features.includes('patcher') ? createPatcherInstance(id) : undefined
     const logger = features.includes('logger')
-        ? {
+        ? ({
               log: (message: string) => console.log(`${tag} ${message}`),
               warn: (message: string) => console.warn(`${tag} ${message}`),
               error: (message: string) => console.error(`${tag} ${message}`),
-          }
+          } satisfies LibraryLogger)
         : undefined
 
     const registered = {
@@ -148,3 +148,9 @@ export type LibraryCallbackContext<Features extends LibraryFeatures> = {
 }
 
 export type LibraryFeatures = 'patcher' | 'logger'
+
+export interface LibraryLogger {
+    log(...args: unknown[]): void
+    warn(...args: unknown[]): void
+    error(...args: unknown[]): void
+}
