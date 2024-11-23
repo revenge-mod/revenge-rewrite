@@ -5,36 +5,15 @@ import { objectSeal } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
 import type React from 'react'
 import type { PluginContext, PluginDefinition, PluginStage, PluginStorage } from '.'
-import { app } from './shared'
-
-export const PluginIdRegex = /^[a-z0-9-_\.]{1,128}$/
+import { isAppRendered } from '@revenge-mod/app'
+import { PluginIdRegex, PluginStatus } from './constants'
 
 export const appRenderedCallbacks = new Set<() => Promise<unknown>>()
-
 export const corePluginIds = new Set<string>()
-export const highPriorityPluginIds = new Set<InternalPluginDefinition['id']>()
 export const plugins = new Map<InternalPluginDefinition['id'], InternalPluginDefinition>()
 
-export const WhitelistedPluginObjectKeys = [
-    'description',
-    'disable',
-    'icon',
-    'id',
-    'name',
-    'version',
-    'stop',
-    'author',
-    'errors',
-] as const satisfies ReadonlyArray<keyof InternalPluginDefinition>
+const highPriorityPluginIds = new Set<InternalPluginDefinition['id']>()
 
-export const PluginStatus = {
-    Stopped: 1,
-    Fetching: 2,
-    Starting: 3,
-    Started: 4,
-}
-
-/** @internal */
 export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void, AppInitializedReturn = void>(
     definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &
         Partial<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>>,
@@ -53,7 +32,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         enabled: predicate?.() ?? core,
         core,
         status: PluginStatus.Stopped,
-        getSettingsComponent: definition.settings,
+        SettingsComponent: definition.settings,
         patcher: createPatcherInstance(`revenge.plugins.plugin#${definition.id}`),
         errors: [],
         get stopped() {
@@ -68,7 +47,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             this.enabled = true
             return !!this.beforeAppRender
         },
-        experimental_startMetroModuleSubscription() {
+        startMetroModuleSubscriptions() {
             if (this.onMetroModuleLoad) subscribeModule.all(this.onMetroModuleLoad)
         },
         async start() {
@@ -83,7 +62,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
                 throw new Error(`Plugin "${this.id}" failed to start at "${stage}":\n${String(e)}`, { cause: e })
             }
 
-            if (app.rendered && this.beforeAppRender)
+            if (isAppRendered && this.beforeAppRender)
                 handleError(
                     new Error(`Plugin "${this.id}" requires running before app is initialized`),
                     'beforeAppRender',
@@ -185,7 +164,7 @@ export type InternalPluginDefinition<Storage = any, AppLaunchedReturn = any, App
     /** @internal */
     enable(): boolean
     /** @internal */
-    experimental_startMetroModuleSubscription: () => void
+    startMetroModuleSubscriptions: () => void
     /** @internal */
     start(): Promise<void>
     /** @internal */
@@ -199,7 +178,7 @@ export type InternalPluginDefinition<Storage = any, AppLaunchedReturn = any, App
     /** @internal */
     status: (typeof PluginStatus)[keyof typeof PluginStatus]
     /** @internal */
-    getSettingsComponent?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
+    SettingsComponent?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
     /** @internal */
     core: boolean
     /** @internal */

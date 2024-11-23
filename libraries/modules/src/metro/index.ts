@@ -142,8 +142,10 @@ export async function initializeModules() {
     const metroModules = getMetroModules()
     if (metroModules[IndexMetroModuleId]?.isInitialized) throw new Error('Metro modules has already been initialized')
 
-    const cacheRestored = await restoreCache()
-    recordTimestamp('Modules_TriedRestoreCache')
+    const cacheRestoredPromise = restoreCache().then(result => {
+        recordTimestamp('Modules_TriedRestoreCache')
+        return result
+    })
 
     // Patches modules on load
     initializeModulePatches(patcher, logger, metroModules)
@@ -170,6 +172,11 @@ export async function initializeModules() {
         tryHookModule(id, metroModule)
     }
 
+    logger.log('Importing index module...')
+    // ! Do NOT use requireModule for this
+    __r(IndexMetroModuleId)
+    recordTimestamp('Modules_IndexRequired')
+
     // I'd use setTimeout here, but we missed a few modules due to that
     setImmediate(() => {
         for (; lastHookedIndex < moduleIds.length; lastHookedIndex++) {
@@ -182,13 +189,8 @@ export async function initializeModules() {
         recordTimestamp('Modules_HookedFactories')
     })
 
-    logger.log('Importing index module...')
-    // ! Do NOT use requireModule for this
-    __r(IndexMetroModuleId)
-    recordTimestamp('Modules_IndexRequired')
-
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
-    if (!cacheRestored) {
+    if (!(await cacheRestoredPromise)) {
         const unpatch = patcher.before(
             ReactNative.AppRegistry,
             'runApplication',

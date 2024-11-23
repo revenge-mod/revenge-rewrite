@@ -1,6 +1,5 @@
-import { lazyDestructure } from '@revenge-mod/utils/lazy'
-import Libraries from '@revenge-mod/utils/library'
-import { ModulesLibrary } from '.'
+import { createPatcherInstance } from '@revenge-mod/patcher'
+import { createLogger } from '@revenge-mod/utils/library'
 
-// Re-exports requires double lazyDestructures
-export const { patcher, logger } = lazyDestructure(() => Libraries.contextFor(ModulesLibrary))
+export const patcher = createPatcherInstance('revenge.library.modules')
+export const logger = createLogger('modules')

@@ -1,54 +1,43 @@
-import { ModulesLibrary } from '@revenge-mod/modules'
 import { assetsRegistry } from '@revenge-mod/modules/common'
-import { getImportingModuleId, cache as metroCache, requireModule } from '@revenge-mod/modules/metro'
-import Libraries from '@revenge-mod/utils/library'
+import { cacheAsset, getImportingModuleId, cache as metroCache, requireModule } from '@revenge-mod/modules/metro'
+import { createPatcherInstance } from '@revenge-mod/patcher'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 
-export const AssetsLibrary = Libraries.create(
-    {
-        name: 'assets',
-        uses: ['patcher'],
-    },
-    ({ patcher }) => {
-        Libraries.instanceFor(ModulesLibrary).then(({ metro }) => {
-            patcher.after(
-                assetsRegistry,
-                'registerAsset',
-                ([asset], index) => {
-                    // // A lot of duplicate assets are registered, so we need to check if it's already in the cache
-                    // if (asset.name in metroCache.assets) return
-                    const moduleId = getImportingModuleId()
-                    metro.cacheAsset(asset.name, index, moduleId)
-                },
-                'patchRegisterAsset',
-            )
-        })
+const patcher = createPatcherInstance('revenge.library.assets')
 
-        return {
-            assets,
-            getByName: getAssetByName,
-            getIndexByName: getAssetIndexByName,
-            getByIndex: getAssetByIndex,
-        }
+patcher.after(
+    assetsRegistry,
+    'registerAsset',
+    ([asset], index) => {
+        // // A lot of duplicate assets are registered, so we need to check if it's already in the cache
+        // if (asset.name in metroCache.assets) return
+        const moduleId = getImportingModuleId()
+        cacheAsset(asset.name, index, moduleId)
     },
+    'patchRegisterAsset',
 )
-
-export type AssetsLibrary = ReturnType<(typeof AssetsLibrary)['new']>
-
-type Asset = ReactNativeInternals.AssetsRegistry.PackagerAsset
 
 const assets = new Proxy(
     Object.fromEntries(
         Object.entries(metroCache.assets).map(([key, index]) => [key, assetsRegistry.getAssetByID(index)]),
-    ) as Record<string, Asset | undefined>,
+    ) as Record<string, ReactNativeInternals.AssetsRegistry.PackagerAsset | undefined>,
     {
         get(cache, prop: string) {
             if (cache[prop]) return cache[prop]
             return assetsRegistry.getAssetByID(Number(prop))
         },
     },
-) as Record<string, Asset | undefined>
+) as Record<string, ReactNativeInternals.AssetsRegistry.PackagerAsset | undefined>
+
+export const AssetsLibrary = {
+    assets,
+    getByName: getAssetByName,
+    getIndexByName: getAssetIndexByName,
+    getByIndex: getAssetByIndex,
+}
+
+export type AssetsLibrary = typeof AssetsLibrary
 
 /**
  * Returns the asset tied to the given name
