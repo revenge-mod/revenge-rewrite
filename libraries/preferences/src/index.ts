@@ -5,8 +5,9 @@ export interface Settings {
         enabled: boolean
         enabledNextLaunch: boolean
     }
-    developerSettingsEnabled: boolean
-    willBeMoved_staffSettingsEnabled: boolean
+    developer: {
+        settingsPageShown: boolean
+    }
 }
 
 export const settings = createStorage<Settings>('revenge/settings.json', {
@@ -15,8 +16,9 @@ export const settings = createStorage<Settings>('revenge/settings.json', {
             enabled: false,
             enabledNextLaunch: false,
         },
-        developerSettingsEnabled: false,
-        willBeMoved_staffSettingsEnabled: false,
+        developer: {
+            settingsPageShown: false,
+        },
     },
 })
 

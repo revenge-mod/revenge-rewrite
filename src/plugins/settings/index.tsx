@@ -1,8 +1,7 @@
-import { findInReactTree } from '@revenge-mod/utils/react'
-// TODO: Fix this path
-import { registerPlugin } from 'libraries/plugins/src/internals'
-
 import { TableRowIcon } from '@revenge-mod/modules/common/components'
+import { registerPlugin } from '@revenge-mod/plugins/internals'
+import { findInReactTree } from '@revenge-mod/utils/react'
+
 import {
     type PressableRowConfig,
     type RawRowConfig,
@@ -10,7 +9,8 @@ import {
     type ToggleRowConfig,
     customData,
 } from '@revenge-mod/ui/settings'
-import { settings } from 'libraries/preferences/src'
+
+import { settings } from '@revenge-mod/preferences'
 
 import RevengeIcon from '../../assets/revenge.webp'
 
@@ -37,106 +37,106 @@ registerPlugin(
                 ui: { settings: sui },
             },
         }) {
-            const SettingsConstants = modules.findByProps('SETTING_RENDERER_CONFIG')
-            const SettingsOverviewScreen = modules.findByName('SettingsOverviewScreen', false)
+            setTimeout(() => {
+                const SettingsConstants = modules.findByProps('SETTING_RENDERER_CONFIG')
+                const SettingsOverviewScreen = modules.findByName('SettingsOverviewScreen', false)
 
-            const originalRendererConfig = SettingsConstants.SETTING_RENDERER_CONFIG as Record<string, RawRowConfig>
-            let rendererConfig = originalRendererConfig
+                const originalRendererConfig = SettingsConstants.SETTING_RENDERER_CONFIG as Record<string, RawRowConfig>
+                let rendererConfig = originalRendererConfig
 
-            Object.defineProperty(SettingsConstants, 'SETTING_RENDERER_CONFIG', {
-                enumerable: true,
-                configurable: true,
-                get: () =>
-                    ({
-                        ...getCustomRows(),
-                        ...rendererConfig,
-                    }) satisfies Record<string, RawRowConfig>,
-                set: v => (rendererConfig = v),
-            })
-
-            cleanup(() => {
                 Object.defineProperty(SettingsConstants, 'SETTING_RENDERER_CONFIG', {
-                    value: originalRendererConfig,
-                    writable: true,
-                    get: undefined,
-                    set: undefined,
+                    enumerable: true,
+                    configurable: true,
+                    get: () =>
+                        ({
+                            ...getCustomRows(),
+                            ...rendererConfig,
+                        }) satisfies Record<string, RawRowConfig>,
+                    set: v => (rendererConfig = v),
                 })
-            })
 
-            patcher.after(
-                SettingsOverviewScreen,
-                'default',
-                (_, children) => {
-                    const registeredCustomRows = new Set(
-                        Object.values(customData.sections).flatMap(({ settings }) => Object.keys(settings)),
-                    )
+                cleanup(() => {
+                    Object.defineProperty(SettingsConstants, 'SETTING_RENDERER_CONFIG', {
+                        value: originalRendererConfig,
+                        writable: true,
+                    })
+                })
 
-                    const { sections } = findInReactTree(children, i => i.props?.sections).props as {
-                        sections: Array<{ label: string; settings: string[] }>
-                    }
+                patcher.after(
+                    SettingsOverviewScreen,
+                    'default',
+                    (_, children) => {
+                        const registeredCustomRows = new Set(
+                            Object.values(customData.sections).flatMap(({ settings }) => Object.keys(settings)),
+                        )
 
-                    // This means we've already spliced new sections
-                    if (
-                        sections.findIndex(section =>
-                            section.settings.some(setting => registeredCustomRows.has(setting)),
-                        ) !== -1
-                    )
-                        return
+                        const { sections } = findInReactTree(children, i => i.props?.sections).props as {
+                            sections: Array<{ label: string; settings: string[] }>
+                        }
 
-                    let index = -~sections.findIndex(section => section.settings.includes('ACCOUNT')) || 1
+                        // This means we've already spliced new sections
+                        if (
+                            sections.findIndex(section =>
+                                section.settings.some(setting => registeredCustomRows.has(setting)),
+                            ) !== -1
+                        )
+                            return
 
-                    for (const key in customData.sections) {
-                        const section = customData.sections[key]!
-                        sections.splice(index++, 0, {
-                            label: section.name,
-                            settings: Object.keys(section.settings),
-                        })
-                    }
-                },
-                'addNewSettingsSections',
-            )
+                        let index = -~sections.findIndex(section => section.settings.includes('ACCOUNT')) || 1
 
-            cleanup(
-                sui.createSection({
-                    name: 'Revenge',
-                    settings: {
-                        Revenge: {
-                            type: 'route',
-                            label: 'Revenge',
-                            icon: {
-                                uri: RevengeIcon,
-                            },
-                            component: RevengeSettingsPage,
-                        },
-                        RevengeDeveloper: {
-                            type: 'route',
-                            label: 'Developer',
-                            icon: assets.getIndexByName('WrenchIcon'),
-                            component: DeveloperSettingsPage,
-                            predicate: () => settings.developerSettingsEnabled,
-                        },
+                        for (const key in customData.sections) {
+                            const section = customData.sections[key]!
+                            sections.splice(index++, 0, {
+                                label: section.name,
+                                settings: Object.keys(section.settings),
+                            })
+                        }
                     },
-                }),
-                sui.createRoute('RevengeAbout', {
-                    type: 'route',
-                    label: 'About',
-                    component: AboutSettingsPage,
-                    icon: assets.getIndexByName('CircleInformationIcon'),
-                }),
-                sui.createRoute('RevengeDebugPerformanceTimes', {
-                    type: 'route',
-                    label: 'Debug Performance Times',
-                    component: DebugPerformanceTimesSettingsPage,
-                    icon: assets.getIndexByName('TimerIcon'),
-                }),
-                sui.createRoute('RevengeCustomPage', {
-                    type: 'route',
-                    label: 'Revenge Page',
-                    unsearchable: true,
-                    component: CustomPageRenderer,
-                    predicate: () => false,
-                }),
-            )
+                    'addNewSettingsSections',
+                )
+
+                cleanup(
+                    sui.createSection({
+                        name: 'Revenge',
+                        settings: {
+                            Revenge: {
+                                type: 'route',
+                                label: 'Revenge',
+                                icon: {
+                                    uri: RevengeIcon,
+                                },
+                                component: RevengeSettingsPage,
+                            },
+                            RevengeDeveloper: {
+                                type: 'route',
+                                label: 'Developer',
+                                icon: assets.getIndexByName('WrenchIcon'),
+                                component: DeveloperSettingsPage,
+                                predicate: () => settings.developer.settingsPageShown,
+                            },
+                        },
+                    }),
+                    sui.createRoute('RevengeAbout', {
+                        type: 'route',
+                        label: 'About',
+                        component: AboutSettingsPage,
+                        icon: assets.getIndexByName('CircleInformationIcon'),
+                    }),
+                    sui.createRoute('RevengeDebugPerformanceTimes', {
+                        type: 'route',
+                        label: 'Debug Performance Times',
+                        component: DebugPerformanceTimesSettingsPage,
+                        icon: assets.getIndexByName('TimerIcon'),
+                    }),
+                    sui.createRoute('RevengeCustomPage', {
+                        type: 'route',
+                        label: 'Revenge Page',
+                        unsearchable: true,
+                        component: CustomPageRenderer,
+                        predicate: () => false,
+                    }),
+                )
+            })
         },
     },
     true,
@@ -159,7 +159,7 @@ const transformRowToRawRow = (key: string, row: RowConfig): RawRowConfig => {
         title: () => row.label,
         parent: row.parent ?? null,
         icon: row.icon,
-        IconComponent: () => TableRowIcon({ source: row.icon }),
+        IconComponent: row.icon ? () => TableRowIcon({ source: row.icon! }) : undefined,
         unsearchable: row.unsearchable,
         screen:
             row.type === 'route'

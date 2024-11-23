@@ -7,15 +7,18 @@ import {
     TableRowTrailingText,
 } from '@revenge-mod/modules/common/components'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
-import type { ComponentProps } from 'react'
+
 import HermesIcon from '../../../assets/hermes.webp'
 import ReactIcon from '../../../assets/react.webp'
 import RevengeIcon from '../../../assets/revenge.webp'
 
+import type { ComponentProps } from 'react'
+import type { ImageSourcePropType } from 'react-native'
+
 const { assets } = revenge
 
 export default function AboutSettingsPage() {
-    const hermesProps = HermesInternal.getRuntimeProperties()
+    const runtimeProps = (HermesInternal as HermesInternalObject).getRuntimeProperties()
 
     return (
         <Stack style={{ paddingHorizontal: 16, paddingVertical: 24 }} spacing={16} direction="vertical">
@@ -52,14 +55,14 @@ export default function AboutSettingsPage() {
                         icon: {
                             uri: ReactIcon,
                         },
-                        trailing: hermesProps['OSS Release Version'].slice(7),
+                        trailing: runtimeProps['OSS Release Version']!.slice(7),
                     },
                     {
                         label: 'Hermes Bytecode',
                         icon: {
                             uri: HermesIcon,
                         },
-                        trailing: `${hermesProps['Bytecode Version']} (${hermesProps.Build})`,
+                        trailing: `${runtimeProps['Bytecode Version']} (${runtimeProps.Build})`,
                     },
                 ].map(props => (
                     // biome-ignore lint/correctness/useJsxKeyInIterable: This page never gets updated
@@ -70,7 +73,7 @@ export default function AboutSettingsPage() {
     )
 }
 
-function VersionRow(props: ComponentProps<typeof TableRow>) {
+function VersionRow(props: Omit<ComponentProps<typeof TableRow>, 'icon'> & { icon: ImageSourcePropType }) {
     return (
         <TableRow
             label={props.label}

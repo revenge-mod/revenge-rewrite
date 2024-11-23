@@ -9,11 +9,15 @@ import {
     TextArea,
 } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
+import { settings } from '@revenge-mod/preferences'
+import { useObservable } from '@revenge-mod/storage'
 
 export default function DeveloperSettingsPage() {
     const { assets, modules } = revenge
     const navigation = NavigationNative.useNavigation()
-    const inputRef = React.useRef('')
+    const evalCodeRef = React.useRef('')
+
+    useObservable([settings])
 
     return (
         <Stack style={{ paddingHorizontal: 16, paddingVertical: 24 }} spacing={16} direction="vertical">
@@ -32,7 +36,7 @@ export default function DeveloperSettingsPage() {
                                         label="Code"
                                         size="md"
                                         placeholder="ReactNative.NativeModules.BundleUpdaterManager.reload()"
-                                        onChange={(v: string) => (inputRef.current = v)}
+                                        onChange={(v: string) => (evalCodeRef.current = v)}
                                     />
                                 }
                                 actions={
@@ -44,7 +48,7 @@ export default function DeveloperSettingsPage() {
                                                 alert(
                                                     modules.findProp('inspect')(
                                                         // biome-ignore lint/security/noGlobalEval: This is intentional
-                                                        globalThis.eval(inputRef.current),
+                                                        globalThis.eval(evalCodeRef.current),
                                                         { depth: 5 },
                                                     ),
                                                 )

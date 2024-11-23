@@ -34,8 +34,8 @@ export default function RevengeSettingsPage() {
                 <TableSwitchRow
                     label="Show Developer Options"
                     icon={<TableRowIcon source={assets.getIndexByName('WrenchIcon')} />}
-                    value={settings.developerSettingsEnabled}
-                    onValueChange={(v: boolean) => (settings.developerSettingsEnabled = v)}
+                    value={settings.developer.settingsPageShown}
+                    onValueChange={(v: boolean) => (settings.developer.settingsPageShown = v)}
                 />
                 {...rows.map((Row, index) => <Row key={index.toString()} />)}
             </TableRowGroup>
