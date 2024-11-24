@@ -7,6 +7,7 @@ export interface Settings {
     }
     developer: {
         settingsPageShown: boolean
+        patchErrorBoundary: boolean
     }
 }
 
@@ -18,6 +19,7 @@ export const settings = createStorage<Settings>('revenge/settings.json', {
         },
         developer: {
             settingsPageShown: false,
+            patchErrorBoundary: true,
         },
     },
 })

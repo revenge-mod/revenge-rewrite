@@ -2,6 +2,7 @@ import { recordTimestamp } from '@revenge-mod/debug'
 import { findByName } from '@revenge-mod/modules/finders'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { createPatcherInstance } from '@revenge-mod/patcher'
+import { awaitStorage } from '@revenge-mod/storage'
 
 import type { Component, FC, ReactNode } from 'react'
 
@@ -49,33 +50,31 @@ const unpatchCreateElement = patcher.after(
     'runRenderCallbacks',
 )
 
-const unpatchRegisterComponent = patcher.before(
-    ReactNative.AppRegistry,
-    'registerComponent',
-    () => {
-        unpatchRegisterComponent()
+afterAppInitialized(async function patchErrorBoundary() {
+    const { settings } = await import('@revenge-mod/preferences')
+    await awaitStorage(settings)
+    if (!settings.developer.patchErrorBoundary) return
 
-        setImmediate(async () => {
-            const { default: Screen } = await import('./components/ErrorBoundaryScreen')
+    const { default: Screen } = await import('./components/ErrorBoundaryScreen')
 
-            patcher.after.await(
-                findByName.async<ErrorBoundaryComponentPrototype, true>('ErrorBoundary').then(it => it!.prototype),
-                'render',
-                function (this: ErrorBoundaryComponentPrototype) {
-                    if (this.state.error)
-                        return (
-                            <Screen
-                                error={this.state.error}
-                                rerender={() => this.setState({ error: null, info: null })}
-                                reload={this.handleReload}
-                            />
-                        )
-                },
-            )
-        })
-    },
-    'patchErrorBoundary',
-)
+    setImmediate(() => {
+        patcher.after.await(
+            findByName.async<ErrorBoundaryComponentPrototype, true>('ErrorBoundary').then(it => it!.prototype),
+            'render',
+            function (this: ErrorBoundaryComponentPrototype) {
+                if (this.state.error)
+                    return (
+                        <Screen
+                            error={this.state.error}
+                            rerender={() => this.setState({ error: null, info: null })}
+                            reload={this.handleReload}
+                        />
+                    )
+            },
+            'patchErrorBoundary',
+        )
+    })
+})
 
 export const AppLibrary = {
     /**

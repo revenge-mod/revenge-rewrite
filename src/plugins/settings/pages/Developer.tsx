@@ -6,6 +6,7 @@ import {
     TableRow,
     TableRowGroup,
     TableRowIcon,
+    TableSwitchRow,
     TextArea,
 } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
@@ -21,7 +22,14 @@ export default function DeveloperSettingsPage() {
 
     return (
         <Stack style={{ paddingHorizontal: 16, paddingVertical: 24 }} spacing={16} direction="vertical">
-            <TableRowGroup title="Tools">
+            <TableRowGroup>
+                <TableSwitchRow
+                    label="Patch ErrorBoundary"
+                    subLabel="Allows you to see a more detailed error screen, but may slow down the app during startup."
+                    icon={<TableRowIcon source={assets.getIndexByName('ScreenXIcon')} />}
+                    value={settings.developer.patchErrorBoundary}
+                    onValueChange={v => (settings.developer.patchErrorBoundary = v)}
+                />
                 <TableRow
                     label="Evaluate JavaScript"
                     icon={<TableRowIcon source={assets.getIndexByName('PaperIcon')} />}
