@@ -95,23 +95,24 @@ function tryHookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) 
                 const originalImportingId = importingModuleId
                 importingModuleId = id
 
-                const { 1: metroRequire, 4: moduleObject } = args
+                const { 4: moduleObject } = args
 
-                // metroImportDefault
-                args[2] = id => {
-                    const exps = metroRequire(id)
-                    return exps?.__esModule ? exps.default : exps
-                }
+                // TODO: Check if this is required
+                // // metroImportDefault
+                // args[2] = id => {
+                //     const exps = metroRequire(id)
+                //     return exps?.__esModule ? exps.default : exps
+                // }
 
-                // metroImportAll
-                args[3] = id => {
-                    const exps = metroRequire(id)
-                    if (exps?.__esModule) return exps
-                    return {
-                        default: exps,
-                        ...exps,
-                    }
-                }
+                // // metroImportAll
+                // args[3] = id => {
+                //     const exps = metroRequire(id)
+                //     if (exps?.__esModule) return exps
+                //     return {
+                //         default: exps,
+                //         ...exps,
+                //     }
+                // }
 
                 try {
                     origFunc(...args)
@@ -142,10 +143,8 @@ export async function initializeModules() {
     const metroModules = getMetroModules()
     if (metroModules[IndexMetroModuleId]?.isInitialized) throw new Error('Metro modules has already been initialized')
 
-    const cacheRestoredPromise = restoreCache().then(result => {
-        recordTimestamp('Modules_TriedRestoreCache')
-        return result
-    })
+    const cacheRestored = await restoreCache()
+    recordTimestamp('Modules_TriedRestoreCache')
 
     // Patches modules on load
     initializeModulePatches(patcher, logger, metroModules)
@@ -161,12 +160,12 @@ export async function initializeModules() {
 
     // To be reliable in finding modules, we need to hook module factories before requiring index
     // This slows down the app by a bit (up to 1s), so we defer some of the later modules to be hooked later
-    const moduleIds = [...metroDependencies]
+    const moduleIds = metroDependencies.values()
 
-    let lastHookedIndex = 0
+    let hookCount = 0
     // I've tested values, and I've found the best value for not missing any modules and being the fastest
-    for (; lastHookedIndex < Math.min(moduleIds.length, SafeModuleHookAmountBeforeDefer); lastHookedIndex++) {
-        const id = moduleIds[lastHookedIndex]!
+    for (; hookCount < Math.min(metroDependencies.size, SafeModuleHookAmountBeforeDefer); hookCount++) {
+        const id = moduleIds.next().value!
         const metroModule = metroModules[id]!
 
         tryHookModule(id, metroModule)
@@ -177,20 +176,22 @@ export async function initializeModules() {
     __r(IndexMetroModuleId)
     recordTimestamp('Modules_IndexRequired')
 
-    // I'd use setTimeout here, but we missed a few modules due to that
+    // Without this delay, sometimes causes the app to be in a limbo state
+    // The reason is unknown...
     setImmediate(() => {
-        for (; lastHookedIndex < moduleIds.length; lastHookedIndex++) {
-            const id = moduleIds[lastHookedIndex]!
-            const metroModule = metroModules[id]!
+        let id = moduleIds.next().value
+        if (!id) return
 
+        do {
+            const metroModule = metroModules[id]!
             tryHookModule(id, metroModule)
-        }
+        } while ((id = moduleIds.next().value))
 
         recordTimestamp('Modules_HookedFactories')
     })
 
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
-    if (!(await cacheRestoredPromise)) {
+    if (!cacheRestored) {
         const unpatch = patcher.before(
             ReactNative.AppRegistry,
             'runApplication',
