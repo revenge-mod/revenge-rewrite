@@ -16,8 +16,9 @@ registerPlugin<{
         id: 'revenge.staff-settings',
         version: '1.0.0',
         icon: 'ic_progress_wrench_24px',
-        onMetroModuleLoad(_, exports) {
+        onMetroModuleLoad(_, __, exports, unsub) {
             if (exports.default?.constructor?.displayName === 'DeveloperExperimentStore') {
+                unsub()
                 exports.default = new Proxy(exports.default, {
                     get(target, property, receiver) {
                         if (property === 'isDeveloper') {

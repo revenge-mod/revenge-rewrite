@@ -65,6 +65,11 @@ export type PluginStorage = Record<string, any>
 
 export type PluginCleanupFunction = () => unknown
 
+export type PluginModuleSubscriptionContext<Storage = PluginStorage> = Pick<
+    PluginContext<'Starting', Storage, null, null>,
+    'revenge' | 'plugin' | 'patcher' | 'cleanup' | 'storage'
+>
+
 export type PluginContext<
     Stage extends PluginStage,
     Storage = PluginStorage,
@@ -87,7 +92,6 @@ export type PluginContext<
     /**
      * The error that caused the plugin to stop
      */
-
     // biome-ignore lint/suspicious/noExplicitAny: Errors can be anything
     error?: any
     /**

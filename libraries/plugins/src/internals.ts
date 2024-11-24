@@ -1,12 +1,13 @@
 import { isAppRendered } from '@revenge-mod/app'
-import { type MetroModuleSubscriptionCallback, subscribeModule } from '@revenge-mod/modules/metro'
+import { subscribeModule } from '@revenge-mod/modules/metro'
 import { type Patcher, createPatcherInstance } from '@revenge-mod/patcher'
-import { createStorage } from '@revenge-mod/storage'
+import { awaitStorage, createStorage } from '@revenge-mod/storage'
 import { objectSeal } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
 import type React from 'react'
-import type { PluginContext, PluginDefinition, PluginStage, PluginStorage } from '.'
+import type { PluginContext, PluginDefinition, PluginModuleSubscriptionContext, PluginStage, PluginStorage } from '.'
 import { PluginIdRegex, PluginStatus } from './constants'
+import type { Metro } from '@revenge-mod/modules'
 
 export const appRenderedCallbacks = new Set<() => Promise<unknown>>()
 export const corePluginIds = new Set<string>()
@@ -26,6 +27,13 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
     if (!PluginIdRegex.test(definition.id))
         throw new Error(`Cannot register plugin "${definition.id}", invalid ID format`)
 
+    const prepareStorageAndPatcher = () => {
+        instance.patcher ||= createPatcherInstance(`revenge.plugins.plugin#${definition.id}`)
+        instance.storage ||= createStorage(`revenge/plugins/${definition.id}/storage.json`, {
+            initial: definition.initializeStorage?.() ?? {},
+        })
+    }
+
     const internalPlugin = objectSeal({
         ...definition,
         // Enabled by default if it is a core plugin, otherwise its enabled state will be modified after core plugins have started
@@ -33,7 +41,6 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         core,
         status: PluginStatus.Stopped,
         SettingsComponent: definition.settings,
-        patcher: createPatcherInstance(`revenge.plugins.plugin#${definition.id}`),
         errors: [],
         get stopped() {
             return this.status === PluginStatus.Stopped
@@ -48,16 +55,17 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             return !!this.beforeAppRender
         },
         startMetroModuleSubscriptions() {
-            if (this.onMetroModuleLoad) subscribeModule.all(this.onMetroModuleLoad)
+            if (this.onMetroModuleLoad) {
+                prepareStorageAndPatcher()
+                const unsub = subscribeModule.all((id, exports) =>
+                    this.onMetroModuleLoad!(instance, id, exports, unsub),
+                )
+            }
         },
         async start() {
             if (!this.enabled) throw new Error(`Plugin "${this.id}" must be enabled before starting`)
             if (!this.stopped) throw new Error(`Plugin "${this.id}" is already started`)
-
-            instance.patcher = createPatcherInstance(`revenge.plugins.plugin#${this.id}`)
-            instance.storage = createStorage(`revenge/plugins/${definition.id}/storage.json`, {
-                initial: definition.initializeStorage?.() ?? {},
-            })
+            prepareStorageAndPatcher()
 
             this.status = PluginStatus.Starting
 
@@ -82,6 +90,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             if (this.afterAppRender)
                 appRenderedCallbacks.add(async () => {
                     try {
+                        await awaitStorage(instance.storage)
                         instance.context.afterAppRender = await this.afterAppRender!(instance)
                         this.status = PluginStatus.Started
                     } catch (e) {
@@ -99,10 +108,10 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
                 this.errors.push(new Error(`Plugin "${this.id}" failed to stop`, { cause: e }))
             } finally {
                 for (const cleanup of cleanups) cleanup()
-                if (!this.patcher.destroyed) this.patcher.destroy()
+                if (!instance.patcher.destroyed) instance.patcher.destroy()
             }
         },
-    } as InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>)
+    } satisfies InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>)
     // ^^ as works, but satisfies doesn't, why???
 
     const proxy = new Proxy(internalPlugin, {
@@ -158,7 +167,12 @@ export type InternalPluginDefinition<Storage = any, AppLaunchedReturn = any, App
      * Runs when a Metro module loads, useful for patching modules very early on.
      * @internal
      */
-    onMetroModuleLoad?: MetroModuleSubscriptionCallback
+    onMetroModuleLoad?: (
+        context: PluginModuleSubscriptionContext<Storage>,
+        id: Metro.ModuleID,
+        exports: Metro.ModuleExports,
+        unsubscribe: () => void,
+    ) => void
     /**
      * Disables the plugin
      */
@@ -186,5 +200,4 @@ export type InternalPluginDefinition<Storage = any, AppLaunchedReturn = any, App
     /** @internal */
     // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
     errors: any[]
-    patcher: Patcher
 }
