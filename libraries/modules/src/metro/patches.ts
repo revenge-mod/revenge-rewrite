@@ -96,13 +96,16 @@ function subscribePatchableModule(
     const cachedId = cache.patchableModules[patchId]
     const unsub = cachedId
         ? subscribeModule(cachedId, exports => {
-              unsub()
               patch(exports, cachedId)
           })
         : subscribeModule.all((id, exports) => {
               if (!filter(exports, id)) return
               unsub()
+
               cache.patchableModules[patchId] = id
               patch(exports, id)
+
+              // Subscribe to the module again (this time it is cached)
+              subscribePatchableModule(patchId, filter, patch)
           })
 }
