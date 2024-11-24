@@ -149,17 +149,8 @@ export async function initializeModules() {
     // Patches modules on load
     initializeModulePatches(patcher, logger, metroModules)
 
-    /// OLD METHOD:
-
-    // for (const id of metroDependencies) {
-    //     const metroModule = metroModules[id]
-    //     if (metroModule) tryHookModule(id, metroModule)
-    // }
-
-    /// NEW METHOD:
-
     // To be reliable in finding modules, we need to hook module factories before requiring index
-    // This slows down the app by a bit (up to 1s), so we defer some of the later modules to be hooked later
+    // Hooking all modules before requiring index slows down startup up to 1s, so we defer some of the later modules to be hooked later
     const moduleIds = metroDependencies.values()
 
     let hookCount = 0
