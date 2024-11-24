@@ -1,6 +1,6 @@
 {
   "name": "@revenge-mod/revenge",
-  "module": "src/index.tsx",
+  "module": "src/index.ts",
   "type": "module",
   "license": "BSD-3-Clause",
   "scripts": {

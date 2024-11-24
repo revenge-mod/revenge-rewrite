@@ -28,18 +28,16 @@ async function initialize() {
     }
 
     try {
-        const modules = await createModulesLibrary()
-        const [
-            { AppLibrary },
-            { AssetsLibrary },
-            { PluginsLibrary, startCorePlugins, startCorePluginsMetroModuleSubscriptions },
-            { awaitStorage },
-        ] = await Promise.all([
+        const ModulesLibraryPromise = createModulesLibrary()
+        const [{ AppLibrary }, { AssetsLibrary }] = await Promise.all([
             import('@revenge-mod/app'),
             import('@revenge-mod/assets'),
-            import('@revenge-mod/plugins'),
-            import('@revenge-mod/storage'),
         ])
+
+        const ModulesLibrary = await ModulesLibraryPromise
+
+        const [{ PluginsLibrary, startCorePlugins, startCorePluginsMetroModuleSubscriptions }, { awaitStorage }] =
+            await Promise.all([import('@revenge-mod/plugins'), import('@revenge-mod/storage')])
 
         // Initialize storages
         const PreferencesLibrary = import('@revenge-mod/preferences')
@@ -52,7 +50,7 @@ async function initialize() {
         globalThis.revenge = {
             app: AppLibrary,
             assets: AssetsLibrary,
-            modules,
+            modules: ModulesLibrary,
             plugins: PluginsLibrary,
             ui: UILibrary,
         }
@@ -85,7 +83,7 @@ const logger = createLogger('init')
 // It doesn't throw and never logs in a non-development environment, we are patching it to do so, so we can catch errors when using async functions
 // https://github.com/facebook/hermes/blob/3332fa020cae0bab751f648db7c94e1d687eeec7/lib/InternalBytecode/01-Promise.js#L446
 const ErrorTypeWhitelist = [ReferenceError, TypeError, RangeError]
-;(HermesInternal as HermesInternalObject).setPromiseRejectionTrackingHook((promise, err) => {
+Promise._m = (promise, err) => {
     // If the rejections are useful enough, we log them
     if (err)
         setTimeout(
@@ -96,7 +94,7 @@ const ErrorTypeWhitelist = [ReferenceError, TypeError, RangeError]
             ErrorTypeWhitelist.some(it => err instanceof it) ? 0 : 2000,
             // The time is completely arbitary. I've picked what Hermes chose.
         )
-})
+}
 
 if (typeof __r !== 'undefined') initialize()
 

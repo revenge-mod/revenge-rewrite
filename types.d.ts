@@ -54,7 +54,6 @@ declare global {
             virtualOffset: number
             isNative: boolean
         }
-        setPromiseRejectionTrackingHook(handler: HermesPromiseRejectionHandler): void
     }
 }
 
