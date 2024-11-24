@@ -93,7 +93,7 @@ export const {
 export const PressableScale = findProp('PressableScale')
 
 // Tables
-export const TableRowTrailingText = findProp('TableRowTrailingText')
+export const TableRowTrailingText = findProp<DiscordModules.Components.TableRowTrailingText>('TableRowTrailingText')!
 export const TableSwitch = findBySingleProp('FormSwitch')
 export const TableRadio = findBySingleProp('FormRadio')
 export const TableCheckbox = findBySingleProp('FormCheckbox')

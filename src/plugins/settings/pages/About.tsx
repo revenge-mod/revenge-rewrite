@@ -73,12 +73,14 @@ export default function AboutSettingsPage() {
     )
 }
 
-function VersionRow(props: Omit<ComponentProps<typeof TableRow>, 'icon'> & { icon: ImageSourcePropType }) {
+function VersionRow(
+    props: Omit<ComponentProps<typeof TableRow>, 'icon' | 'trailing'> & { icon: ImageSourcePropType; trailing: string },
+) {
     return (
         <TableRow
             label={props.label}
             icon={<TableRowIcon source={props.icon} />}
-            trailing={<TableRowTrailingText text={props.trailing} />}
+            trailing={<TableRowTrailingText text={props.trailing!} />}
             onPress={() => {
                 clipboard.setString(`${props.label} - ${props.trailing}`)
                 toasts.open({
