@@ -26,15 +26,19 @@ export function definePlugin<Storage = PluginStorage, AppLaunchedReturn = void, 
 }
 
 export async function startCorePlugins() {
+    const promises: Promise<unknown>[] = []
+
     for (const id of corePluginIds) {
         try {
             const plugin = plugins.get(id)!
             // In case predicate returned false
-            if (plugin.enabled) await plugin.start()
+            if (plugin.enabled) promises.push(plugin.start())
         } catch (e) {
             throw new Error(`Core plugin "${id}" had an error while starting`, { cause: e })
         }
     }
+
+    return void (await Promise.all(promises))
 }
 
 export function startCorePluginsMetroModuleSubscriptions() {
