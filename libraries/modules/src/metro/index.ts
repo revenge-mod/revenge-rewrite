@@ -87,6 +87,14 @@ export function resolveModuleDependencies(modules: Metro.ModuleList, id: Metro.M
 function tryHookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
     if (isModuleBlacklisted(id)) return
 
+    // Allow patching already initialized modules
+    // I don't know why this is needed, as we only require index after we hook a few modules...
+    if (metroModule.isInitialized) {
+        const subs = subscriptions.get(id)
+        if (subs) for (const sub of subs) sub(id, metroModule.publicModule.exports)
+        for (const sub of allSubscriptionSet) sub(id, metroModule.publicModule.exports)
+    }
+
     if (metroModule!.factory) {
         const unpatch = patcher.instead(
             metroModule as Metro.ModuleDefinition<false>,
