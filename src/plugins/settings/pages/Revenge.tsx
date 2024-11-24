@@ -49,6 +49,6 @@ const rows: ComponentType[] = []
  * Yes, this is oddly specific, but who cares
  * @internal
  */
-export function internal_addTableRowsToAdvancedSectionInRevengePage(...comps: ComponentType[]) {
+export function addTableRowsToAdvancedSectionInRevengePage(...comps: ComponentType[]) {
     rows.push(...comps)
 }

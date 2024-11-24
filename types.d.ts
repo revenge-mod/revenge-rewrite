@@ -19,6 +19,21 @@ declare global {
 
     var React: typeof import('react')
     var ReactNative: typeof import('react-native')
+
+    var __REACT_DEVTOOLS_GLOBAL_HOOK__: unknown | undefined
+    var __reactDevTools:
+        | {
+              version: string
+              exports: {
+                  connectToDevTools(opts: {
+                      host?: string
+                      port?: number
+                      websocket?: WebSocket
+                  }): void
+              }
+          }
+        | undefined
+
     const ErrorUtils: RNErrorUtils
 
     var performance: {

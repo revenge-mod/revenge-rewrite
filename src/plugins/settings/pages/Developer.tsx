@@ -8,21 +8,72 @@ import {
     TableRowIcon,
     TableSwitchRow,
     TextArea,
+    TextInput,
 } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { settings } from '@revenge-mod/preferences'
 import { useObservable } from '@revenge-mod/storage'
 
+import ReactIcon from '../../../assets/react.webp'
+
+let devToolsWs: WebSocket | undefined
+let devToolsConnected = false
+
 export default function DeveloperSettingsPage() {
     const { assets, modules } = revenge
     const navigation = NavigationNative.useNavigation()
     const evalCodeRef = React.useRef('')
+    const devToolsAddrRef = React.useRef('localhost:8097')
 
     useObservable([settings])
 
+    const [, forceUpdate] = React.useReducer(x => ~x, 0)
+
     return (
         <Stack style={{ paddingHorizontal: 16, paddingVertical: 24 }} spacing={16} direction="vertical">
-            <TableRowGroup>
+            {typeof __reactDevTools !== 'undefined' && (
+                <Stack spacing={8} direction='vertical'>
+                    <TextInput
+                        editable={!devToolsConnected}
+                        isDisabled={devToolsConnected}
+                        leadingText="ws://"
+                        defaultValue="localhost:8097"
+                        label="React DevTools"
+                        onChangeText={text => (devToolsAddrRef.current = text)}
+                    />
+                    <TableRowGroup>
+                        {devToolsConnected ? (
+                            <TableRow
+                                label="Disconnect from React DevTools"
+                                variant="danger"
+                                icon={<TableRowIcon variant="danger" source={{ uri: ReactIcon }} />}
+                                onPress={() => {
+                                    devToolsWs!.close()
+                                    devToolsConnected = false
+                                    forceUpdate()
+                                }}
+                            />
+                        ) : (
+                            <TableRow
+                                label={'Connect to React DevTools'}
+                                icon={<TableRowIcon source={{ uri: ReactIcon }} />}
+                                onPress={() => {
+                                    devToolsWs = new WebSocket(`ws://${devToolsAddrRef.current}`)
+                                    devToolsWs.addEventListener('open', () => {
+                                        devToolsConnected = true
+                                        forceUpdate()
+                                    })
+
+                                    __reactDevTools!.exports.connectToDevTools({
+                                        websocket: devToolsWs,
+                                    })
+                                }}
+                            />
+                        )}
+                    </TableRowGroup>
+                </Stack>
+            )}
+            <TableRowGroup title="Tools">
                 <TableSwitchRow
                     label="Patch ErrorBoundary"
                     subLabel="Allows you to see a more detailed error screen, but may slow down the app during startup."

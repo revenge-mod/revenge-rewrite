@@ -1,7 +1,7 @@
 import { TableRowIcon, TableSwitchRow } from '@revenge-mod/modules/common/components'
 import { registerPlugin } from '@revenge-mod/plugins/internals'
 import { storageContextSymbol, useObservable } from '@revenge-mod/storage'
-import { internal_addTableRowsToAdvancedSectionInRevengePage } from '../settings/pages/Revenge'
+import { addTableRowsToAdvancedSectionInRevengePage } from '../settings/pages/Revenge'
 
 let originalValue: boolean
 let isStaffSettingsShown = () => true
@@ -36,7 +36,7 @@ registerPlugin<{
 
             isStaffSettingsShown = () => (storage[storageContextSymbol].ready ? storage.enabled : true)
 
-            internal_addTableRowsToAdvancedSectionInRevengePage(() => {
+            addTableRowsToAdvancedSectionInRevengePage(() => {
                 useObservable([storage])
 
                 return (
