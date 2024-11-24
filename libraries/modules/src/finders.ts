@@ -84,15 +84,13 @@ export const find = Object.assign(
          */
         all: function* findModuleAll<A extends unknown[]>(filter: FilterFn<A>) {
             for (const [id, isDefaultExport] of findId.all(filter)) {
-                if (typeof id !== 'number') return null
-                yield isDefaultExport ? requireModule(id).default : requireModule(id)
+                if (typeof id === 'number') yield isDefaultExport ? requireModule(id).default : requireModule(id)
             }
         },
         eager: function findModuleEager<A extends unknown[]>(filter: FilterFn<A>) {
             const [id, defaultExport] = findId(filter)
             // id can be 0
-            if (typeof id !== 'number') return null
-            return defaultExport ? requireModule(id).default : requireModule(id)
+            if (typeof id === 'number') return defaultExport ? requireModule(id).default : requireModule(id)
         },
     },
 )
