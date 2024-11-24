@@ -32,7 +32,6 @@ registerPlugin(
         icon: 'SettingsIcon',
         afterAppRender({
             patcher,
-            cleanup,
             revenge: {
                 assets,
                 modules,
@@ -55,13 +54,6 @@ registerPlugin(
                             ...rendererConfig,
                         }) satisfies Record<string, RawRowConfig>,
                     set: v => (rendererConfig = v),
-                })
-
-                cleanup(() => {
-                    Object.defineProperty(SettingsConstants, 'SETTING_RENDERER_CONFIG', {
-                        value: originalRendererConfig,
-                        writable: true,
-                    })
                 })
 
                 patcher.after(
@@ -100,47 +92,48 @@ registerPlugin(
                     'addNewSettingsSections',
                 )
 
-                cleanup(
-                    sui.createSection({
-                        name: 'Revenge',
-                        settings: {
-                            Revenge: {
-                                type: 'route',
-                                label: 'Revenge',
-                                icon: {
-                                    uri: RevengeIcon,
-                                },
-                                component: RevengeSettingsPage,
+                sui.createSection({
+                    name: 'Revenge',
+                    settings: {
+                        Revenge: {
+                            type: 'route',
+                            label: 'Revenge',
+                            icon: {
+                                uri: RevengeIcon,
                             },
-                            RevengeDeveloper: {
-                                type: 'route',
-                                label: 'Developer',
-                                icon: assets.getIndexByName('WrenchIcon'),
-                                component: DeveloperSettingsPage,
-                                predicate: () => settings.developer.settingsPageShown,
-                            },
+                            component: RevengeSettingsPage,
                         },
-                    }),
-                    sui.createRoute('RevengeAbout', {
-                        type: 'route',
-                        label: 'About',
-                        component: AboutSettingsPage,
-                        icon: assets.getIndexByName('CircleInformationIcon'),
-                    }),
-                    sui.createRoute('RevengeDebugPerformanceTimes', {
-                        type: 'route',
-                        label: 'Debug Performance Times',
-                        component: DebugPerformanceTimesSettingsPage,
-                        icon: assets.getIndexByName('TimerIcon'),
-                    }),
-                    sui.createRoute('RevengeCustomPage', {
-                        type: 'route',
-                        label: 'Revenge Page',
-                        unsearchable: true,
-                        component: CustomPageRenderer,
-                        predicate: () => false,
-                    }),
-                )
+                        RevengeDeveloper: {
+                            type: 'route',
+                            label: 'Developer',
+                            icon: assets.getIndexByName('WrenchIcon'),
+                            component: DeveloperSettingsPage,
+                            predicate: () => settings.developer.settingsPageShown,
+                        },
+                    },
+                })
+
+                sui.createRoute('RevengeAbout', {
+                    type: 'route',
+                    label: 'About',
+                    component: AboutSettingsPage,
+                    icon: assets.getIndexByName('CircleInformationIcon'),
+                })
+
+                sui.createRoute('RevengeDebugPerformanceTimes', {
+                    type: 'route',
+                    label: 'Debug Performance Times',
+                    component: DebugPerformanceTimesSettingsPage,
+                    icon: assets.getIndexByName('TimerIcon'),
+                })
+
+                sui.createRoute('RevengeCustomPage', {
+                    type: 'route',
+                    label: 'Revenge Page',
+                    unsearchable: true,
+                    component: CustomPageRenderer,
+                    predicate: () => false,
+                })
             })
         },
     },
