@@ -25,6 +25,7 @@ export const {
     TableRow,
     TableSwitchRow,
     TableRowGroup,
+    TableRowGroupTitle,
     TableRowIcon,
     TableRadioGroup,
     TableCheckboxRow,
@@ -73,6 +74,7 @@ export const {
             TableRow: DiscordModules.Components.TableRow
             TableSwitchRow: DiscordModules.Components.TableSwitchRow
             TableRowGroup: DiscordModules.Components.TableRowGroup
+            TableRowGroupTitle: DiscordModules.Components.TableRowGroupTitle
             TableRowIcon: DiscordModules.Components.TableRowIcon
             TableRadioGroup: DiscordModules.Components.TableRadioGroup
             TableCheckboxRow: DiscordModules.Components.TableCheckboxRow

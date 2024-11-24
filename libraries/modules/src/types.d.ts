@@ -433,6 +433,9 @@ export namespace DiscordModules {
             }
         >
         export type TableRowGroup = React.FC<TableRowGroupProps>
+        export type TableRowGroupTitle = React.FC<{
+            title: string
+        }>
         export type TableRowIconVariant =
             | 'default'
             | 'blurple'
