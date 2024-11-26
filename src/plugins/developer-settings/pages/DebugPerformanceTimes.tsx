@@ -1,7 +1,7 @@
 import { PerformanceTimes, timeOf, timestampOf } from '@revenge-mod/debug'
 import { TableRow, Text } from '@revenge-mod/modules/common/components'
 
-import PageWrapper from './(Wrapper)'
+import PageWrapper from '../../../plugins/settings/pages/(Wrapper)'
 
 const PerformanceTimesKeys = (Object.keys(PerformanceTimes) as (keyof typeof PerformanceTimes)[]).sort(
     (a, b) => timeOf(a) - timeOf(b),

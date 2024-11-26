@@ -491,10 +491,7 @@ export const findProp = Object.assign(
     },
 )
 
-export type BySingleProp<
-    Value,
-    Key extends string,
-> = Undefinable<{ [K in Key]: Value }>
+export type BySingleProp<Value, Key extends string> = Undefinable<{ [K in Key]: Value }>
 
 /**
  * Finds an export by its single property
@@ -511,10 +508,7 @@ export const findBySingleProp = Object.assign(
         return find(bySingleProp(name)) as LazyModule<BySingleProp<T, K>>
     },
     {
-        async: function findBySinglePropAsync<T, K extends string>(
-            name: K,
-            timeout = 1000,
-        ) {
+        async: function findBySinglePropAsync<T, K extends string>(name: K, timeout = 1000) {
             return new Promise<BySingleProp<T, K>>(resolve => {
                 const id = setTimeout(() => resolve(undefined), timeout)
                 findBySingleProp(name)![lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
@@ -523,9 +517,7 @@ export const findBySingleProp = Object.assign(
                 })
             })
         },
-        eager: function findBySinglePropEager<T, K extends string>(
-            name: K,
-        ) {
+        eager: function findBySinglePropEager<T, K extends string>(name: K) {
             return find.eager(bySingleProp(name as string)) as BySingleProp<T, K>
         },
     },

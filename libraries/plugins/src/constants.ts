@@ -12,7 +12,8 @@ export const WhitelistedPluginObjectKeys = [
     'stop',
     'author',
     'errors',
-] as const satisfies ReadonlyArray<keyof InternalPluginDefinition>
+    // biome-ignore lint/suspicious/noExplicitAny: get out
+] as const satisfies ReadonlyArray<keyof InternalPluginDefinition<any, any, any>>
 
 export const PluginStatus = {
     Stopped: 1,

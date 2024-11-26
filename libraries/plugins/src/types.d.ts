@@ -3,9 +3,11 @@ import type { RevengeLibrary } from '@revenge-mod/revenge'
 import type { ExtendedObservable } from '@revenge-mod/storage'
 import type React from 'react'
 
-import type { InternalPluginDefinition, WhitelistedPluginObjectKeys } from './internals'
+import type { WhitelistedPluginObjectKeys } from './constants'
+import type { InternalPluginDefinition } from './internals'
 
-export type PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> = {
+// biome-ignore lint/suspicious/noExplicitAny: Defaulting to unknown does NOT work
+export type PluginDefinition<Storage = any, AppLaunchedReturn = any, AppInitializedReturn = any> = {
     /**
      * The friendly name of the plugin
      */
@@ -38,7 +40,7 @@ export type PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> =
      * @returns An additional context to give to the next lifecycles
      */
     beforeAppRender?: (
-        context: PluginContext<'Starting', Storage, AppLaunchedReturn, AppInitializedReturn>,
+        context: PluginContext<'BeforeAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>,
     ) => Promise<AppInitializedReturn> | AppInitializedReturn
     /**
      * Runs after the app gets rendered.
@@ -46,19 +48,19 @@ export type PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> =
      * @returns An additional context to give to the next lifecyles
      */
     afterAppRender?: (
-        context: PluginContext<'BeforeAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>,
+        context: PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>,
     ) => Promise<AppLaunchedReturn> | AppLaunchedReturn
     /**
      * Runs before your plugin is stopped
      * @param context The context for this lifecycle
      */
-    beforeStop?: (context: PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>) => unknown
+    beforeStop?: (context: PluginContext<'BeforeStop', Storage, AppLaunchedReturn, AppInitializedReturn>) => unknown
 } & {
     settings?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
     initializeStorage?: () => Storage
 }
 
-export type PluginStage = 'Starting' | 'BeforeAppRender' | 'AfterAppRender'
+export type PluginStage = 'BeforeAppRender' | 'AfterAppRender' | 'BeforeStop'
 
 // biome-ignore lint/suspicious/noExplicitAny: Anything can be in storage
 export type PluginStorage = Record<string, any>
@@ -66,21 +68,19 @@ export type PluginStorage = Record<string, any>
 export type PluginCleanupFunction = () => unknown
 
 export type PluginModuleSubscriptionContext<Storage = PluginStorage> = Pick<
-    PluginContext<'Starting', Storage, null, null>,
+    PluginContext<'BeforeAppRender', Storage, null, null>,
     'revenge' | 'plugin' | 'patcher' | 'cleanup' | 'storage'
 >
 
-export type PluginContext<
-    Stage extends PluginStage,
-    Storage = PluginStorage,
-    AppLaunchedReturn = void,
-    AppInitializedReturn = void,
-> = {
+export type PluginContext<Stage extends PluginStage, Storage, AppLaunchedReturn, AppInitializedReturn> = {
     revenge: RevengeLibrary
     /**
      * The plugin definition
      */
-    plugin: Pick<InternalPluginDefinition, (typeof WhitelistedPluginObjectKeys)[number]>
+    plugin: Pick<
+        InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>,
+        (typeof WhitelistedPluginObjectKeys)[number]
+    >
     /**
      * The patcher instance for the plugin
      */
@@ -99,7 +99,7 @@ export type PluginContext<
      */
     context: {
         beforeAppRender: Stage extends 'Starting' ? null : AppLaunchedReturn
-        afterAppRender: Stage extends 'AfterAppRender' ? AppInitializedReturn : null
+        afterAppRender: Stage extends 'BeforeAppRender' ? AppInitializedReturn : null
     }
     /**
      * Schedules callbacks to be run when the plugin is stopped

@@ -5,14 +5,6 @@ export interface Settings {
         enabled: boolean
         enabledNextLaunch: boolean
     }
-    developer: {
-        settingsPageShown: boolean
-        patchErrorBoundary: boolean
-        reactDevTools: {
-            address: string
-            autoConnect: boolean
-        }
-    }
 }
 
 export const settings = createStorage<Settings>('revenge/settings.json', {
@@ -20,14 +12,6 @@ export const settings = createStorage<Settings>('revenge/settings.json', {
         safeMode: {
             enabled: false,
             enabledNextLaunch: false,
-        },
-        developer: {
-            settingsPageShown: false,
-            patchErrorBoundary: true,
-            reactDevTools: {
-                address: 'localhost:8097',
-                autoConnect: false,
-            }
         },
     },
 })

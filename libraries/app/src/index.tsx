@@ -2,7 +2,6 @@ import { recordTimestamp } from '@revenge-mod/debug'
 import { findByName } from '@revenge-mod/modules/finders'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { createPatcherInstance } from '@revenge-mod/patcher'
-import { awaitStorage } from '@revenge-mod/storage'
 
 import type { Component, FC, ReactNode } from 'react'
 
@@ -51,10 +50,6 @@ const unpatchCreateElement = patcher.after(
 )
 
 afterAppInitialized(async function patchErrorBoundary() {
-    const { settings } = await import('@revenge-mod/preferences')
-    await awaitStorage(settings)
-    if (!settings.developer.patchErrorBoundary) return
-
     const { default: Screen } = await import('./components/ErrorBoundaryScreen')
 
     setImmediate(() => {

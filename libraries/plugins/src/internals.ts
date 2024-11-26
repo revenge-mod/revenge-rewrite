@@ -1,23 +1,29 @@
 import { isAppRendered } from '@revenge-mod/app'
+import type { Metro } from '@revenge-mod/modules'
 import { subscribeModule } from '@revenge-mod/modules/metro'
 import { type Patcher, createPatcherInstance } from '@revenge-mod/patcher'
 import { awaitStorage, createStorage } from '@revenge-mod/storage'
 import { objectSeal } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
 import type React from 'react'
-import type { PluginContext, PluginDefinition, PluginModuleSubscriptionContext, PluginStage, PluginStorage } from '.'
+import type { PluginContext, PluginDefinition, PluginModuleSubscriptionContext, PluginStorage } from '.'
 import { PluginIdRegex, PluginStatus } from './constants'
-import type { Metro } from '@revenge-mod/modules'
 
 export const appRenderedCallbacks = new Set<() => Promise<unknown>>()
 export const corePluginIds = new Set<string>()
-export const plugins = new Map<InternalPluginDefinition['id'], InternalPluginDefinition>()
+export const plugins = new Map<
+    InternalPluginDefinition<unknown, unknown, unknown>['id'],
+    // biome-ignore lint/suspicious/noExplicitAny: I should really turn off this rule...
+    PluginDefinition<any, any, any> & Partial<Omit<InternalPluginDefinition<any, any, any>, keyof PluginDefinition>>
+>()
 
-const highPriorityPluginIds = new Set<InternalPluginDefinition['id']>()
+const highPriorityPluginIds = new Set<InternalPluginDefinition<unknown, unknown, unknown>['id']>()
 
 export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void, AppInitializedReturn = void>(
     definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &
-        Partial<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>>,
+        Partial<
+            Omit<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>, keyof PluginDefinition>
+        >,
     core = false,
     predicate?: () => boolean,
 ) {
@@ -111,8 +117,8 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
                 if (!instance.patcher.destroyed) instance.patcher.destroy()
             }
         },
-    } satisfies InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>)
-    // ^^ as works, but satisfies doesn't, why???
+    } satisfies PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &
+        Omit<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>, keyof PluginDefinition>)
 
     const proxy = new Proxy(internalPlugin, {
         get(target, prop) {
@@ -137,7 +143,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
     })
 
     // biome-ignore lint/suspicious/noExplicitAny: Defaulting types to something else doesn't end very well
-    const instance: PluginContext<PluginStage, any, any, any> = {
+    const instance: PluginContext<any, any, any, any> = {
         context: {
             beforeAppRender: null,
             afterAppRender: null,
@@ -155,11 +161,10 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
     plugins.set(internalPlugin.id, internalPlugin)
     if (internalPlugin.beforeAppRender) highPriorityPluginIds.add(internalPlugin.id)
 
-    return proxy
+    return proxy as PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Defaulting types to something else doesn't end very well
-export type InternalPluginDefinition<Storage = any, AppLaunchedReturn = any, AppInitializedReturn = any> = Omit<
+export type InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> = Omit<
     PluginDefinition<PluginStorage, AppLaunchedReturn, AppInitializedReturn>,
     'settings'
 > & {
