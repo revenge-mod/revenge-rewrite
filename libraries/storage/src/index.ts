@@ -7,15 +7,16 @@ export const storageContextSymbol = Symbol.for('revenge.storage.context')
 
 const loadedStorages = {} as Record<string, AnyObject>
 
-export type ExtendedObservable = Observable & {
+export type ExtendedObservable<T extends object = object> = Observable & {
     [storageContextSymbol]: {
         emitter: EventEmitter<{
             set: (data: { path: string[]; value: any }) => void
             delete: (data: { path: string[] }) => void
         }>
-        error: any
+        error?: any
         readyPromise: Promise<void>
         ready: boolean
+        file: ReturnType<typeof createJSONFile<T>>
     }
 }
 
@@ -38,6 +39,7 @@ function createJSONFile<T extends object>(path: string) {
             return FileModule.writeFile('documents', path, JSON.stringify(data), 'utf8')
         },
         exists: () => FileModule.fileExists(actualPath),
+        delete: () => FileModule.removeFile('documents', path),
     }
 
     return file
@@ -90,11 +92,14 @@ export function createStorage<T extends AnyObject = AnyObject>(
     let resolve: () => void
     let proxy: Observable
 
+    const backend = createJSONFile<T>(path)
+
     const context = {
         emitter: new EventEmitter(),
         ready: false,
         readyPromise,
-    } as ExtendedObservable[typeof storageContextSymbol]
+        file: backend,
+    } as ExtendedObservable<T>[typeof storageContextSymbol]
 
     const callback = (data: AnyObject | null) => {
         const observable = Observable.from(data)
@@ -120,8 +125,6 @@ export function createStorage<T extends AnyObject = AnyObject>(
         resolve()
         return (proxy = _proxy)
     }
-
-    const backend = createJSONFile<T>(path)
 
     if (loadedStorages[path]) {
         callback(loadedStorages[path])
