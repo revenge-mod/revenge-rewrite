@@ -12,7 +12,8 @@ import {
 } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { settings } from '@revenge-mod/preferences'
-import { useObservable } from '@revenge-mod/storage'
+
+import PageWrapper from './(Wrapper)'
 
 import ReactIcon from '../../../assets/react.webp'
 
@@ -30,6 +31,7 @@ export default function DeveloperSettingsPage() {
     const [, forceUpdate] = React.useReducer(x => ~x, 0)
 
     return (
+        <PageWrapper>
         <Stack style={{ paddingHorizontal: 16, paddingVertical: 24 }} spacing={16} direction="vertical">
             {typeof __reactDevTools !== 'undefined' && (
                 <Stack spacing={8} direction='vertical'>
@@ -167,5 +169,5 @@ export default function DeveloperSettingsPage() {
                 />
             </TableRowGroup>
         </Stack>
-    )
+        </PageWrapper>
 }
