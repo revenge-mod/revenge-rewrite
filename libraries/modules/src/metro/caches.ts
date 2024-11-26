@@ -50,6 +50,7 @@ export const cache = {
      * - `b`: Blacklist freezing module
      * - `d`: Block Discord analytics
      * - `s`: Block Sentry initialization
+     * - `m`: Fix Moment locale
      */
     patchableModules: {} as MetroCacheObject['p'],
     /**
@@ -218,7 +219,7 @@ export interface MetroCacheObject {
     e: Record<Metro.ModuleIDKey, number>
     l: Record<string, MetroLookupCacheRegistry | undefined>
     a: Record<Asset['name'], Metro.ModuleID>
-    p: Record<'f' | 'r' | 'b' | 's' | 'd', number | undefined>
+    p: Record<'f' | 'r' | 'b' | 's' | 'd' | 'm', number | undefined>
 }
 
 /**

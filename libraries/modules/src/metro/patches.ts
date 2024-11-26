@@ -86,6 +86,18 @@ export function initializeModulePatches(patcher: Patcher, logger: LibraryLogger,
         m => m.default?.track && m.default.trackMaker,
         m => (m.default.track = () => noopPromise),
     )
+
+    subscribePatchableModule(
+        'm',
+        m => m.isMoment,
+        moment => {
+            patcher.instead(moment, 'defineLocale', (args, orig) => {
+                const origLocale = moment.locale()
+                orig(...args)
+                moment.locale(origLocale)
+            })
+        },
+    )
 }
 
 function subscribePatchableModule(
