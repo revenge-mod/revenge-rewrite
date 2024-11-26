@@ -40,7 +40,7 @@ export const {
 
     // Inputs
 
-    TextInput,
+    TextField,
     TextArea,
     GhostInput,
 
@@ -61,7 +61,7 @@ export const {
         findByProps.eager<{
             Text: DiscordModules.Components.Text
 
-            TextInput: DiscordModules.Components.TextInput
+            TextField: DiscordModules.Components.TextField
             TextArea: DiscordModules.Components.TextArea
             GhostInput: DiscordModules.Components.GhostInput
 
@@ -89,7 +89,7 @@ export const {
             Stack: DiscordModules.Components.Stack
 
             Slider: DiscordModules.Components.Slider
-        }>('TextInput', 'ContextMenu')!,
+        }>('TextField', 'ContextMenu')!,
 )
 
 export const PressableScale = findProp('PressableScale')

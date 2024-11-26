@@ -7,6 +7,7 @@ import type {
     ImageSourcePropType,
     ImageStyle,
     PressableProps,
+    TextInputProps,
     TextProps,
     TextStyle,
     ViewProps,
@@ -354,7 +355,7 @@ export namespace DiscordModules {
         export type PressableScale = React.FC
 
         // Inputs
-        export type TextInput = React.FC
+        export type TextField = React.FC<TextInputProps>
         export type TextArea = React.FC
         export type GhostInput = React.FC
 
