@@ -40,6 +40,7 @@ export const {
 
     // Inputs
 
+    TextInput,
     TextField,
     TextArea,
     GhostInput,
@@ -61,6 +62,7 @@ export const {
         findByProps.eager<{
             Text: DiscordModules.Components.Text
 
+            TextInput: DiscordModules.Components.TextInput
             TextField: DiscordModules.Components.TextField
             TextArea: DiscordModules.Components.TextArea
             GhostInput: DiscordModules.Components.GhostInput
