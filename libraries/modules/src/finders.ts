@@ -492,13 +492,9 @@ export const findProp = Object.assign(
 )
 
 export type BySingleProp<
-    Struct extends { [K in string]: Metro.ModuleExports },
-    DefaultExport extends boolean,
-> = Undefinable<If<DefaultExport, BySinglePropDefaultExport<Struct>, { default: BySinglePropDefaultExport<Struct> }>>
-
-type BySinglePropDefaultExport<Struct = { [K in string]: Metro.ModuleExports }> = {
-    [K in keyof Struct]: Metro.ModuleExports
-}
+    Value,
+    Key extends string,
+> = Undefinable<{ [K in Key]: Value }>
 
 /**
  * Finds an export by its single property
@@ -511,37 +507,26 @@ type BySinglePropDefaultExport<Struct = { [K in string]: Metro.ModuleExports }> 
  * @returns The module exports
  */
 export const findBySingleProp = Object.assign(
-    function findBySinglePropLazy<S extends Record<string, Metro.ModuleExports>, D extends boolean>(
-        name: keyof S,
-        returnDefaultExport: D = true as D,
-    ) {
-        return find(
-            returnDefaultExport ? bySingleProp(name as string) : bySingleProp.raw(name as string),
-        ) as LazyModule<BySingleProp<S, D>>
+    function findBySinglePropLazy<T, K extends string>(name: K) {
+        return find(bySingleProp(name)) as LazyModule<BySingleProp<T, K>>
     },
     {
-        async: function findBySinglePropAsync<S extends Record<string, Metro.ModuleExports>, D extends boolean>(
-            name: keyof S,
-            returnDefaultExport: D = true as D,
+        async: function findBySinglePropAsync<T, K extends string>(
+            name: K,
             timeout = 1000,
         ) {
-            return new Promise<BySingleProp<S, D>>(resolve => {
+            return new Promise<BySingleProp<T, K>>(resolve => {
                 const id = setTimeout(() => resolve(undefined), timeout)
-                findBySingleProp(name, returnDefaultExport)![lazyContextSymbol].getExports(
-                    (exp: Metro.ModuleExports) => {
-                        clearTimeout(id)
-                        resolve(exp)
-                    },
-                )
+                findBySingleProp(name)![lazyContextSymbol].getExports((exp: Metro.ModuleExports) => {
+                    clearTimeout(id)
+                    resolve(exp)
+                })
             })
         },
-        eager: function findBySinglePropEager<S extends Record<string, Metro.ModuleExports>, D extends boolean>(
-            name: keyof S,
-            returnDefaultExport: D = true as D,
+        eager: function findBySinglePropEager<T, K extends string>(
+            name: K,
         ) {
-            return find.eager(
-                returnDefaultExport ? bySingleProp(name as string) : bySingleProp.raw(name as string),
-            ) as BySingleProp<S, D>
+            return find.eager(bySingleProp(name as string)) as BySingleProp<T, K>
         },
     },
 )
