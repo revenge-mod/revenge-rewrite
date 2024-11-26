@@ -8,6 +8,10 @@ export interface Settings {
     developer: {
         settingsPageShown: boolean
         patchErrorBoundary: boolean
+        reactDevTools: {
+            address: string
+            autoConnect: boolean
+        }
     }
 }
 
@@ -20,6 +24,10 @@ export const settings = createStorage<Settings>('revenge/settings.json', {
         developer: {
             settingsPageShown: false,
             patchErrorBoundary: true,
+            reactDevTools: {
+                address: 'localhost:8097',
+                autoConnect: false,
+            }
         },
     },
 })

@@ -11,13 +11,15 @@ import {
 } from '@revenge-mod/ui/settings'
 
 import { settings } from '@revenge-mod/preferences'
+import { awaitStorage } from '@revenge-mod/storage'
+import { noop } from '@revenge-mod/utils/functions'
 
 import RevengeIcon from '../../assets/revenge.webp'
 
 import AboutSettingsPage from './pages/About'
 import CustomPageRenderer from './pages/CustomPageRenderer'
 import DebugPerformanceTimesSettingsPage from './pages/DebugPerformanceTimes'
-import DeveloperSettingsPage from './pages/Developer'
+import DeveloperSettingsPage, { connectToDevTools } from './pages/Developer'
 import RevengeSettingsPage from './pages/Revenge'
 
 import type { FC } from 'react'
@@ -38,6 +40,11 @@ registerPlugin(
                 ui: { settings: sui },
             },
         }) {
+            awaitStorage(settings).then(() => {
+                if (settings.developer.reactDevTools.autoConnect)
+                    connectToDevTools(settings.developer.reactDevTools.address, noop)
+            })
+
             setTimeout(() => {
                 const SettingsConstants = modules.findByProps('SETTING_RENDERER_CONFIG')!
                 const SettingsOverviewScreen = modules.findByName<FC, false>('SettingsOverviewScreen', false)!
