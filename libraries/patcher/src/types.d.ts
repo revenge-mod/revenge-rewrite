@@ -28,6 +28,7 @@ type WrappableParams<N extends WrappableName, Parent extends AnyObject, Name ext
      */
     callback: N extends 'before'
         ? (
+              this: Parent,
               /**
                * The arguments passed to the function
                */
@@ -36,6 +37,7 @@ type WrappableParams<N extends WrappableName, Parent extends AnyObject, Name ext
           ) => SafeParameters<Parent[Name]> | void
         : N extends 'after'
           ? (
+                this: Parent,
                 /**
                  * The arguments passed to the function
                  */
@@ -48,6 +50,7 @@ type WrappableParams<N extends WrappableName, Parent extends AnyObject, Name ext
             ) => ReturnType<Parent[Name]> | void
           : N extends 'instead'
             ? (
+                  this: Parent,
                   /**
                    * The arguments passed to the function
                    */
@@ -85,6 +88,7 @@ type AwaitedWrappableParams<
      */
     callback: N extends 'before'
         ? (
+              this: Awaited<Parent>,
               /**
                * The arguments passed to the function
                */
@@ -93,6 +97,7 @@ type AwaitedWrappableParams<
           ) => SafeParameters<Awaited<Parent>[Name]> | void
         : N extends 'after'
           ? (
+                this: Awaited<Parent>,
                 /**
                  * The arguments passed to the function
                  */
@@ -105,6 +110,7 @@ type AwaitedWrappableParams<
             ) => ReturnType<Awaited<Parent>[Name]> | void
           : N extends 'instead'
             ? (
+                  this: Awaited<Parent>,
                   /**
                    * The arguments passed to the function
                    */
@@ -125,12 +131,10 @@ type AwaitedWrappable<N extends WrappableName> = <
     Parent extends Promise<AnyObject>,
     Name extends KeysWithFunctionValues<Awaited<Parent>>,
 >(
-    // this: Awaited<Parent>,
     ...params: AwaitedWrappableParams<N, Parent, Name>
 ) => UnpatchFunction
 
 type Wrappable<N extends WrappableName> = <Parent extends AnyObject, Name extends KeysWithFunctionValues<Parent>>(
-    // this: Parent,
     ...params: WrappableParams<N, Parent, Name>
 ) => UnpatchFunction
 
