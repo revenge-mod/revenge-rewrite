@@ -49,14 +49,20 @@ const unpatchCreateElement = patcher.after(
     'runRenderCallbacks',
 )
 
-afterAppInitialized(async function patchErrorBoundary() {
+let resolveErrorBoundaryPatched: () => void
+export const errorBoundaryPatchedPromise = new Promise<void>(resolve => (resolveErrorBoundaryPatched = resolve))
+
+// Patching ErrorBoundary afterInitialized causes the weird "Element type is invalid" error due to TextInputWrapper
+const afterErrorBoundaryPatchable = ReactNative.Platform.OS === 'ios' ? afterAppRendered : afterAppInitialized
+
+afterErrorBoundaryPatchable(async function patchErrorBoundary() {
     const { default: Screen } = await import('./components/ErrorBoundaryScreen')
 
     setImmediate(() => {
         patcher.after.await(
             findByName.async<ErrorBoundaryComponentPrototype, true>('ErrorBoundary').then(it => it!.prototype),
             'render',
-            function (this: ErrorBoundaryComponentPrototype) {
+            function () {
                 if (this.state.error)
                     return (
                         <Screen
@@ -68,6 +74,8 @@ afterAppInitialized(async function patchErrorBoundary() {
             },
             'patchErrorBoundary',
         )
+
+        resolveErrorBoundaryPatched()
     })
 })
 

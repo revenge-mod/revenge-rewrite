@@ -29,23 +29,18 @@ async function initialize() {
 
     try {
         const ModulesLibraryPromise = createModulesLibrary()
-        const [{ AppLibrary }, { AssetsLibrary }] = await Promise.all([
+        const [{ AppLibrary, errorBoundaryPatchedPromise }, { AssetsLibrary }] = await Promise.all([
             import('@revenge-mod/app'),
             import('@revenge-mod/assets'),
         ])
 
         const ModulesLibrary = await ModulesLibraryPromise
 
-        const [{ PluginsLibrary, startCorePlugins, startCorePluginsMetroModuleSubscriptions }, { awaitStorage }] =
-            await Promise.all([import('@revenge-mod/plugins'), import('@revenge-mod/storage')])
-
         // Initialize storages
         const PreferencesLibrary = import('@revenge-mod/preferences')
 
-        const CorePlugins = import('./plugins').then(() => {
-            recordTimestamp('Plugins_CoreImported')
-            startCorePluginsMetroModuleSubscriptions()
-        })
+        const [{ PluginsLibrary, startCorePlugins, startCorePluginsMetroModuleSubscriptions }, { awaitStorage }] =
+            await Promise.all([import('@revenge-mod/plugins'), import('@revenge-mod/storage')])
 
         globalThis.revenge = {
             app: AppLibrary,
@@ -55,13 +50,19 @@ async function initialize() {
             ui: UILibrary,
         }
 
-        PreferencesLibrary.then(async ({ settings }) => {
+        const CorePlugins = import('./plugins').then(() => {
+            recordTimestamp('Plugins_CoreImported')
+            startCorePluginsMetroModuleSubscriptions()
+        })
+
+        errorBoundaryPatchedPromise.then(async () => {
+            const { settings } = await PreferencesLibrary
             await awaitStorage(settings)
             recordTimestamp('Storage_Initialized')
-            CorePlugins.then(() => {
-                startCorePlugins()
-                recordTimestamp('Plugins_CoreStarted')
-            })
+
+            await CorePlugins
+            startCorePlugins()
+            recordTimestamp('Plugins_CoreStarted')
         })
     } catch (e) {
         onError(e)
@@ -88,7 +89,6 @@ Promise._m = (promise, err) => {
     if (err)
         setTimeout(
             () => {
-                // If still not handled...
                 if (promise._h === 0) logger.error(`Unhandled promise rejection: ${getErrorStack(err)}`)
             },
             ErrorTypeWhitelist.some(it => err instanceof it) ? 0 : 2000,
