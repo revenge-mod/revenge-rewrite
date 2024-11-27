@@ -14,6 +14,7 @@
       "ES2019.Array",
       "ES2020.BigInt",
       "ES2020.Intl",
+      "ES2021",
       "ES2022.Error",
       "ES2022.Array"
     ],

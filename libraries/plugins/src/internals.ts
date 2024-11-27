@@ -8,6 +8,8 @@ import { lazyValue } from '@revenge-mod/utils/lazy'
 import type React from 'react'
 import type { PluginContext, PluginDefinition, PluginModuleSubscriptionContext, PluginStorage } from '.'
 import { PluginIdRegex, PluginStatus } from './constants'
+import { logger } from './shared'
+import { getErrorStack } from '@revenge-mod/utils/errors'
 
 export const appRenderedCallbacks = new Set<() => Promise<unknown>>()
 export const corePluginIds = new Set<string>()
@@ -69,28 +71,30 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             }
         },
         async start() {
-            if (!this.enabled) throw new Error(`Plugin "${this.id}" must be enabled before starting`)
-            if (!this.stopped) throw new Error(`Plugin "${this.id}" is already started`)
-            prepareStorageAndPatcher()
-
-            this.status = PluginStatus.Starting
-
-            const handleError = (e: unknown, stage: string) => {
+            const handleError = (e: unknown) => {
                 this.errors.push(e)
                 this.stop()
-                throw new Error(`Plugin "${this.id}" failed to start at "${stage}":\n${String(e)}`, { cause: e })
             }
 
+            if (!this.enabled) return handleError(new Error(`Plugin "${this.id}" must be enabled before starting`))
+            if (!this.stopped) return handleError(new Error(`Plugin "${this.id}" is already started`))
+
+            logger.log(`Starting plugin: ${this.id}`)
+            this.status = PluginStatus.Starting
+
+            prepareStorageAndPatcher()
+
             if (isAppRendered && this.beforeAppRender)
-                handleError(
-                    new Error(`Plugin "${this.id}" requires running before app is initialized`),
-                    'beforeAppRender',
-                )
+                return handleError(new Error(`Plugin "${this.id}" requires running before app is initialized`))
 
             try {
                 instance.context.beforeAppRender = await this.beforeAppRender?.(instance)
             } catch (e) {
-                handleError(e, 'onAppLaunched')
+                return handleError(
+                    new Error(`Plugin "${this.id}" encountered an error when running "beforeAppRender": ${e}`, {
+                        cause: e,
+                    }),
+                )
             }
 
             if (this.afterAppRender)
@@ -100,7 +104,11 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
                         instance.context.afterAppRender = await this.afterAppRender!(instance)
                         this.status = PluginStatus.Started
                     } catch (e) {
-                        handleError(e, 'onAppInitialized')
+                        return handleError(
+                            new Error(`Plugin "${this.id}" encountered an error when running "afterAppRender": ${e}`, {
+                                cause: e,
+                            }),
+                        )
                     }
                 })
             else this.status = PluginStatus.Started
@@ -108,13 +116,28 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         stop() {
             if (this.stopped) return
 
+            logger.log(`Stopping plugin: ${this.id}`)
+
             try {
                 this.beforeStop?.(instance)
             } catch (e) {
-                this.errors.push(new Error(`Plugin "${this.id}" failed to stop`, { cause: e }))
-            } finally {
-                for (const cleanup of cleanups) cleanup()
-                if (!instance.patcher.destroyed) instance.patcher.destroy()
+                this.errors.push(
+                    new Error(`Plugin "${this.id}" encountered an error when stopping: ${e}`, { cause: e }),
+                )
+            }
+
+            for (const cleanup of cleanups) cleanup()
+            if (!instance.patcher.destroyed) instance.patcher.destroy()
+
+            this.status = PluginStatus.Stopped
+
+            // Since plugins always get stopped when encountering an error, we can throw this
+            if (this.errors.length) {
+                logger.error(`Plugin "${this.id}" encountered ${this.errors.length} errors`)
+                throw new AggregateError(
+                    this.errors,
+                    `Plugin "${this.id}" encountered ${this.errors.length} errors\n${this.errors.map(getErrorStack).join('\n')}`,
+                )
             }
         },
     } satisfies PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &

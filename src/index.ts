@@ -39,7 +39,7 @@ async function initialize() {
         // Initialize storages
         const PreferencesLibrary = import('@revenge-mod/preferences')
 
-        const [{ PluginsLibrary, startCorePlugins, startCorePluginsMetroModuleSubscriptions }, { awaitStorage }] =
+        const [{ PluginsLibrary, startCorePlugins, startPluginsMetroModuleSubscriptions: startCorePluginsMetroModuleSubscriptions }, { awaitStorage }] =
             await Promise.all([import('@revenge-mod/plugins'), import('@revenge-mod/storage')])
 
         globalThis.revenge = {
@@ -61,7 +61,7 @@ async function initialize() {
             recordTimestamp('Storage_Initialized')
 
             await CorePlugins
-            startCorePlugins()
+            await startCorePlugins()
             recordTimestamp('Plugins_CoreStarted')
         })
     } catch (e) {
@@ -70,7 +70,7 @@ async function initialize() {
 }
 
 function onError(e: unknown) {
-    console.error(`Failed to load Revenge: ${getErrorStack(e)}`)
+    logger.error(`Failed to load Revenge: ${getErrorStack(e)}`)
     alert(['Failed to load Revenge\n', `Build Number: ${ClientInfoModule.Build}`, getErrorStack(e)].join('\n'))
 }
 

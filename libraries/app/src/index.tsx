@@ -2,10 +2,14 @@ import { recordTimestamp } from '@revenge-mod/debug'
 import { findByName } from '@revenge-mod/modules/finders'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { createPatcherInstance } from '@revenge-mod/patcher'
+import { createLogger } from '@revenge-mod/utils/library'
 
 import type { Component, FC, ReactNode } from 'react'
 
 const patcher = createPatcherInstance('revenge.library.app')
+const logger = createLogger('app')
+
+logger.log('Library loaded')
 
 const initializeCallbacks = new Set<AppGenericCallback>()
 const renderCallbacks = new Set<AppGenericCallback>()
@@ -31,9 +35,14 @@ const unpatchRunApplication = patcher.after(
     'runApplication',
     () => {
         unpatchRunApplication()
+
         recordTimestamp('App_RunApplicationCalled')
+        logger.log('AppRegistry.runApplication called')
+
         for (const callback of initializeCallbacks) callback()
+
         recordTimestamp('App_AfterRunCallbacks')
+        logger.log('Initialized callbacks called')
     },
     'runInitializeCallbacks',
 )
@@ -43,8 +52,13 @@ const unpatchCreateElement = patcher.after(
     'createElement',
     () => {
         unpatchCreateElement()
+
         recordTimestamp('App_CreateElementCalled')
+        logger.log('React.createElement called')
+
         for (const callback of renderCallbacks) callback()
+
+        logger.log('Rendered callbacks called')
     },
     'runRenderCallbacks',
 )
@@ -75,6 +89,7 @@ afterErrorBoundaryPatchable(async function patchErrorBoundary() {
             'patchErrorBoundary',
         )
 
+        logger.log('ErrorBoundary patched')
         resolveErrorBoundaryPatched()
     })
 })
