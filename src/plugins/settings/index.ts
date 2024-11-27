@@ -87,35 +87,35 @@ registerPlugin(
                     },
                     'addNewSettingsSections',
                 )
+            })
 
-                sui.createSection({
-                    name: 'Revenge',
-                    settings: {
-                        Revenge: {
-                            type: 'route',
-                            label: 'Revenge',
-                            icon: {
-                                uri: RevengeIcon,
-                            },
-                            component: RevengeSettingsPage,
+            sui.createSection({
+                name: 'Revenge',
+                settings: {
+                    Revenge: {
+                        type: 'route',
+                        label: 'Revenge',
+                        icon: {
+                            uri: RevengeIcon,
                         },
+                        component: RevengeSettingsPage,
                     },
-                })
+                },
+            })
 
-                sui.createRoute('RevengeAbout', {
-                    type: 'route',
-                    label: 'About',
-                    component: AboutSettingsPage,
-                    icon: assets.getIndexByName('CircleInformationIcon'),
-                })
+            sui.createRoute('RevengeAbout', {
+                type: 'route',
+                label: 'About',
+                component: AboutSettingsPage,
+                icon: assets.getIndexByName('CircleInformationIcon'),
+            })
 
-                sui.createRoute('RevengeCustomPage', {
-                    type: 'route',
-                    label: 'Revenge Page',
-                    unsearchable: true,
-                    component: CustomPageRenderer,
-                    predicate: () => false,
-                })
+            sui.createRoute('RevengeCustomPage', {
+                type: 'route',
+                label: 'Revenge Page',
+                unsearchable: true,
+                component: CustomPageRenderer,
+                predicate: () => false,
             })
         },
     },

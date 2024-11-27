@@ -59,7 +59,6 @@ const plugin = registerPlugin<{
 
             if (storage.reactDevTools.autoConnect) connectToDevTools(storage.reactDevTools.address)
 
-            setTimeout(() => {
                 sui.addRowsToSection('Revenge', {
                     RevengeDeveloper: {
                         type: 'route',
@@ -68,7 +67,6 @@ const plugin = registerPlugin<{
                         component: wrapPluginContext(DeveloperSettingsPage),
                         predicate: () => storage.settingsRowShown,
                     },
-                })
             })
 
             sui.createRoute('RevengeDebugPerformanceTimes', {
