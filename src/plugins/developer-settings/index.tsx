@@ -57,16 +57,16 @@ const plugin = registerPlugin<{
                 }),
             )
 
-            if (storage.reactDevTools.autoConnect) connectToDevTools(storage.reactDevTools.address)
+            if (storage.reactDevTools.autoConnect && globalThis.__reactDevTools) connectToDevTools(storage.reactDevTools.address)
 
-                sui.addRowsToSection('Revenge', {
-                    RevengeDeveloper: {
-                        type: 'route',
-                        label: 'Developer',
-                        icon: assets.getIndexByName('WrenchIcon'),
-                        component: wrapPluginContext(DeveloperSettingsPage),
-                        predicate: () => storage.settingsRowShown,
-                    },
+            sui.addRowsToSection('Revenge', {
+                RevengeDeveloper: {
+                    type: 'route',
+                    label: 'Developer',
+                    icon: assets.getIndexByName('WrenchIcon'),
+                    component: wrapPluginContext(DeveloperSettingsPage),
+                    predicate: () => storage.settingsRowShown,
+                },
             })
 
             sui.createRoute('RevengeDebugPerformanceTimes', {
