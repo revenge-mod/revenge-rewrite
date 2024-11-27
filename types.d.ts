@@ -49,6 +49,7 @@ declare global {
 
     interface Promise {
         /// PROMISE POLYFILLS FROM: https://github.com/then/promise
+        /// AND: https://github.com/facebook/hermes/blob/main/lib/InternalBytecode/01-Promise.js
         _h: 0 | 1 | 2
     }
     // biome-ignore lint/suspicious/noExplicitAny: explode
