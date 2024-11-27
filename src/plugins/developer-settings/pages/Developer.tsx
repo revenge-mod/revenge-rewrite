@@ -103,13 +103,6 @@ export default function DeveloperSettingsPage() {
                     </Stack>
                 )}
                 <TableRowGroup title="Tools">
-                    <TableSwitchRow
-                        label="Patch ErrorBoundary"
-                        subLabel="Allows you to see a more detailed error screen, but may slow down the app during startup."
-                        icon={<TableRowIcon source={assets.getIndexByName('ScreenXIcon')} />}
-                        value={storage.patchErrorBoundary}
-                        onValueChange={v => (storage.patchErrorBoundary = v)}
-                    />
                     <TableRow
                         label="Evaluate JavaScript"
                         icon={<TableRowIcon source={assets.getIndexByName('PaperIcon')} />}

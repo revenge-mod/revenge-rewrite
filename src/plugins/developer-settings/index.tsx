@@ -14,7 +14,6 @@ import type { FunctionComponent } from 'react'
 
 const plugin = registerPlugin<{
     settingsRowShown: boolean
-    patchErrorBoundary: boolean
     reactDevTools: {
         address: string
         autoConnect: boolean
@@ -94,7 +93,6 @@ const plugin = registerPlugin<{
         },
         initializeStorage: () => ({
             settingsRowShown: false,
-            patchErrorBoundary: true,
             reactDevTools: {
                 address: 'localhost:8097',
                 autoConnect: false,
