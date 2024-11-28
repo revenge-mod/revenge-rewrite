@@ -190,12 +190,6 @@ declare module '@revenge-mod/plugins' {
     export default plugins
 }
 
-declare module '@revenge-mod/preferences' {
-    const preferences: typeof import('./libraries/preferences')
-    export * from './libraries/preferences'
-    export default preferences
-}
-
 declare module '@revenge-mod/storage' {
     const storage: typeof import('./libraries/storage')
     export * from './libraries/storage'
@@ -206,4 +200,22 @@ declare module 'events' {
     const events: typeof import('./shims/events')
     export * from './shims/events'
     export default events
+}
+
+declare module '@revenge-mod/ui/colors' {
+    const uiColors: typeof import('./libraries/ui/src/colors')
+    export * from './libraries/ui/src/colors'
+    export default uiColors
+}
+
+declare module '@revenge-mod/ui/components' {
+    const uiComponents: typeof import('./libraries/ui/src/components')
+    export * from './libraries/ui/src/components'
+    export default uiComponents
+}
+
+declare module '@revenge-mod/ui/settings' {
+    const settingsUI: typeof import('./libraries/ui/src/settings')
+    export * from './libraries/ui/src/settings'
+    export default settingsUI
 }

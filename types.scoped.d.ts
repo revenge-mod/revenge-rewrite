@@ -14,4 +14,10 @@ declare global {
     }
 }
 
+declare module '@revenge-mod/preferences' {
+    const preferences: typeof import('./libraries/preferences')
+    export * from './libraries/preferences'
+    export default preferences
+}
+
 export {}

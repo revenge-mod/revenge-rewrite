@@ -34,8 +34,6 @@
       "@revenge-mod/shared/*": ["./libraries/shared/src/*"],
       "@revenge-mod/utils/*": ["./libraries/utils/src/*"],
       "@revenge-mod/revenge": ["./types.d.ts"],
-      "@revenge-mod/ui/*": ["./libraries/ui/src/*.ts"],
-      "events": ["./shims/events.ts"]
     },
     "skipLibCheck": true,
     "noPropertyAccessFromIndexSignature": false,
