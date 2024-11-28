@@ -1,3 +1,3 @@
-import { createLogger } from '@revenge-mod/utils/library'
+import { Logger } from '@revenge-mod/modules/common'
 
-export const logger = createLogger('plugins')
+export const logger = new Logger('revenge.plugins')

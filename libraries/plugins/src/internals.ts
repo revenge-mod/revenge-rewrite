@@ -133,11 +133,9 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
 
             // Since plugins always get stopped when encountering an error, we can throw this
             if (this.errors.length) {
-                logger.error(`Plugin "${this.id}" encountered ${this.errors.length} errors`)
-                throw new AggregateError(
-                    this.errors,
-                    `Plugin "${this.id}" encountered ${this.errors.length} errors\n${this.errors.map(getErrorStack).join('\n')}`,
-                )
+                const msg = `Plugin "${this.id}" encountered ${this.errors.length} errors\n${this.errors.map(getErrorStack).join('\n')}`
+                logger.error(msg)
+                throw new AggregateError(this.errors, msg)
             }
         },
     } satisfies PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &

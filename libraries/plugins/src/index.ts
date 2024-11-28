@@ -1,9 +1,10 @@
 import { afterAppRendered } from '@revenge-mod/app'
+import { getErrorStack } from '@revenge-mod/utils/errors'
+
 import { appRenderedCallbacks, corePluginIds, plugins, registerPlugin } from './internals'
+import { logger } from './shared'
 
 import type { PluginDefinition, PluginStorage } from './types'
-import { logger } from './shared'
-import { getErrorStack } from '@revenge-mod/utils/errors'
 
 export type * from './types'
 
@@ -31,7 +32,7 @@ export function definePlugin<Storage = PluginStorage, AppLaunchedReturn = void, 
  * @internal
  */
 export function startCorePlugins() {
-    logger.log('Starting core plugins lifecycles...')
+    logger.info('Starting core plugins lifecycles...')
 
     const promises: Promise<unknown>[] = []
     const errors: AggregateError[] = []
@@ -60,7 +61,7 @@ export function startCorePlugins() {
 }
 
 export function startPluginsMetroModuleSubscriptions() {
-    logger.log('Starting Metro module subscriptions for plugins...')
+    logger.info('Starting Metro module subscriptions for plugins...')
     for (const plugin of plugins.values()) plugin.startMetroModuleSubscriptions!()
 }
 
