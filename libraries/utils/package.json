@@ -4,6 +4,9 @@
   "type": "module",
   "exports": {
     "./enums": "./src/enums.ts",
+    "./errors": "./src/errors.ts",
+    "./react": "./src/react.ts",
+    "./library": "./src/library.ts",
     "./functions": "./src/functions.ts",
     "./lazy": "./src/lazy.ts",
     "./trees": "./src/trees.ts"
