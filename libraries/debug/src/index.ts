@@ -6,12 +6,13 @@ export const PerformanceTimes = {
     Modules_IndexRequired: -1,
     Init_PromiseResolved: -1,
     Modules_RequiredAssets: -1,
+    App_RunApplicationCalled: -1,
+    App_AfterRunRACallbacks: -1,
     Plugins_CoreImported: -1,
     Storage_Initialized: -1,
     Plugins_CoreStarted: -1,
-    App_RunApplicationCalled: -1,
     App_CreateElementCalled: -1,
-    App_AfterRunCallbacks: -1,
+    App_AfterRunCECallbacks: -1,
 }
 
 export function timeOf(time: keyof typeof PerformanceTimes) {

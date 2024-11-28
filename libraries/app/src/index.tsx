@@ -41,7 +41,7 @@ const unpatchRunApplication = patcher.after(
 
         for (const callback of initializeCallbacks) callback()
 
-        recordTimestamp('App_AfterRunCallbacks')
+        recordTimestamp('App_AfterRunRACallbacks')
         logger.log('Initialized callbacks called')
     },
     'runInitializeCallbacks',
@@ -58,6 +58,7 @@ const unpatchCreateElement = patcher.after(
 
         for (const callback of renderCallbacks) callback()
 
+        recordTimestamp('App_AfterRunCECallbacks')
         logger.log('Rendered callbacks called')
     },
     'runRenderCallbacks',
