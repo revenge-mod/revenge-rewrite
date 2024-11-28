@@ -4,6 +4,7 @@
   "scripts": {},
   "exports": {
     "./colors": "./src/colors.ts",
+    "./components": "./src/components.tsx",
     "./settings": "./src/settings.ts"
   },
   "dependencies": {
