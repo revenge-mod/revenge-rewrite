@@ -18,20 +18,18 @@ patcher.after(
     'patchRegisterAsset',
 )
 
-const assets = new Proxy(
-    Object.fromEntries(
-        Object.entries(metroCache.assets).map(([key, index]) => [key, assetsRegistry.getAssetByID(index)]),
-    ) as Record<string, ReactNativeInternals.AssetsRegistry.PackagerAsset | undefined>,
+const assetsIndex = new Proxy(
+    {} as Record<string, ReactNativeInternals.AssetsRegistry.PackagerAsset | undefined>,
     {
         get(cache, prop: string) {
             if (cache[prop]) return cache[prop]
-            return assetsRegistry.getAssetByID(Number(prop))
+            return cache[prop] = assetsRegistry.getAssetByID(Number(prop))
         },
     },
 ) as Record<string, ReactNativeInternals.AssetsRegistry.PackagerAsset | undefined>
 
 export const AssetsLibrary = {
-    assets,
+    index: assetsIndex,
     getByName: getAssetByName,
     getIndexByName: getAssetIndexByName,
     getByIndex: getAssetByIndex,
@@ -44,7 +42,7 @@ export type AssetsLibrary = typeof AssetsLibrary
  * @param name The name of the asset
  * @returns The asset tied to the name
  */
-function getAssetByName(name: string) {
+export function getAssetByName(name: string) {
     return getAssetByIndex(metroCache.assets[name]!)
 }
 
@@ -53,8 +51,8 @@ function getAssetByName(name: string) {
  * @param index The index of the asset
  * @returns The asset tied to the index
  */
-function getAssetByIndex(index: number) {
-    return assets[index]
+export function getAssetByIndex(index: number) {
+    return assetsIndex[index]
 }
 
 /**
@@ -62,10 +60,7 @@ function getAssetByIndex(index: number) {
  * @param name The name of the asset
  * @returns The asset index tied to the name
  */
-function getAssetIndexByName(name: string) {
-    const cachedId = metroCache.assets[name]
-    if (cachedId) return cachedId
-
+export function getAssetIndexByName(name: string) {
     const moduleId = metroCache.assetModules[name]
     if (!moduleId) return
     return (metroCache.assets[name] = requireModule(moduleId))
