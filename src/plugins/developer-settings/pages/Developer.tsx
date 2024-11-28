@@ -145,6 +145,12 @@ export default function DeveloperSettingsPage() {
                         }}
                     />
                     <TableRow
+                        label="Asset Browser"
+                        icon={<TableRowIcon source={assets.getIndexByName('ImageIcon')} />}
+                        arrow
+                        onPress={() => navigation.navigate('RevengeAssetBrowser')}
+                    />
+                    <TableRow
                         variant="danger"
                         label="Clear Settings"
                         subLabel="This will remove the settings file and reload the app."
@@ -159,6 +165,7 @@ export default function DeveloperSettingsPage() {
                     <TableRow
                         label="Test CustomPageRenderer"
                         icon={<TableRowIcon source={assets.getIndexByName('ScreenArrowIcon')} />}
+                        arrow
                         onPress={() =>
                             navigation.navigate('RevengeCustomPage', {
                                 title: 'Custom Page Test',
@@ -170,6 +177,7 @@ export default function DeveloperSettingsPage() {
                         variant="danger"
                         label="Test ErrorBoundary"
                         icon={<TableRowIcon variant="danger" source={assets.getIndexByName('ScreenXIcon')} />}
+                        arrow
                         onPress={() =>
                             navigation.navigate('RevengeCustomPage', {
                                 title: 'ErrorBoundary Test',

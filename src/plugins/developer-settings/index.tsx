@@ -1,16 +1,18 @@
 import { toasts } from '@revenge-mod/modules/common'
 import { TableRowIcon, TableSwitchRow } from '@revenge-mod/modules/common/components'
 import { registerPlugin } from '@revenge-mod/plugins/internals'
+import { useObservable } from '@revenge-mod/storage'
+import { sleep } from '@revenge-mod/utils/functions'
+
 import { addTableRowsToAdvancedSectionInRevengePage } from '../settings/pages/Revenge'
 
+import AssetBrowserSettingsPage from './pages/AssetBrowser'
 import DebugPerformanceTimesSettingsPage from './pages/DebugPerformanceTimes'
 import DeveloperSettingsPage from './pages/Developer'
 
 import { DevToolsEvents, connectToDevTools } from './devtools'
 
 import type { PluginDefinition } from '@revenge-mod/plugins'
-import { useObservable } from '@revenge-mod/storage'
-import { sleep } from '@revenge-mod/utils/functions'
 import type { FunctionComponent } from 'react'
 
 const plugin = registerPlugin<{
@@ -79,6 +81,13 @@ const plugin = registerPlugin<{
                 label: 'Debug Performance Times',
                 component: DebugPerformanceTimesSettingsPage,
                 icon: assets.getIndexByName('TimerIcon'),
+            })
+
+            sui.createRoute('RevengeAssetBrowser', {
+                type: 'route',
+                label: 'Asset Browser',
+                component: AssetBrowserSettingsPage,
+                icon: assets.getIndexByName('ImageIcon'),
             })
 
             addTableRowsToAdvancedSectionInRevengePage(() => {
