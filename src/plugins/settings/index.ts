@@ -53,7 +53,7 @@ registerPlugin(
                 type: 'route',
                 label: 'About',
                 component: AboutSettingsPage,
-                icon: assets.getIndexByName('CircleInformationIcon'),
+                icon: assets.getIndexByName('CircleInformationIcon-primary'),
             })
 
             sui.createRoute('RevengeCustomPage', {
