@@ -2,7 +2,7 @@ import { ReactNative } from '@revenge-mod/modules/common'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 import { registerPlugin } from '@revenge-mod/plugins/internals'
 
-const MinimumSupportedBuildNumber = ReactNative.Platform.select({ android: 254000, ios: 65235 })!
+const MinimumSupportedBuildNumber = ReactNative.Platform.select({ android: 254000, ios: 66559 })!
 
 registerPlugin<{
     supportWarningDismissedAt?: number
@@ -24,7 +24,7 @@ registerPlugin<{
                     body:
                         // biome-ignore lint/style/useTemplate: I can't see the whole message when not doing concatenation
                         'Revenge does not officially support this build of Discord. Please update to a newer version as some features may not work as expected.\n\n' +
-                        `Supported Builds: 250.0 (${MinimumSupportedBuildNumber}) or after\nYour Build: ${ClientInfoModule.Version} (${ClientInfoModule.Build})`,
+                        `Supported Builds: 254.0 (${MinimumSupportedBuildNumber}) or after\nYour Build: ${ClientInfoModule.Version} (${ClientInfoModule.Build})`,
                     confirmText: 'Remind me in 7 days',
                     onConfirm: () => {
                         storage.supportWarningDismissedAt = Date.now()
