@@ -10,7 +10,7 @@ const { release, minify, dev } = args
 
 const context = {
     hash: 'local',
-    hashDirty: !!Bun.$`git diff --quiet && git diff --cached --quiet`
+    hashDirty: !!await Bun.$`git diff --quiet && git diff --cached --quiet`
         .quiet()
         .nothrow()
         .then(res => res.exitCode),
