@@ -11,3 +11,14 @@ declare module '@revenge-mod/modules/finders' {
     const finders: import('./libraries/modules/src/finders')
     export * from './libraries/modules/src/finders'
 }
+
+declare module '@revenge-mod/preferences' {
+    const preferences: typeof import('./libraries/preferences')
+    export * from './libraries/preferences'
+    export default preferences
+}
+
+declare module 'events' {
+    const events: typeof import('./shims/events')
+    export * from './shims/events'
+}
