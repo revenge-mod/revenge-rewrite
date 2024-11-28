@@ -21,7 +21,7 @@ export default function RevengeSettingsPage() {
                     <TableRow
                         label="About"
                         icon={<TableRowIcon source={assets.getIndexByName('CircleInformationIcon-primary')} />}
-                        trailing={<TableRow.Arrow />}
+                        arrow
                         onPress={() => navigation.push('RevengeAbout')}
                     />
                 </TableRowGroup>
