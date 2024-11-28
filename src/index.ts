@@ -13,22 +13,23 @@ import { createPatcherInstance } from '@revenge-mod/patcher'
 
 // ! This function is BLOCKING, so we need to make sure it's as fast as possible
 async function initialize() {
-    const [{ createModulesLibrary }, UIColorsLibrary, { SettingsUILibrary }] = await Promise.all([
-        import('@revenge-mod/modules'),
-        import('@revenge-mod/ui/colors'),
-        import('@revenge-mod/ui/settings'),
-    ])
-
     recordTimestamp('Init_Initialize')
     Object.freeze = Object.seal = o => o
 
-    const UILibrary = {
-        settings: SettingsUILibrary,
-        colors: UIColorsLibrary,
-    }
-
     try {
+        const [{ createModulesLibrary }, UIColorsLibrary, { SettingsUILibrary }] = await Promise.all([
+            import('@revenge-mod/modules'),
+            import('@revenge-mod/ui/colors'),
+            import('@revenge-mod/ui/settings'),
+        ])
+
         const ModulesLibraryPromise = createModulesLibrary()
+
+        const UILibrary = {
+            settings: SettingsUILibrary,
+            colors: UIColorsLibrary,
+        }
+
         const [{ AppLibrary, errorBoundaryPatchedPromise }, { AssetsLibrary }] = await Promise.all([
             import('@revenge-mod/app'),
             import('@revenge-mod/assets'),
@@ -39,8 +40,14 @@ async function initialize() {
         // Initialize storages
         const PreferencesLibrary = import('@revenge-mod/preferences')
 
-        const [{ PluginsLibrary, startCorePlugins, startPluginsMetroModuleSubscriptions: startCorePluginsMetroModuleSubscriptions }, { awaitStorage }] =
-            await Promise.all([import('@revenge-mod/plugins'), import('@revenge-mod/storage')])
+        const [
+            {
+                PluginsLibrary,
+                startCorePlugins,
+                startPluginsMetroModuleSubscriptions: startCorePluginsMetroModuleSubscriptions,
+            },
+            { awaitStorage },
+        ] = await Promise.all([import('@revenge-mod/plugins'), import('@revenge-mod/storage')])
 
         globalThis.revenge = {
             app: AppLibrary,
@@ -55,7 +62,14 @@ async function initialize() {
             startCorePluginsMetroModuleSubscriptions()
         })
 
-        errorBoundaryPatchedPromise.then(async () => {
+        // We do not want to use await here even though we're in an async function
+        // We don't need to wait for plugins to finish loading before we start the app
+        // TODO: If we have issues when starting too many plugins, then we can use await
+        ;(async () => {
+            // Await the error boundary patching on non-iOS
+            // because iOS only patches ErrorBoundary after render
+            if (ReactNative.Platform.OS !== 'ios') await errorBoundaryPatchedPromise
+
             const { settings } = await PreferencesLibrary
             await awaitStorage(settings)
             recordTimestamp('Storage_Initialized')
@@ -63,7 +77,7 @@ async function initialize() {
             await CorePlugins
             await startCorePlugins()
             recordTimestamp('Plugins_CoreStarted')
-        })
+        })()
     } catch (e) {
         onError(e)
     }

@@ -10,6 +10,7 @@ import { DevToolsEvents, connectToDevTools } from './devtools'
 
 import type { PluginDefinition } from '@revenge-mod/plugins'
 import { useObservable } from '@revenge-mod/storage'
+import { sleep } from '@revenge-mod/utils/functions'
 import type { FunctionComponent } from 'react'
 
 const plugin = registerPlugin<{
@@ -26,7 +27,7 @@ const plugin = registerPlugin<{
         id: 'revenge.developer-settings',
         version: '1.0.0',
         icon: 'WrenchIcon',
-        afterAppRender(context) {
+        async afterAppRender(context) {
             const {
                 storage,
                 revenge: {
@@ -57,7 +58,11 @@ const plugin = registerPlugin<{
                 }),
             )
 
-            if (storage.reactDevTools.autoConnect && globalThis.__reactDevTools) connectToDevTools(storage.reactDevTools.address)
+            if (storage.reactDevTools.autoConnect && globalThis.__reactDevTools)
+                connectToDevTools(storage.reactDevTools.address)
+
+            // Wait for the section to be added by the Settings plugin
+            await sleep(0)
 
             sui.addRowsToSection('Revenge', {
                 RevengeDeveloper: {
