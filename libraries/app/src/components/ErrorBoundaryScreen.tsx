@@ -48,7 +48,9 @@ export default function ErrorBoundaryScreen(props: {
                     ) : null}
                 </Text>
                 <Text variant="text-sm/normal" color="text-muted">
-                    {ClientInfoModule.Version} ({ClientInfoModule.Build}) • Revenge {__BUNDLE_RELEASE__}
+                    {ClientInfoModule.Version} ({ClientInfoModule.Build}) • Revenge {__REVENGE_RELEASE__} (
+                    {__REVENGE_HASH__}
+                    {__REVENGE_HASH_DIRTY__ ? '-dirty' : ''})
                 </Text>
             </ReactNative.View>
             <LabeledCard label="Error" rawContent={getErrorStack(error)}>

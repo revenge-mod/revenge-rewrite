@@ -3,13 +3,13 @@ import type { Metro } from '@revenge-mod/modules'
 import { subscribeModule } from '@revenge-mod/modules/metro'
 import { type Patcher, createPatcherInstance } from '@revenge-mod/patcher'
 import { awaitStorage, createStorage } from '@revenge-mod/storage'
+import { getErrorStack } from '@revenge-mod/utils/errors'
 import { objectSeal } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
 import type React from 'react'
 import type { PluginContext, PluginDefinition, PluginModuleSubscriptionContext, PluginStorage } from '.'
 import { PluginIdRegex, PluginStatus } from './constants'
 import { logger } from './shared'
-import { getErrorStack } from '@revenge-mod/utils/errors'
 
 export const appRenderedCallbacks = new Set<() => Promise<unknown>>()
 export const corePluginIds = new Set<string>()

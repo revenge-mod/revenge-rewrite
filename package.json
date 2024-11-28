@@ -4,8 +4,8 @@
   "type": "module",
   "license": "BSD-3-Clause",
   "scripts": {
-    "serve": "node ./scripts/serve.mjs",
-    "build": "node ./scripts/build.mjs"
+    "serve": "bun run ./scripts/serve.mjs",
+    "build": "bun run ./scripts/build.mjs"
   },
   "dependencies": {
     "@revenge-mod/app": "workspace:*",

@@ -66,6 +66,7 @@ const unpatchCreateElement = patcher.after(
 let resolveErrorBoundaryPatched: () => void
 export const errorBoundaryPatchedPromise = new Promise<void>(resolve => (resolveErrorBoundaryPatched = resolve))
 
+// TODO: NEEDS WOKAROUND
 // Patching ErrorBoundary afterInitialized causes the weird "Element type is invalid" error due to TextInputWrapper
 const afterErrorBoundaryPatchable = ReactNative.Platform.OS === 'ios' ? afterAppRendered : afterAppInitialized
 

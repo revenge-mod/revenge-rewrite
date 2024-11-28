@@ -1,5 +1,3 @@
-import { execSync } from 'child_process'
-import { randomBytes } from 'crypto'
 import { resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 import { transformFile } from '@swc/core'
@@ -10,11 +8,12 @@ import yargs from 'yargs-parser'
 const args = yargs(process.argv.slice(2))
 const { release, minify, dev } = args
 
-let context = {
-    /**
-     * @type {string | null}
-     */
-    hash: null,
+const context = {
+    hash: 'local',
+    hashDirty: !!Bun.$`git diff --quiet && git diff --cached --quiet`
+        .quiet()
+        .nothrow()
+        .then(res => res.exitCode),
 }
 
 /**
@@ -33,8 +32,10 @@ const config = {
         'const-and-let': false,
     },
     define: {
-        __BUNDLE_DEV__: `${dev}`,
-        __BUNDLE_RELEASE__: `"${release ?? 'local'}"`,
+        __REVENGE_DEV__: `${dev}`,
+        __REVENGE_RELEASE__: `"${release ?? 'local'}"`,
+        __REVENGE_HASH__: `"${context.hash}"`,
+        __REVENGE_HASH_DIRTY__: `${context.hashDirty}`,
     },
     footer: {
         js: '//# sourceURL=revenge',
@@ -95,11 +96,12 @@ const config = {
 }
 
 export async function buildBundle(overrideConfig = {}) {
-    context = {
-        hash: release
-            ? execSync('git rev-parse --short HEAD').toString().trim()
-            : randomBytes(8).toString('hex').slice(0, 7),
-    }
+    context.hash = await Bun.$`git rev-parse --short HEAD`
+        .nothrow()
+        .quiet()
+        .text()
+        .then(res => res.trim())
+    config.define.__REVENGE_HASH__ = `"${context.hash}"`
 
     const initialStartTime = performance.now()
     await build({ ...config, ...overrideConfig })

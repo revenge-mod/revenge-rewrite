@@ -1,14 +1,10 @@
 // Types that should only exist in Revenge's codebase
 
 declare global {
-    /**
-     * @internal
-     */
-    var __BUNDLE_DEV__: boolean
-    /**
-     * @internal
-     */
-    var __BUNDLE_RELEASE__: string
+    var __REVENGE_DEV__: boolean
+    var __REVENGE_RELEASE__: string
+    var __REVENGE_HASH__: string
+    var __REVENGE_HASH_DIRTY__: string
 
     // TODO: Type this better, or not...
     var __fbBatchedBridge: MessageQueue & {

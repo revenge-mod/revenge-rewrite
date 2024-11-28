@@ -32,7 +32,7 @@ export default function AboutSettingsPage() {
                             icon: {
                                 uri: RevengeIcon,
                             },
-                            trailing: __BUNDLE_RELEASE__,
+                            trailing: `${__REVENGE_RELEASE__} (${__REVENGE_HASH__}${__REVENGE_HASH_DIRTY__ ? '-dirty' : ''})`,
                         },
                         {
                             label: 'Discord',
