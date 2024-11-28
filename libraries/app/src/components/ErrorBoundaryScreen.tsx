@@ -4,6 +4,8 @@ import { ClientInfoModule } from '@revenge-mod/modules/native'
 import { SemanticColor } from '@revenge-mod/ui/colors'
 import { getErrorStack } from '@revenge-mod/utils/errors'
 
+import { ScrollView, StyleSheet, View } from 'react-native'
+
 import type { ComponentProps } from 'react'
 
 const useErrorBoundaryStyles = createStyles({
@@ -16,7 +18,7 @@ const useErrorBoundaryStyles = createStyles({
     },
 })
 
-const styles = ReactNative.StyleSheet.create({
+const styles = StyleSheet.create({
     nestedView: {
         gap: 8,
         flex: 1,
@@ -36,7 +38,7 @@ export default function ErrorBoundaryScreen(props: {
 
     return (
         <SafeAreaView style={errorBoundaryStyles.view}>
-            <ReactNative.View style={{ gap: 4 }}>
+            <View style={{ gap: 4 }}>
                 <Text variant="display-lg">Error!</Text>
                 <Text variant="text-md/normal">
                     An error was thrown while rendering components. This could be caused by plugins, Revenge or Discord.{' '}
@@ -52,13 +54,13 @@ export default function ErrorBoundaryScreen(props: {
                     {__REVENGE_HASH__}
                     {__REVENGE_HASH_DIRTY__ ? '-dirty' : ''})
                 </Text>
-            </ReactNative.View>
+            </View>
             <LabeledCard label="Error" rawContent={getErrorStack(error)}>
                 <Text variant="text-md/medium">{String(error)}</Text>
                 {error instanceof Error && error.stack && (
                     <>
                         <Text variant="heading-xl/semibold">Call Stack</Text>
-                        <ReactNative.ScrollView style={styles.nestedView} fadingEdgeLength={64}>
+                        <ScrollView style={styles.nestedView} fadingEdgeLength={64}>
                             {parseStackTrace(error.stack?.slice(String(error).length + 1)).map(
                                 ({ at, file, line, column }) => (
                                     // biome-ignore lint/correctness/useJsxKeyInIterable: This never gets rerendered
@@ -83,7 +85,7 @@ export default function ErrorBoundaryScreen(props: {
                                     </Text>
                                 ),
                             )}
-                        </ReactNative.ScrollView>
+                        </ScrollView>
                     </>
                 )}
             </LabeledCard>
@@ -118,11 +120,11 @@ export type LabeledCardProps = ComponentProps<typeof Card> & {
 }
 
 export function LabeledCard(props: LabeledCardProps) {
-    const ViewComponent = props.scrollable ? ReactNative.ScrollView : ReactNative.View
+    const ViewComponent = props.scrollable ? ScrollView : View
 
     return (
         <Card {...props} style={[styles.nestedView, ...(Array.isArray(props.style) ? props.style : [props.style])]}>
-            <ReactNative.View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Text variant="heading-xl/semibold" style={styles.headerText}>
                     {props.label}
                 </Text>
@@ -134,7 +136,7 @@ export function LabeledCard(props: LabeledCardProps) {
                         onPress={() => clipboard.setString(props.rawContent as string)}
                     />
                 )}
-            </ReactNative.View>
+            </View>
             <ViewComponent style={styles.nestedView} fadingEdgeLength={32}>
                 {props.children}
             </ViewComponent>

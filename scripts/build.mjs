@@ -43,13 +43,12 @@ const config = {
     loader: {
         '.webp': 'dataurl',
     },
-    // inject: ["./shims/asyncIteratorSymbol.js", "./shims/promiseAllSettled.js"],
     legalComments: 'none',
     alias: {
-        react: './shims/react.ts',
-        'react-native': './shims/react-native.ts',
+        react: './shims/react.cjs',
+        'react-native': './shims/react-native.cjs',
         'react/jsx-runtime': './shims/react~jsx-runtime.ts',
-        events: './shims/events.ts',
+        events: './shims/events.ts'
     },
     plugins: [
         {

@@ -11,6 +11,9 @@ import {
 import { cache as metroCache } from '@revenge-mod/modules/metro'
 import { SearchInput } from '@revenge-mod/ui/components'
 
+import { useState } from 'react'
+import { View, Image } from 'react-native'
+
 import type { Metro } from '@revenge-mod/modules'
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 
@@ -40,7 +43,7 @@ function AssetDisplay({
             subLabel={`Index: ${index} • Type: ${asset.type}`}
             icon={
                 DisplayableTypes.has(asset.type) ? (
-                    <ReactNative.Image source={index} style={{ width: 32, height: 32 }} />
+                    <Image source={index} style={{ width: 32, height: 32 }} />
                 ) : (
                     <TableRow.Icon
                         variant="danger"
@@ -60,7 +63,7 @@ function AssetDisplay({
                         content={`Index: ${index}\nModule ID: ${moduleId}\nType: ${asset.type}`}
                         extraContent={
                             DisplayableTypes.has(asset.type) ? (
-                                <ReactNative.Image
+                                <Image
                                     resizeMode="contain"
                                     source={index}
                                     style={{ flex: 1, width: 'auto', height: 192 }}
@@ -106,10 +109,10 @@ function copyToClipboard(text: string) {
 }
 
 export default function AssetBrowserSettingsPage() {
-    const [search, setSearch] = React.useState('')
+    const [search, setSearch] = useState('')
 
     return (
-        <ReactNative.View style={{ gap: 16, paddingHorizontal: 16, paddingTop: 16, flex: 1 }}>
+        <View style={{ gap: 16, paddingHorizontal: 16, paddingTop: 16, flex: 1 }}>
             <SearchInput size="md" style={{ margin: 10 }} onChange={(v: string) => setSearch(v)} />
             <FlashList
                 data={Object.keys(metroCache.assets)
@@ -131,6 +134,6 @@ export default function AssetBrowserSettingsPage() {
                 renderItem={({ item }) => <AssetDisplay {...item} />}
                 estimatedItemSize={1500}
             />
-        </ReactNative.View>
+        </View>
     )
 }
