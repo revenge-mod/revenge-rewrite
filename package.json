@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@shopify/flash-list": "^1.7.2",
     "@swc/core": "^1.9.3",
     "@swc/helpers": "^0.5.15",
     "@tsconfig/strictest": "^2.0.5",

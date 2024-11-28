@@ -102,4 +102,4 @@ export const FormSwitch = findBySingleProp('FormSwitch')
 export const FormRadio = findBySingleProp('FormRadio')
 export const FormCheckbox = findBySingleProp('FormCheckbox')
 
-export const FlashList = findProp('FlashList')
+export const FlashList = findProp<typeof import('@shopify/flash-list').FlashList>('FlashList')!

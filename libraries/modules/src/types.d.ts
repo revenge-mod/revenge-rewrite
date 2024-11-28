@@ -1,7 +1,6 @@
 import type { If, Nullish } from '@revenge-mod/shared/types'
-import type React from 'react'
 
-import type { ReactNode } from 'react'
+import type { ComponentProps, FC, ReactNode } from 'react'
 import type {
     ImageProps,
     ImageSourcePropType,
@@ -13,6 +12,7 @@ import type {
     ViewProps,
     ViewStyle,
 } from 'react-native'
+
 import type { MetroModuleFilePathKey } from './constants'
 import type { lazyContextSymbol } from './utils/lazy'
 
@@ -181,6 +181,11 @@ export type LazyModule<T> = T extends unknown | undefined
 /// COMMON
 
 export namespace DiscordModules {
+    export interface Alerts {
+        openAlert(key: string, alert: JSX.Element): void
+        dismissAlerts(): void
+    }
+
     export interface LinkingUtils {
         /**
          * Shows an action sheet with options for the given URL
@@ -300,7 +305,7 @@ export namespace DiscordModules {
     export namespace Components {
         // Buttons
         export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg'
-        export type Button = React.FC<
+        export type Button = FC<
             PressableProps & {
                 renderIcon?(): ReactNode
                 renderRightIcon?(): ReactNode
@@ -328,20 +333,20 @@ export namespace DiscordModules {
                     | 'white'
             }
         >
-        export type TwinButtons = React.FC
-        export type IconButton = React.FC
-        export type RowButton = React.FC
-        export type ImageButton = React.FC
-        export type FloatingActionButton = React.FC
+        export type TwinButtons = FC
+        export type IconButton = FC
+        export type RowButton = FC
+        export type ImageButton = FC
+        export type FloatingActionButton = FC
 
         // Layouts
-        export type Stack = React.FC<
+        export type Stack = FC<
             ViewProps & {
                 spacing?: number
                 direction?: 'vertical' | 'horizontal'
             }
         >
-        export type Card = React.FC<
+        export type Card = FC<
             ViewProps & {
                 start?: boolean
                 end?: boolean
@@ -352,22 +357,65 @@ export namespace DiscordModules {
                 children: ReactNode
             }
         >
-        export type PressableScale = React.FC
+        export type PressableScale = FC
 
         // Inputs
-        export type TextInput = React.FC<TextInputProps>
-        export type TextField = React.FC<TextInputProps>
-        export type TextArea = React.FC
-        export type GhostInput = React.FC
+        export type TextFieldProps = {
+            onChange?: (value: string) => void
+            onBlur?: () => void
+            onFocus?: () => void
+
+            leadingIcon?: () => JSX.Element
+            trailingIcon?: () => JSX.Element
+            leadingText?: string
+            trailingText?: string
+            description?: string
+            errorMessage?: string
+
+            isDisabled?: boolean
+            focusable?: boolean
+            editable?: boolean
+            status?: TextFieldStatus
+
+            defaultValue?: string
+            value?: string
+
+            placeholder?: string
+            placeholderTextColor?: string
+            
+            maxLength?: number
+            multiline?: boolean
+            
+            autoFocus?: boolean
+            secureTextEntry?: boolean
+            returnKeyType?: TextInputProps['returnKeyType']
+            isClearable?: boolean
+            
+            size?: TextFieldSize
+            style?: ViewStyle | ViewStyle[]
+        }
+
+        export type TextFieldSize = 'sm' | 'md' | 'lg'
+
+        export type TextFieldStatus = 'default' | 'error'
+
+        export type TextInput = FC<
+            TextFieldProps & {
+                label?: string
+            }
+        >
+        export type TextField = FC<TextFieldProps>
+        export type TextArea = FC<Omit<ComponentProps<TextInput>, 'multiline'>>
+        export type GhostInput = FC
 
         // Forms
-        export type FormSwitch = React.FC
-        export type FormRadio = React.FC
-        export type FormCheckbox = React.FC
+        export type FormSwitch = FC
+        export type FormRadio = FC
+        export type FormCheckbox = FC
 
         // Segmented controls
-        export type SegmentedControl = React.FC
-        export type SegmentedControlPages = React.FC
+        export type SegmentedControl = FC
+        export type SegmentedControlPages = FC
         export type SegmentedControlStateArgs = {
             initialSelectedIndex: number
             onChange: (index: number) => void
@@ -377,13 +425,13 @@ export namespace DiscordModules {
         }
 
         // Sheets
-        export type ActionSheet = React.FC
-        export type ActionSheetCloseButton = React.FC
-        export type ActionSheetRow = React.FC
-        export type ActionSheetSwitchRow = React.FC
-        export type ActionSheetIconHeader = React.FC
-        export type ActionSheetHeaderBar = React.FC
-        export type BottomSheetTitleHeader = React.FC
+        export type ActionSheet = FC
+        export type ActionSheetCloseButton = FC
+        export type ActionSheetRow = FC
+        export type ActionSheetSwitchRow = FC
+        export type ActionSheetIconHeader = FC
+        export type ActionSheetHeaderBar = FC
+        export type BottomSheetTitleHeader = FC
 
         export type IconSize =
             | 'extraSmall10'
@@ -421,21 +469,21 @@ export namespace DiscordModules {
             hasIcons?: boolean
             accessibilityLabel?: string
             accessibilityRole?: string
-            children: React.ReactNode
+            children: ReactNode
         }
-        export type TableRow = React.FC<TableRowProps> & {
-            Arrow: React.FC
+        export type TableRow = FC<TableRowProps> & {
+            Arrow: FC
             Icon: TableRowIcon
         }
-        export type TableSwitchRow = React.FC<
+        export type TableSwitchRow = FC<
             Omit<TableRowProps, 'trailing'> & {
                 accessibilityHint?: string
                 value: boolean
                 onValueChange(value: boolean): void
             }
         >
-        export type TableRowGroup = React.FC<TableRowGroupProps>
-        export type TableRowGroupTitle = React.FC<{
+        export type TableRowGroup = FC<TableRowGroupProps>
+        export type TableRowGroupTitle = FC<{
             title: string
         }>
         export type TableRowIconVariant =
@@ -451,16 +499,16 @@ export namespace DiscordModules {
             | 'danger'
             | 'secondary'
             | 'translucent'
-        export type TableRowIcon = React.FC<{
+        export type TableRowIcon = FC<{
             source: ImageSourcePropType
             variant?: TableRowIconVariant
         }>
-        export type TableRadioGroup<T = unknown> = React.FC<
+        export type TableRadioGroup<T = unknown> = FC<
             TableRowGroupProps & {
                 onChange(value: T): void
             }
         >
-        export type TableCheckboxRow = React.FC<
+        export type TableCheckboxRow = FC<
             Omit<TableRowProps, 'trailing'> & {
                 accessibilityHint?: string
                 checked: boolean
@@ -468,28 +516,33 @@ export namespace DiscordModules {
                 onPress: unknown
             }
         >
-        export type TableRadioRow<T = unknown> = React.FC<
+        export type TableRadioRow<T = unknown> = FC<
             Omit<TableRowProps, 'trailing'> & {
                 accessibilityHint?: string
                 value: T
             }
         >
-        export type TableRowTrailingText = React.FC<{
+        export type TableRowTrailingText = FC<{
             text: string
         }>
 
         // Alerts
-        export type AlertModal = React.FC
+        export type AlertModal = FC<{
+            title: string
+            content?: ReactNode
+            extraContent?: ReactNode
+            actions?: ReactNode
+        }>
         export type AlertActionButton = Button
 
         // Menus
-        export type ContextMenu = React.FC
-        export type ContextMenuContainer = React.FC
+        export type ContextMenu = FC
+        export type ContextMenuContainer = FC
 
         // Other
-        export type Slider = React.FC
-        export type FlashList = React.FC
-        export type Text = React.FC<
+        export type Slider = FC
+        export type FlashList = FC
+        export type Text = FC<
             TextProps & {
                 variant?: DiscordModules.Styles.TextVariant
                 color?: string
