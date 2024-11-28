@@ -71,11 +71,13 @@ export type NavigationNativeStackParamList = {
     [Page: string]: any
 }
 
-export const { TextStyleSheet, createStyles } = lazyDestructure(
+export const { TextStyleSheet, createStyles, dismissAlerts, openAlert } = lazyDestructure(
     () =>
         findByProps.eager<{
             createStyles: DiscordModules.Styles.CreateStylesFn
             TextStyleSheet: DiscordModules.Styles.TextStyleSheet
+            dismissAlerts: DiscordModules.Alerts['dismissAlerts']
+            openAlert: DiscordModules.Alerts['openAlert']
         }>('createStyles', 'TextStyleSheet')!,
 )
 

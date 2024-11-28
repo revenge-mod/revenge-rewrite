@@ -35,8 +35,6 @@ export const {
 
     AlertModal,
     AlertActionButton,
-    dismissAlerts,
-    openAlert,
 
     // Inputs
 
@@ -84,8 +82,6 @@ export const {
 
             AlertModal: DiscordModules.Components.AlertModal
             AlertActionButton: DiscordModules.Components.AlertActionButton
-            dismissAlerts: unknown
-            openAlert: unknown
 
             Card: DiscordModules.Components.Card
             Stack: DiscordModules.Components.Stack
