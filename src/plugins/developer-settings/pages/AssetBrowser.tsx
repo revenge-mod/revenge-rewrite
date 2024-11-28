@@ -1,18 +1,11 @@
 import { getAssetByIndex, getAssetIndexByName } from '@revenge-mod/assets'
-import { clipboard, toasts, openAlert } from '@revenge-mod/modules/common'
-import {
-    AlertActionButton,
-    AlertModal,
-    FlashList,
-    Stack,
-    TableRow,
-    Text,
-} from '@revenge-mod/modules/common/components'
+import { clipboard, openAlert, toasts } from '@revenge-mod/modules/common'
+import { AlertActionButton, AlertModal, FlashList, Stack, TableRow, Text } from '@revenge-mod/modules/common/components'
 import { cache as metroCache } from '@revenge-mod/modules/metro'
 import { SearchInput } from '@revenge-mod/ui/components'
 
 import { useState } from 'react'
-import { View, Image } from 'react-native'
+import { Image, View } from 'react-native'
 
 import type { Metro } from '@revenge-mod/modules'
 import type { ReactNativeInternals } from '@revenge-mod/revenge'

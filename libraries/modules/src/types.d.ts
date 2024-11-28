@@ -382,15 +382,15 @@ export namespace DiscordModules {
 
             placeholder?: string
             placeholderTextColor?: string
-            
+
             maxLength?: number
             multiline?: boolean
-            
+
             autoFocus?: boolean
             secureTextEntry?: boolean
             returnKeyType?: TextInputProps['returnKeyType']
             isClearable?: boolean
-            
+
             size?: TextFieldSize
             style?: ViewStyle | ViewStyle[]
         }

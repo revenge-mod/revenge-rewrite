@@ -37,7 +37,8 @@
       "indentWidth": 2
     },
     "parser": {
-      "allowComments": true
+      "allowComments": true,
+      "allowTrailingCommas": true
     }
   },
   "javascript": {

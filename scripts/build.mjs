@@ -10,10 +10,10 @@ const { release, minify, dev } = args
 
 const context = {
     hash: 'local',
-    hashDirty: !!await Bun.$`git diff --quiet && git diff --cached --quiet`
+    hashDirty: !!(await Bun.$`git diff --quiet && git diff --cached --quiet`
         .quiet()
         .nothrow()
-        .then(res => res.exitCode),
+        .then(res => res.exitCode)),
 }
 
 /**
@@ -48,7 +48,7 @@ const config = {
         react: './shims/react.cjs',
         'react-native': './shims/react-native.cjs',
         'react/jsx-runtime': './shims/react~jsx-runtime.ts',
-        events: './shims/events.ts'
+        events: './shims/events.ts',
     },
     plugins: [
         {

@@ -33,7 +33,7 @@
     "paths": {
       "@revenge-mod/shared/*": ["./libraries/shared/src/*"],
       "@revenge-mod/utils/*": ["./libraries/utils/src/*"],
-      "@revenge-mod/revenge": ["./types.d.ts"],
+      "@revenge-mod/revenge": ["./types.d.ts"]
     },
     "skipLibCheck": true,
     "noPropertyAccessFromIndexSignature": false,

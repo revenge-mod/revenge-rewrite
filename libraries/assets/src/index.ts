@@ -18,15 +18,12 @@ patcher.after(
     'patchRegisterAsset',
 )
 
-const assetsIndex = new Proxy(
-    {} as Record<string, ReactNativeInternals.AssetsRegistry.PackagerAsset | undefined>,
-    {
-        get(cache, prop: string) {
-            if (cache[prop]) return cache[prop]
-            return cache[prop] = assetsRegistry.getAssetByID(Number(prop))
-        },
+const assetsIndex = new Proxy({} as Record<string, ReactNativeInternals.AssetsRegistry.PackagerAsset | undefined>, {
+    get(cache, prop: string) {
+        if (cache[prop]) return cache[prop]
+        return (cache[prop] = assetsRegistry.getAssetByID(Number(prop)))
     },
-) as Record<string, ReactNativeInternals.AssetsRegistry.PackagerAsset | undefined>
+}) as Record<string, ReactNativeInternals.AssetsRegistry.PackagerAsset | undefined>
 
 export const AssetsLibrary = {
     index: assetsIndex,
