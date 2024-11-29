@@ -1,8 +1,7 @@
+require('!deps-shim!')
+
 import { lazyDestructure } from '@revenge-mod/utils/lazy'
 import { findByFilePath, findByName, findByProps } from '../finders'
-
-import ImportedReact from 'react'
-import ImportedReactNative from 'react-native'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { ComponentType } from 'react'
@@ -89,8 +88,9 @@ export const FluxDispatcher = findByProps<DiscordModules.Flux.Dispatcher>('_inte
 /// REACT
 
 export const assetsRegistry = findByProps<typeof ReactNativeInternals.AssetsRegistry>('registerAsset')!
-export const React = (globalThis.React = ImportedReact)
-export const ReactNative = (globalThis.ReactNative = ImportedReactNative)
+// Declarations are made in shims/deps.ts
+export const React = globalThis.React
+export const ReactNative = globalThis.ReactNative
 
 /// OTHERS
 

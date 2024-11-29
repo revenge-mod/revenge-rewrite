@@ -4,6 +4,7 @@ import { transformFile } from '@swc/core'
 import chalk from 'chalk'
 import { build } from 'esbuild'
 import yargs from 'yargs-parser'
+import pluginGlobals from 'esbuild-plugin-globals'
 
 const args = yargs(process.argv.slice(2))
 const { release, minify, dev } = args
@@ -45,12 +46,20 @@ const config = {
     },
     legalComments: 'none',
     alias: {
-        react: './shims/react.cjs',
-        'react-native': './shims/react-native.cjs',
+        '!deps-shim!': './shims/deps.ts',
         'react/jsx-runtime': './shims/react~jsx-runtime.ts',
         events: './shims/events.ts',
     },
     plugins: [
+        pluginGlobals({
+            ...['react', 'react-native', 'util', 'moment', 'chroma-js', 'lodash', '@shopify/react-native-skia'].reduce(
+                (deps, name) => {
+                    deps[name] = `require("!deps-shim!").default[${JSON.stringify(name)}]`
+                    return deps
+                },
+                {},
+            ),
+        }),
         {
             name: 'swc',
             setup(build) {
