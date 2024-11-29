@@ -41,7 +41,7 @@ const lazyHandler: ProxyHandler<any> = {
         }
 
         const resolved = contextHolder?.factory()
-        if (!resolved) throw new Error(`Cannot read keys of ${typeof resolved}`)
+        if (!resolved) throw new Error(`Cannot read keys of ${typeof resolved} (reading '${String(p)})`)
         return Reflect.has(resolved, p)
     },
     get(target, p, receiver) {
@@ -71,7 +71,7 @@ const lazyHandler: ProxyHandler<any> = {
     getOwnPropertyDescriptor: (target, p) => {
         const contextHolder = proxyContextHolder.get(target)
         const resolved = contextHolder?.factory()
-        if (!resolved) throw new Error(`Trying to getOwnPropertyDescriptor of ${typeof resolved}`)
+        if (!resolved) throw new Error(`Cannot get property descriptor of ${typeof resolved} (getting '${String(p)}')`)
 
         if (isUnconfigurable(p)) return Reflect.getOwnPropertyDescriptor(target, p)
 
@@ -121,7 +121,7 @@ export function lazyValue<T, I extends ExemptedEntries>(factory: () => T, opts: 
  * @example
  *
  * const { uuid4 } = lazyDestructure(() => findByProps.eager("uuid4"))
- * uuid4; // <- is a lazy proxy!
+ * uuid4; // <- is a lazy value!
  */
 export function lazyDestructure<T extends Record<PropertyKey, unknown>, I extends ExemptedEntries>(
     factory: () => T,
