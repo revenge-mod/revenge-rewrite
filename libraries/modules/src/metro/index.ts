@@ -341,7 +341,8 @@ export function* modulesForFinder(key: string, fullLookup = false) {
  */
 export function isModuleExportsBad(exports: Metro.ModuleExports) {
     return (
-        !exports ||
+        typeof exports === 'undefined' ||
+        exports === null ||
         exports === globalThis ||
         exports[''] === null ||
         (exports.__proto__ === Object.prototype && Reflect.ownKeys(exports).length === 0)
