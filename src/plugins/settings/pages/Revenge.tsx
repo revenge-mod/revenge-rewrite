@@ -20,7 +20,7 @@ export default function RevengeSettingsPage() {
                 <TableRowGroup title="Info">
                     <TableRow
                         label="About"
-                        icon={<TableRowIcon source={assets.getIndexByName('CircleInformationIcon-primary')} />}
+                        icon={<TableRowIcon source={assets.getIndexByName('CircleInformationIcon-primary')!} />}
                         arrow
                         onPress={() => navigation.push('RevengeAbout')}
                     />
@@ -28,7 +28,7 @@ export default function RevengeSettingsPage() {
                 <TableRowGroup title="Actions">
                     <TableRow
                         label="Reload Discord"
-                        icon={<TableRowIcon source={assets.getIndexByName('RetryIcon')} />}
+                        icon={<TableRowIcon source={assets.getIndexByName('RetryIcon')!} />}
                         // Passing BundleUpdaterManager.reload directly just explodes for some reason. Maybe onPress had args?
                         onPress={() => BundleUpdaterManager.reload()}
                     />

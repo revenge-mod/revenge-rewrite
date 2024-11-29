@@ -42,7 +42,7 @@ registerPlugin<{
                 return (
                     <TableSwitchRow
                         label="Show Discord Staff Settings"
-                        icon={<TableRowIcon source={assets.getIndexByName('ic_progress_wrench_24px')} />}
+                        icon={<TableRowIcon source={assets.getIndexByName('ic_progress_wrench_24px')!} />}
                         value={storage.enabled}
                         onValueChange={(v: boolean) => (storage.enabled = v)}
                     />

@@ -96,7 +96,7 @@ const plugin = registerPlugin<{
                 return (
                     <TableSwitchRow
                         label="Show Developer Options"
-                        icon={<TableRowIcon source={assets.getIndexByName('WrenchIcon')} />}
+                        icon={<TableRowIcon source={assets.getIndexByName('WrenchIcon')!} />}
                         value={storage.settingsRowShown}
                         onValueChange={(v: boolean) => (storage.settingsRowShown = v)}
                     />

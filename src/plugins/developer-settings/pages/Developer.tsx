@@ -108,7 +108,7 @@ export default function DeveloperSettingsPage() {
                 <TableRowGroup title="Tools">
                     <TableRow
                         label="Evaluate JavaScript"
-                        icon={<TableRowIcon source={assets.getIndexByName('PaperIcon')} />}
+                        icon={<TableRowIcon source={assets.getIndexByName('PaperIcon')!} />}
                         onPress={() => {
                             alerts.openAlert(
                                 'revenge.plugins.storage.evaluate',
@@ -149,7 +149,7 @@ export default function DeveloperSettingsPage() {
                     />
                     <TableRow
                         label="Asset Browser"
-                        icon={<TableRowIcon source={assets.getIndexByName('ImageIcon')} />}
+                        icon={<TableRowIcon source={assets.getIndexByName('ImageIcon')!} />}
                         arrow
                         onPress={() => navigation.navigate('RevengeAssetBrowser')}
                     />
@@ -157,7 +157,7 @@ export default function DeveloperSettingsPage() {
                         variant="danger"
                         label="Clear Settings"
                         subLabel="This will remove the settings file and reload the app."
-                        icon={<TableRowIcon variant="danger" source={assets.getIndexByName('TrashIcon')} />}
+                        icon={<TableRowIcon variant="danger" source={assets.getIndexByName('TrashIcon')!} />}
                         onPress={async () => {
                             await settings[storageContextSymbol].file.delete()
                             BundleUpdaterManager.reload()
@@ -167,7 +167,7 @@ export default function DeveloperSettingsPage() {
                 <TableRowGroup title="Tests">
                     <TableRow
                         label="Test CustomPageRenderer"
-                        icon={<TableRowIcon source={assets.getIndexByName('ScreenArrowIcon')} />}
+                        icon={<TableRowIcon source={assets.getIndexByName('ScreenArrowIcon')!} />}
                         arrow
                         onPress={() =>
                             navigation.navigate('RevengeCustomPage', {
@@ -179,7 +179,7 @@ export default function DeveloperSettingsPage() {
                     <TableRow
                         variant="danger"
                         label="Test ErrorBoundary"
-                        icon={<TableRowIcon variant="danger" source={assets.getIndexByName('ScreenXIcon')} />}
+                        icon={<TableRowIcon variant="danger" source={assets.getIndexByName('ScreenXIcon')!} />}
                         arrow
                         onPress={() =>
                             navigation.navigate('RevengeCustomPage', {
@@ -193,7 +193,7 @@ export default function DeveloperSettingsPage() {
                 <TableRowGroup title="Performance">
                     <TableRow
                         label="Show Debug Performance Times"
-                        icon={<TableRowIcon source={assets.getIndexByName('TimerIcon')} />}
+                        icon={<TableRowIcon source={assets.getIndexByName('TimerIcon')!} />}
                         onPress={() => navigation.navigate('RevengeDebugPerformanceTimes')}
                     />
                 </TableRowGroup>
@@ -202,7 +202,7 @@ export default function DeveloperSettingsPage() {
                         variant="danger"
                         label="Recreate Metro Cache"
                         subLabel="Module blacklists, lookup flags, asset index maps, asset module ID maps. This will reload the app."
-                        icon={<TableRowIcon variant="danger" source={assets.getIndexByName('TrashIcon')} />}
+                        icon={<TableRowIcon variant="danger" source={assets.getIndexByName('TrashIcon')!} />}
                         onPress={() => {
                             modules.metro.invalidateCache()
                             BundleUpdaterManager.reload()
