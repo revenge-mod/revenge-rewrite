@@ -23,8 +23,6 @@ import {
     disconnectFromDevTools,
 } from '../devtools'
 
-import ReactIcon from '../../../assets/react.webp'
-
 import { settings } from '@revenge-mod/preferences'
 import { PluginContext } from '..'
 
@@ -82,20 +80,25 @@ export default function DeveloperSettingsPage() {
                                 <TableRow
                                     label="Disconnect from React DevTools"
                                     variant="danger"
-                                    icon={<TableRowIcon variant="danger" source={{ uri: ReactIcon }} />}
+                                    icon={
+                                        <TableRowIcon
+                                            variant="danger"
+                                            source={assets.getIndexByName('Revenge.RevengeIcon')!}
+                                        />
+                                    }
                                     onPress={() => disconnectFromDevTools()}
                                 />
                             ) : (
                                 <TableRow
                                     label={'Connect to React DevTools'}
-                                    icon={<TableRowIcon source={{ uri: ReactIcon }} />}
+                                    icon={<TableRowIcon source={assets.getIndexByName('Revenge.ReactIcon')!} />}
                                     onPress={() => connectToDevTools(refDevToolsAddr.current)}
                                 />
                             )}
                             <TableSwitchRow
                                 label="Auto Connect on Startup"
                                 subLabel="Automatically connect to React DevTools when the app starts."
-                                icon={<TableRowIcon source={{ uri: ReactIcon }} />}
+                                icon={<TableRowIcon source={assets.getIndexByName('Revenge.ReactIcon')!} />}
                                 value={storage.reactDevTools.autoConnect}
                                 onValueChange={v => (storage.reactDevTools.autoConnect = v)}
                             />

@@ -1,4 +1,4 @@
-import { getAssetByIndex, getAssetIndexByName } from '@revenge-mod/assets'
+import { customAssets, getAssetByIndex, getAssetIndexByName } from '@revenge-mod/assets'
 import { clipboard, openAlert, toasts } from '@revenge-mod/modules/common'
 import { AlertActionButton, AlertModal, FlashList, Stack, TableRow, Text } from '@revenge-mod/modules/common/components'
 import { cache as metroCache } from '@revenge-mod/modules/metro'
@@ -10,7 +10,7 @@ import { Image, View } from 'react-native'
 import type { Metro } from '@revenge-mod/modules'
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 
-const DisplayableTypes = new Set(['png', 'jpg', 'svg'])
+const DisplayableTypes = new Set(['png', 'jpg', 'svg', 'webp'])
 
 const UndisplayableTypesIconMap = {
     jsona: 'ic_file_text',
@@ -27,24 +27,26 @@ function AssetDisplay({
 }: {
     index: number
     asset: ReactNativeInternals.AssetsRegistry.PackagerAsset
-    moduleId: Metro.ModuleID
+    moduleId?: Metro.ModuleID
 }) {
     return (
         <TableRow
             variant={DisplayableTypes.has(asset.type) ? 'default' : 'danger'}
             label={asset.name}
-            subLabel={`Index: ${index} • Type: ${asset.type}`}
+            subLabel={`Index: ${index} • Type: ${asset.type} • ${!moduleId ? 'Custom asset' : `Module ID: ${moduleId}`}`}
             icon={
                 DisplayableTypes.has(asset.type) ? (
                     <Image source={index} style={{ width: 32, height: 32 }} />
                 ) : (
                     <TableRow.Icon
                         variant="danger"
-                        source={getAssetIndexByName(
-                            asset.type in UndisplayableTypesIconMap
-                                ? UndisplayableTypesIconMap[asset.type as keyof typeof UndisplayableTypesIconMap]
-                                : UndisplayableTypesIconMap.default,
-                        )}
+                        source={
+                            getAssetIndexByName(
+                                asset.type in UndisplayableTypesIconMap
+                                    ? UndisplayableTypesIconMap[asset.type as keyof typeof UndisplayableTypesIconMap]
+                                    : UndisplayableTypesIconMap.default,
+                            )!
+                        }
                     />
                 )
             }
@@ -53,7 +55,7 @@ function AssetDisplay({
                     'revenge.plugins.developer-settings.asset-browser.display',
                     <AlertModal
                         title={asset.name}
-                        content={`Index: ${index}\nModule ID: ${moduleId}\nType: ${asset.type}`}
+                        content={`Index: ${index}\nModule ID: ${moduleId ?? '(custom asset)'}\nType: ${asset.type}`}
                         extraContent={
                             DisplayableTypes.has(asset.type) ? (
                                 <Image
@@ -109,19 +111,25 @@ export default function AssetBrowserSettingsPage() {
             <SearchInput size="md" style={{ margin: 10 }} onChange={(v: string) => setSearch(v)} />
             <FlashList
                 data={Object.keys(metroCache.assets)
-                    .filter(
-                        name =>
-                            name in metroCache.assets &&
-                            (name.toLowerCase().includes(search.toLowerCase()) ||
-                                metroCache.assets[name]?.toString() === search),
-                    )
+                    .concat(Object.keys(customAssets))
+                    .filter(name => {
+                        const source =
+                            name in metroCache.assets
+                                ? metroCache.assets
+                                : name in customAssets
+                                  ? customAssets
+                                  : undefined
+
+                        if (!source) return false
+                        return name.toLowerCase().includes(search.toLowerCase()) || source[name]?.toString() === search
+                    })
                     .map(name => {
-                        const index = metroCache.assets[name]!
+                        const index = (metroCache.assets[name] ?? customAssets[name])!
 
                         return {
                             index,
                             asset: getAssetByIndex(index)!,
-                            moduleId: metroCache.assetModules[name]!,
+                            moduleId: metroCache.assetModules[name],
                         }
                     })}
                 renderItem={({ item }) => <AssetDisplay {...item} />}

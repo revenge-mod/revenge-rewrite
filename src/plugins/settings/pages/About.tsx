@@ -8,10 +8,6 @@ import {
 } from '@revenge-mod/modules/common/components'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 
-import HermesIcon from '../../../assets/hermes.webp'
-import ReactIcon from '../../../assets/react.webp'
-import RevengeIcon from '../../../assets/revenge.webp'
-
 import PageWrapper from './(Wrapper)'
 
 import type { ComponentProps } from 'react'
@@ -29,14 +25,12 @@ export default function AboutSettingsPage() {
                     {[
                         {
                             label: 'Revenge',
-                            icon: {
-                                uri: RevengeIcon,
-                            },
+                            icon: assets.getIndexByName('Revenge.RevengeIcon')!,
                             trailing: `${__REVENGE_RELEASE__} (${__REVENGE_HASH__}${__REVENGE_HASH_DIRTY__ ? '-dirty' : ''})`,
                         },
                         {
                             label: 'Discord',
-                            icon: assets.getIndexByName('Discord'),
+                            icon: assets.getIndexByName('Discord')!,
                             trailing: `${ClientInfoModule.Version} (${ClientInfoModule.Build})`,
                         },
                     ].map(props => (
@@ -48,23 +42,17 @@ export default function AboutSettingsPage() {
                     {[
                         {
                             label: 'React',
-                            icon: {
-                                uri: ReactIcon,
-                            },
+                            icon: assets.getIndexByName('Revenge.ReactIcon')!,
                             trailing: React.version,
                         },
                         {
                             label: 'React Native',
-                            icon: {
-                                uri: ReactIcon,
-                            },
+                            icon: assets.getIndexByName('Revenge.ReactIcon')!,
                             trailing: runtimeProps['OSS Release Version']!.slice(7),
                         },
                         {
                             label: 'Hermes Bytecode',
-                            icon: {
-                                uri: HermesIcon,
-                            },
+                            icon: assets.getIndexByName('Revenge.HermesIcon')!,
                             trailing: `${runtimeProps['Bytecode Version']} (${runtimeProps.Build})`,
                         },
                     ].map(props => (

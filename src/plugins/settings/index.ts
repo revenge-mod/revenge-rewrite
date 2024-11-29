@@ -11,8 +11,6 @@ import {
     customData,
 } from '@revenge-mod/ui/settings'
 
-import RevengeIcon from '../../assets/revenge.webp'
-
 import AboutSettingsPage from './pages/About'
 import CustomPageRenderer from './pages/CustomPageRenderer'
 import RevengeSettingsPage from './pages/Revenge'
@@ -41,9 +39,7 @@ registerPlugin(
                     Revenge: {
                         type: 'route',
                         label: 'Revenge',
-                        icon: {
-                            uri: RevengeIcon,
-                        },
+                        icon: assets.getIndexByName('Revenge.RevengeIcon'),
                         component: RevengeSettingsPage,
                     },
                 },
