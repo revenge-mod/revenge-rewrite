@@ -463,7 +463,9 @@ export const findByFilePath = Object.assign(
 )
 
 /**
- * Finds an export by its properties, and accesses it directly
+ * Finds an export by its properties, and accesses it directly.
+ * **This is not reliable for non-object-like values (eg. strings, numbers, booleans) since we cannot create proxies for those types
+ * , only `findProp.async` and `findProp.eager` are reliable for such things.**
  *
  * - Filter: `m[prop] && props.every(p => m[p])`
  * - Returns: `m[prop]`
@@ -474,7 +476,7 @@ export const findByFilePath = Object.assign(
  */
 export const findProp = Object.assign(
     function findPropLazy<T extends Metro.ModuleExports>(prop: string, ...filterProps: string[]) {
-        return lazyValue(() => findByProps(prop, ...filterProps)?.[prop]) as LazyModule<Undefinable<T>>
+        return lazyValue(() => findByProps.eager(prop, ...filterProps)?.[prop]) as LazyModule<Undefinable<T>>
     },
     {
         async: function findPropAsync<T extends Metro.ModuleExports>(
