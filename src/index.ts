@@ -10,7 +10,6 @@ import { getErrorStack } from '@revenge-mod/utils/errors'
 
 import type { Metro } from '@revenge-mod/modules'
 import { createPatcherInstance } from '@revenge-mod/patcher'
-import { sleep } from '@revenge-mod/utils/functions'
 
 // ! This function is BLOCKING, so we need to make sure it's as fast as possible
 async function initialize() {
@@ -24,10 +23,6 @@ async function initialize() {
         ])
 
         const ModulesLibraryPromise = createModulesLibrary()
-
-        // Need to wait for a single tick so a few globals are registered
-        // There is technically a better to solution, which is to import the globals directly from the `modules` module
-        await sleep(0)
 
         const [{ AppLibrary, errorBoundaryPatchedPromise }, { AssetsLibrary }, UIColorsLibrary] = await Promise.all([
             import('@revenge-mod/app'),
