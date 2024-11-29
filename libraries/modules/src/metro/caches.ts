@@ -196,6 +196,7 @@ type Asset = ReactNativeInternals.AssetsRegistry.PackagerAsset
 export function cacheAsset(name: Asset['name'], index: number, moduleId: Metro.ModuleID) {
     cache.assets[name] = index
     cache.assetModules[name] = moduleId
+    cache.exportsFlags[moduleId]! |= MetroModuleFlags.Asset
     saveCache()
 }
 

@@ -3,7 +3,7 @@ import { createBitFlagEnum } from '@revenge-mod/utils/enums'
 /**
  * The module flags
  */
-export const MetroModuleFlags = createBitFlagEnum('Blacklisted')
+export const MetroModuleFlags = createBitFlagEnum('Blacklisted', 'Asset')
 /**
  * The module lookup flags
  */

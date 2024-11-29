@@ -93,6 +93,7 @@ export interface RevengeLibrary {
     plugins: PluginsLibrary
     ui: {
         settings: SettingsUILibrary
+        colors: typeof import('@revenge-mod/ui/colors')
     }
 }
 

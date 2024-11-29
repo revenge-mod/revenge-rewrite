@@ -84,49 +84,29 @@ export function resolveModuleDependencies(modules: Metro.ModuleList, id: Metro.M
     }
 }
 
-function tryHookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
-    if (isModuleBlacklisted(id)) return
-
+function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
     // Allow patching already initialized modules
     // I don't know why this is needed, as we only require index after we hook a few modules...
     if (metroModule.isInitialized) {
         const subs = subscriptions.get(id)
         if (subs) for (const sub of subs) sub(id, metroModule.publicModule.exports)
         for (const sub of allSubscriptionSet) sub(id, metroModule.publicModule.exports)
-    }
-
-    if (metroModule!.factory) {
+    } else if (metroModule!.factory) {
         const unpatch = patcher.instead(
             metroModule as Metro.ModuleDefinition<false>,
             'factory',
             (args, origFunc) => {
+                unpatch()
+
                 const originalImportingId = importingModuleId
                 importingModuleId = id
 
                 const { 4: moduleObject } = args
 
-                // TODO: Check if this is required
-                // // metroImportDefault
-                // args[2] = id => {
-                //     const exps = metroRequire(id)
-                //     return exps?.__esModule ? exps.default : exps
-                // }
-
-                // // metroImportAll
-                // args[3] = id => {
-                //     const exps = metroRequire(id)
-                //     if (exps?.__esModule) return exps
-                //     return {
-                //         default: exps,
-                //         ...exps,
-                //     }
-                // }
-
                 try {
                     origFunc(...args)
                 } catch (error) {
                     logger.log(`Blacklisted module ${id} because it could not be initialized: ${error}`)
-                    unpatch()
                     blacklistModule(id)
                 }
 
@@ -161,13 +141,13 @@ export async function initializeModules() {
     // Hooking all modules before requiring index slows down startup up to 1s, so we defer some of the later modules to be hooked later
     const moduleIds = metroDependencies.values()
 
-    let hookCount = 0
+    let hookCountLeft = Math.min(metroDependencies.size, SafeModuleHookAmountBeforeDefer)
     // I've tested values, and I've found the best value for not missing any modules and being the fastest
-    for (; hookCount < Math.min(metroDependencies.size, SafeModuleHookAmountBeforeDefer); hookCount++) {
+    while (hookCountLeft > -1) {
         const id = moduleIds.next().value!
-        const metroModule = metroModules[id]!
-
-        tryHookModule(id, metroModule)
+        if (moduleShouldNotBeHooked(id)) continue
+        hookModule(id, metroModules[id]!)
+        --hookCountLeft
     }
 
     logger.log('Importing index module...')
@@ -182,8 +162,8 @@ export async function initializeModules() {
         if (!id) return
 
         do {
-            const metroModule = metroModules[id]!
-            tryHookModule(id, metroModule)
+            if (moduleShouldNotBeHooked(id)) continue
+            hookModule(id, metroModules[id]!)
         } while ((id = moduleIds.next().value))
 
         recordTimestamp('Modules_HookedFactories')
@@ -212,7 +192,6 @@ export async function initializeModules() {
  * @param id
  */
 export function blacklistModule(id: Metro.ModuleIDKey) {
-    Object.defineProperty(getMetroModules(), id, { enumerable: false })
     cacheModuleAsBlacklisted(id)
     saveCache()
 }
@@ -302,6 +281,23 @@ export const subscribeModule = Object.assign(
 export function isModuleBlacklisted(id: Metro.ModuleIDKey) {
     if (!(id in cache.exportsFlags)) return 0
     return cache.exportsFlags[id]! & MetroModuleFlags.Blacklisted
+}
+
+/**
+ * Returns whether the module is an asset registrar
+ * @param id The module ID
+ * @returns Whether the module is an asset registrar
+ */
+export function isModuleAssetRegistrar(id: Metro.ModuleIDKey) {
+    if (!(id in cache.exportsFlags)) return 0
+    return cache.exportsFlags[id]! & MetroModuleFlags.Asset
+}
+
+/** @internal */
+function moduleShouldNotBeHooked(id: Metro.ModuleIDKey) {
+    // Blacklisted modules and asset registrars should not be hooked
+    // It only slows down the startup and adds no value
+    return isModuleBlacklisted(id) || isModuleAssetRegistrar(id)
 }
 
 /**
