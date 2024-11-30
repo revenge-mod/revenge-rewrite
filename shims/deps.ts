@@ -1,4 +1,4 @@
-import { findByProps } from '@revenge-mod/modules/finders'
+import { findByProps, findProp } from '@revenge-mod/modules/finders'
 
 export default {
     react: (globalThis.React = findByProps('createElement')!),
@@ -8,4 +8,5 @@ export default {
     'chroma-js': findByProps('brewer'),
     lodash: findByProps('forEachRight'),
     '@shopify/react-native-skia': findByProps('useFont'),
+    '@shopify/flash-list': findProp('FlashList')!,
 }
