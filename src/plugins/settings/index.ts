@@ -13,6 +13,7 @@ import {
 
 import AboutSettingsPage from './pages/About'
 import CustomPageRenderer from './pages/CustomPageRenderer'
+import PluginsSettingsPage from './pages/Plugins'
 import RevengeSettingsPage from './pages/Revenge'
 
 import type { FC } from 'react'
@@ -41,6 +42,12 @@ registerPlugin(
                         label: 'Revenge',
                         icon: assets.getIndexByName('Revenge.RevengeIcon'),
                         component: RevengeSettingsPage,
+                    },
+                    RevengePlugins: {
+                        type: 'route',
+                        label: 'Plugins',
+                        icon: assets.getIndexByName('Revenge.PluginIcon'),
+                        component: PluginsSettingsPage,
                     },
                 },
             })
