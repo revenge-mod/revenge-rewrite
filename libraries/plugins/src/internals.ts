@@ -16,7 +16,7 @@ export const corePluginIds = new Set<string>()
 export const plugins = new Map<
     InternalPluginDefinition<unknown, unknown, unknown>['id'],
     // biome-ignore lint/suspicious/noExplicitAny: I should really turn off this rule...
-    PluginDefinition<any, any, any> & Partial<Omit<InternalPluginDefinition<any, any, any>, keyof PluginDefinition>>
+    PluginDefinition<any, any, any> & Omit<InternalPluginDefinition<any, any, any>, keyof PluginDefinition>
 >()
 
 const highPriorityPluginIds = new Set<InternalPluginDefinition<unknown, unknown, unknown>['id']>()
@@ -27,6 +27,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             Omit<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>, keyof PluginDefinition>
         >,
     core = false,
+    managable = !core,
     predicate?: () => boolean,
 ) {
     const cleanups = new Set<() => unknown>()
@@ -47,6 +48,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         // Enabled by default if it is a core plugin, otherwise its enabled state will be modified after core plugins have started
         enabled: predicate?.() ?? core,
         core,
+        managable,
         status: PluginStatus.Stopped,
         SettingsComponent: definition.settings,
         errors: [],
@@ -54,7 +56,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             return this.status === PluginStatus.Stopped
         },
         disable() {
-            if (this.core) throw new Error(`Cannot disable core plugin "${this.id}"`)
+            if (!this.managable) throw new Error(`Cannot disable unmanagable plugin "${this.id}"`)
             if (!this.stopped) this.stop()
             this.enabled = false
         },
@@ -82,10 +84,10 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             logger.log(`Starting plugin: ${this.id}`)
             this.status = PluginStatus.Starting
 
-            prepareStorageAndPatcher()
-
             if (isAppRendered && this.beforeAppRender)
                 return handleError(new Error(`Plugin "${this.id}" requires running before app is initialized`))
+
+            prepareStorageAndPatcher()
 
             try {
                 instance.context.beforeAppRender = await this.beforeAppRender?.(instance)
@@ -97,8 +99,8 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
                 )
             }
 
-            if (this.afterAppRender)
-                appRenderedCallbacks.add(async () => {
+            if (this.afterAppRender) {
+                const cb = async () => {
                     try {
                         await awaitStorage(instance.storage)
                         instance.context.afterAppRender = await this.afterAppRender!(instance)
@@ -110,8 +112,11 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
                             }),
                         )
                     }
-                })
-            else this.status = PluginStatus.Started
+                }
+
+                if (isAppRendered) cb()
+                else appRenderedCallbacks.add(cb)
+            } else this.status = PluginStatus.Started
         },
         stop() {
             if (this.stopped) return
@@ -223,6 +228,8 @@ export type InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedR
     SettingsComponent?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
     /** @internal */
     core: boolean
+    /** @internal */
+    managable: boolean
     /** @internal */
     // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
     errors: any[]

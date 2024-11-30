@@ -9,7 +9,7 @@ registerPlugin<{
 }>(
     {
         name: 'Warnings',
-        author: 'The Revenge Team',
+        author: 'Revenge',
         description: 'Startup warnings for users that are not using the recommended defaults for Revenge',
         id: 'revenge.warnings',
         version: '1.0.0',
@@ -39,6 +39,7 @@ registerPlugin<{
         },
     },
     true,
+    false,
     // We do !> instead of < in case the value of the left is NaN
     () => !(Number(ClientInfoModule.Build) > MinimumSupportedBuildNumber),
 )

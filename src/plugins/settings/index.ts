@@ -20,7 +20,7 @@ import type { FC } from 'react'
 registerPlugin(
     {
         name: 'Settings',
-        author: 'The Revenge Team',
+        author: 'Revenge',
         description: 'Settings menus for Revenge',
         id: 'revenge.settings',
         version: '1.0.0',

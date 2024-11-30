@@ -11,11 +11,11 @@ registerPlugin<{
 }>(
     {
         name: 'Staff Settings',
-        author: 'The Revenge Team',
+        author: 'Revenge',
         description: 'Enables access to staff settings on Discord',
         id: 'revenge.staff-settings',
         version: '1.0.0',
-        icon: 'ic_progress_wrench_24px',
+        icon: 'StaffBadgeIcon',
         onMetroModuleLoad(_, __, exports, unsub) {
             if (exports.default?.constructor?.displayName === 'DeveloperExperimentStore') {
                 unsub()
@@ -32,24 +32,25 @@ registerPlugin<{
             }
         },
         beforeAppRender({ cleanup, storage, revenge: { assets } }) {
-            cleanup(() => (isStaffSettingsShown = () => originalValue))
-
             isStaffSettingsShown = () => (storage[storageContextSymbol].ready ? storage.enabled : true)
 
-            addTableRowsToAdvancedSectionInRevengePage(() => {
-                useObservable([storage])
+            cleanup((isStaffSettingsShown = () => originalValue), () =>
+                addTableRowsToAdvancedSectionInRevengePage(() => {
+                    useObservable([storage])
 
-                return (
-                    <TableSwitchRow
-                        label="Show Discord Staff Settings"
-                        icon={<TableRowIcon source={assets.getIndexByName('ic_progress_wrench_24px')!} />}
-                        value={storage.enabled}
-                        onValueChange={(v: boolean) => (storage.enabled = v)}
-                    />
-                )
-            })
+                    return (
+                        <TableSwitchRow
+                            label="Show Discord Staff Settings"
+                            icon={<TableRowIcon source={assets.getIndexByName('ic_progress_wrench_24px')!} />}
+                            value={storage.enabled}
+                            onValueChange={(v: boolean) => (storage.enabled = v)}
+                        />
+                    )
+                }),
+            )
         },
         initializeStorage: () => ({ enabled: false }),
     },
+    true,
     true,
 )

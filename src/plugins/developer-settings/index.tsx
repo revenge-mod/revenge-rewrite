@@ -24,13 +24,14 @@ const plugin = registerPlugin<{
 }>(
     {
         name: 'Developer Settings',
-        author: 'The Revenge Team',
+        author: 'Revenge',
         description: 'Developer settings for Revenge',
         id: 'revenge.developer-settings',
         version: '1.0.0',
         icon: 'WrenchIcon',
         async afterAppRender(context) {
             const {
+                cleanup,
                 storage,
                 revenge: {
                     assets,
@@ -66,42 +67,44 @@ const plugin = registerPlugin<{
             // Wait for the section to be added by the Settings plugin
             await sleep(0)
 
-            sui.addRowsToSection('Revenge', {
-                RevengeDeveloper: {
+            cleanup(
+                sui.addRowsToSection('Revenge', {
+                    RevengeDeveloper: {
+                        type: 'route',
+                        label: 'Developer',
+                        icon: assets.getIndexByName('WrenchIcon'),
+                        component: wrapPluginContext(DeveloperSettingsPage),
+                        predicate: () => storage.settingsRowShown,
+                    },
+                }),
+
+                sui.createRoute('RevengeDebugPerformanceTimes', {
                     type: 'route',
-                    label: 'Developer',
-                    icon: assets.getIndexByName('WrenchIcon'),
-                    component: wrapPluginContext(DeveloperSettingsPage),
-                    predicate: () => storage.settingsRowShown,
-                },
-            })
+                    label: 'Debug Performance Times',
+                    component: DebugPerformanceTimesSettingsPage,
+                    icon: assets.getIndexByName('TimerIcon'),
+                }),
 
-            sui.createRoute('RevengeDebugPerformanceTimes', {
-                type: 'route',
-                label: 'Debug Performance Times',
-                component: DebugPerformanceTimesSettingsPage,
-                icon: assets.getIndexByName('TimerIcon'),
-            })
+                sui.createRoute('RevengeAssetBrowser', {
+                    type: 'route',
+                    label: 'Asset Browser',
+                    component: AssetBrowserSettingsPage,
+                    icon: assets.getIndexByName('ImageIcon'),
+                }),
 
-            sui.createRoute('RevengeAssetBrowser', {
-                type: 'route',
-                label: 'Asset Browser',
-                component: AssetBrowserSettingsPage,
-                icon: assets.getIndexByName('ImageIcon'),
-            })
+                addTableRowsToAdvancedSectionInRevengePage(() => {
+                    useObservable([storage])
 
-            addTableRowsToAdvancedSectionInRevengePage(() => {
-                useObservable([storage])
-
-                return (
-                    <TableSwitchRow
-                        label="Show Developer Options"
-                        icon={<TableRowIcon source={assets.getIndexByName('WrenchIcon')!} />}
-                        value={storage.settingsRowShown}
-                        onValueChange={(v: boolean) => (storage.settingsRowShown = v)}
-                    />
-                )
-            })
+                    return (
+                        <TableSwitchRow
+                            label="Show Developer Options"
+                            icon={<TableRowIcon source={assets.getIndexByName('WrenchIcon')!} />}
+                            value={storage.settingsRowShown}
+                            onValueChange={(v: boolean) => (storage.settingsRowShown = v)}
+                        />
+                    )
+                }),
+            )
         },
         initializeStorage: () => ({
             settingsRowShown: false,
@@ -111,6 +114,7 @@ const plugin = registerPlugin<{
             },
         }),
     },
+    true,
     true,
 )
 
