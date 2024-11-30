@@ -51,6 +51,7 @@ export const cache = {
      * - `d`: Block Discord analytics
      * - `s`: Block Sentry initialization
      * - `m`: Fix Moment locale
+     * - `i`: Attempt to fix iOS TextInputWrapper crash
      */
     patchableModules: {} as MetroCacheObject['p'],
     /**
@@ -220,7 +221,7 @@ export interface MetroCacheObject {
     e: Record<Metro.ModuleIDKey, number>
     l: Record<string, MetroLookupCacheRegistry | undefined>
     a: Record<Asset['name'], Metro.ModuleID>
-    p: Record<'f' | 'r' | 'b' | 's' | 'd' | 'm', number | undefined>
+    p: Record<'f' | 'r' | 'b' | 's' | 'd' | 'm' | 'i', number | undefined>
 }
 
 /**

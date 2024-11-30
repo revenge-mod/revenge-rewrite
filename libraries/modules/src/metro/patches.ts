@@ -90,13 +90,18 @@ export function initializeModulePatches(patcher: Patcher, logger: LibraryLogger,
     subscribePatchableModule(
         'm',
         m => m.isMoment,
-        moment => {
+        moment =>
             patcher.instead(moment, 'defineLocale', (args, orig) => {
                 const origLocale = moment.locale()
                 orig(...args)
                 moment.locale(origLocale)
-            })
-        },
+            }),
+    )
+
+    subscribePatchableModule(
+        'i',
+        exports => exports.default?.type?.name === 'PortalKeyboardPlaceholder',
+        exports => patcher.instead(exports.default, 'type', () => null),
     )
 }
 
