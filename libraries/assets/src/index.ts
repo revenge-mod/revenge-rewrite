@@ -21,8 +21,8 @@ patcher.after(
     assetsRegistry,
     'registerAsset',
     ([asset], index) => {
-        const moduleId = getImportingModuleId()
         if (CustomAssetBrandKey in asset) return
+        const moduleId = getImportingModuleId()
         cacheAsset(asset.name, index, moduleId)
     },
     'patchRegisterAsset',
