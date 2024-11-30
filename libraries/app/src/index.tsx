@@ -1,6 +1,6 @@
 import { recordTimestamp } from '@revenge-mod/debug'
-import { findByName } from '@revenge-mod/modules/finders'
 import { React, ReactNative } from '@revenge-mod/modules/common'
+import { findByName } from '@revenge-mod/modules/finders'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { createPatcherInstance } from '@revenge-mod/patcher'
 import { createLogger } from '@revenge-mod/utils/library'

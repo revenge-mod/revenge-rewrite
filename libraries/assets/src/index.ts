@@ -1,11 +1,6 @@
 import { assetsRegistry } from '@revenge-mod/modules/common'
 import { findByName } from '@revenge-mod/modules/finders'
-import {
-    cacheAsset,
-    getImportingModuleId,
-    cache as metroCache,
-    requireModule,
-} from '@revenge-mod/modules/metro'
+import { cacheAsset, getImportingModuleId, cache as metroCache, requireModule } from '@revenge-mod/modules/metro'
 import { createPatcherInstance } from '@revenge-mod/patcher'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'

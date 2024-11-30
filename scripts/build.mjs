@@ -3,8 +3,8 @@ import { fileURLToPath } from 'url'
 import { transformFile } from '@swc/core'
 import chalk from 'chalk'
 import { build } from 'esbuild'
-import yargs from 'yargs-parser'
 import pluginGlobals from 'esbuild-plugin-globals'
+import yargs from 'yargs-parser'
 
 const args = yargs(process.argv.slice(2))
 const { release, minify, dev } = args

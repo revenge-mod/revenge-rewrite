@@ -1,9 +1,9 @@
 import { registerCustomAsset } from '@revenge-mod/assets'
 import { registerPlugin } from '@revenge-mod/plugins/internals'
 
-import RevengeIcon from '../../assets/revenge.webp'
 import HermesIcon from '../../assets/hermes.webp'
 import ReactIcon from '../../assets/react.webp'
+import RevengeIcon from '../../assets/revenge.webp'
 
 registerPlugin(
     {
