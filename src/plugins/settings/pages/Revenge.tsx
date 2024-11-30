@@ -1,5 +1,5 @@
 import { NavigationNative } from '@revenge-mod/modules/common'
-import { Stack, TableRow, TableRowGroup, TableRowIcon } from '@revenge-mod/modules/common/components'
+import { TableRow, TableRowGroup, TableRowIcon } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { settings } from '@revenge-mod/preferences'
 import { useObservable } from '@revenge-mod/storage'
@@ -7,6 +7,7 @@ import { useObservable } from '@revenge-mod/storage'
 import PageWrapper from './(Wrapper)'
 
 import type { ComponentType } from 'react'
+import { ScrollView } from 'react-native'
 
 export default function RevengeSettingsPage() {
     const { assets } = revenge
@@ -15,8 +16,8 @@ export default function RevengeSettingsPage() {
     useObservable([settings])
 
     return (
-        <PageWrapper>
-            <Stack style={{ paddingHorizontal: 16, paddingVertical: 24 }} spacing={16} direction="vertical">
+        <ScrollView>
+            <PageWrapper>
                 <TableRowGroup title="Info">
                     <TableRow
                         label="About"
@@ -34,19 +35,25 @@ export default function RevengeSettingsPage() {
                     />
                 </TableRowGroup>
                 <TableRowGroup title="Advanced">
-                    {...rows.map((Row, index) => <Row key={index.toString()} />)}
+                    {[...rows].map((Row, index) => (
+                        <Row key={index.toString()} />
+                    ))}
                 </TableRowGroup>
-            </Stack>
-        </PageWrapper>
+            </PageWrapper>
+        </ScrollView>
     )
 }
 
-const rows: ComponentType[] = []
+const rows = new Set<ComponentType>()
 
 /**
  * Yes, this is oddly specific, but who cares
  * @internal
  */
 export function addTableRowsToAdvancedSectionInRevengePage(...comps: ComponentType[]) {
-    rows.push(...comps)
+    for (const comp of comps) rows.add(comp)
+
+    return () => {
+        for (const comp of comps) rows.delete(comp)
+    }
 }

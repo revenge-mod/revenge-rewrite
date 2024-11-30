@@ -24,6 +24,7 @@ import {
 } from '../devtools'
 
 import { settings } from '@revenge-mod/preferences'
+import { ScrollView } from 'react-native'
 import { PluginContext } from '..'
 
 export default function DeveloperSettingsPage() {
@@ -53,8 +54,8 @@ export default function DeveloperSettingsPage() {
     }, [])
 
     return (
-        <PageWrapper>
-            <Stack style={{ paddingHorizontal: 16, paddingVertical: 24 }} spacing={16} direction="vertical">
+        <ScrollView>
+            <PageWrapper>
                 {typeof __reactDevTools !== 'undefined' && (
                     <Stack spacing={8} direction="vertical">
                         <TextInput
@@ -75,7 +76,8 @@ export default function DeveloperSettingsPage() {
                             }}
                             returnKeyType="done"
                         />
-                        <TableRowGroup>
+                        {/* Rerender when connected changes */}
+                        <TableRowGroup key={String(connected)}>
                             {connected ? (
                                 <TableRow
                                     label="Disconnect from React DevTools"
@@ -83,7 +85,7 @@ export default function DeveloperSettingsPage() {
                                     icon={
                                         <TableRowIcon
                                             variant="danger"
-                                            source={assets.getIndexByName('Revenge.RevengeIcon')!}
+                                            source={assets.getIndexByName('Revenge.ReactIcon')!}
                                         />
                                     }
                                     onPress={() => disconnectFromDevTools()}
@@ -209,7 +211,7 @@ export default function DeveloperSettingsPage() {
                         }}
                     />
                 </TableRowGroup>
-            </Stack>
-        </PageWrapper>
+            </PageWrapper>
+        </ScrollView>
     )
 }

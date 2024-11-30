@@ -61,7 +61,7 @@ function AssetDisplay({
                                 <Image
                                     resizeMode="contain"
                                     source={index}
-                                    style={{ flex: 1, width: 'auto', height: 192 }}
+                                    style={{ flexGrow: 1, width: 'auto', height: 192 }}
                                 />
                             ) : (
                                 <Text
@@ -107,7 +107,7 @@ export default function AssetBrowserSettingsPage() {
     const [search, setSearch] = useState('')
 
     return (
-        <View style={{ gap: 16, paddingHorizontal: 16, paddingTop: 16, flex: 1 }}>
+        <View style={{ gap: 16, paddingHorizontal: 16, paddingTop: 16, flexGrow: 1 }}>
             <SearchInput size="md" style={{ margin: 10 }} onChange={(v: string) => setSearch(v)} />
             <FlashList
                 data={Object.keys(metroCache.assets)
@@ -133,7 +133,7 @@ export default function AssetBrowserSettingsPage() {
                         }
                     })}
                 renderItem={({ item }) => <AssetDisplay {...item} />}
-                estimatedItemSize={1500}
+                estimatedItemSize={80}
             />
         </View>
     )

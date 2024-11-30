@@ -1,17 +1,11 @@
 import { clipboard, toasts } from '@revenge-mod/modules/common'
-import {
-    Stack,
-    TableRow,
-    TableRowGroup,
-    TableRowIcon,
-    TableRowTrailingText,
-} from '@revenge-mod/modules/common/components'
+import { TableRow, TableRowGroup, TableRowIcon, TableRowTrailingText } from '@revenge-mod/modules/common/components'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 
 import PageWrapper from './(Wrapper)'
+import { type ImageSourcePropType, ScrollView } from 'react-native'
 
 import type { ComponentProps } from 'react'
-import type { ImageSourcePropType } from 'react-native'
 
 const { assets } = revenge
 
@@ -19,8 +13,8 @@ export default function AboutSettingsPage() {
     const runtimeProps = (HermesInternal as HermesInternalObject).getRuntimeProperties()
 
     return (
-        <PageWrapper>
-            <Stack style={{ paddingHorizontal: 16, paddingVertical: 24 }} spacing={16} direction="vertical">
+        <ScrollView>
+            <PageWrapper>
                 <TableRowGroup title="App">
                     {[
                         {
@@ -60,8 +54,8 @@ export default function AboutSettingsPage() {
                         <VersionRow {...props} />
                     ))}
                 </TableRowGroup>
-            </Stack>
-        </PageWrapper>
+            </PageWrapper>
+        </ScrollView>
     )
 }
 
