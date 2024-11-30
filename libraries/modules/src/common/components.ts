@@ -1,5 +1,7 @@
 import { lazyDestructure } from '@revenge-mod/utils/lazy'
-import { findByProps, findBySingleProp, findProp } from '../finders'
+import { findByProps, findProp, findSingleProp } from '../finders'
+
+import { FlashList as _FlashList } from '@shopify/flash-list'
 
 import type { DiscordModules } from '../types'
 
@@ -94,12 +96,10 @@ export const PressableScale = findProp('PressableScale')
 
 // Tables
 export const TableRowTrailingText = findProp<DiscordModules.Components.TableRowTrailingText>('TableRowTrailingText')!
-export const TableSwitch = findBySingleProp('FormSwitch')
-export const TableRadio = findBySingleProp('FormRadio')
-export const TableCheckbox = findBySingleProp('FormCheckbox')
 
-export const FormSwitch = findBySingleProp('FormSwitch')
-export const FormRadio = findBySingleProp('FormRadio')
-export const FormCheckbox = findBySingleProp('FormCheckbox')
+export const FormSwitch = findSingleProp<DiscordModules.Components.FormSwitch>('FormSwitch')!
+export const FormRadio = findSingleProp<DiscordModules.Components.FormRadio>('FormRadio')!
+export const FormCheckbox = findSingleProp<DiscordModules.Components.FormCheckbox>('FormCheckbox')!
 
-export const FlashList = findProp<typeof import('@shopify/flash-list').FlashList>('FlashList')!
+// Declarations are made in shims/deps.ts
+export const FlashList = _FlashList

@@ -525,6 +525,20 @@ export const findBySingleProp = Object.assign(
     },
 )
 
+export const findSingleProp = Object.assign(
+    function findSinglePropLazy<T>(name: string) {
+        return lazyValue(() => findBySingleProp.eager(name)?.[name]) as LazyModule<Undefinable<T>>
+    },
+    {
+        async: function findSinglePropAsync<T>(name: string, timeout = 1000) {
+            return findBySingleProp.async(name, timeout).then(exports => exports?.[name]) as Promise<Undefinable<T>>
+        },
+        eager: function findSinglePropEager<T>(name: string) {
+            return findBySingleProp.eager(name)?.[name] as Undefinable<T>
+        },
+    },
+)
+
 /**
  * Finds an export by a query string **(very expensive, only use for debugging)**
  * @param query The query string to search for
