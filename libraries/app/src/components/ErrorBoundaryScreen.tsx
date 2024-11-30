@@ -1,5 +1,5 @@
 import { clipboard, createStyles } from '@revenge-mod/modules/common'
-import { Button, Card, SafeAreaView, Text } from '@revenge-mod/modules/common/components'
+import { Button, Card, SafeAreaView, Stack, Text } from '@revenge-mod/modules/common/components'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 import { SemanticColor } from '@revenge-mod/ui/colors'
 import { getErrorStack } from '@revenge-mod/utils/errors'
@@ -19,12 +19,15 @@ const useErrorBoundaryStyles = createStyles({
 })
 
 const styles = StyleSheet.create({
-    nestedView: {
+    scrollView: {
         gap: 8,
         flex: 1,
     },
-    headerText: {
+    growable: {
         flexGrow: 1,
+    },
+    resizable: {
+        flex: 1,
     },
 })
 
@@ -60,7 +63,7 @@ export default function ErrorBoundaryScreen(props: {
                 {error instanceof Error && error.stack && (
                     <>
                         <Text variant="heading-xl/semibold">Call Stack</Text>
-                        <ScrollView style={styles.nestedView} fadingEdgeLength={64}>
+                        <ScrollView style={styles.scrollView} fadingEdgeLength={64}>
                             {parseStackTrace(error.stack?.slice(String(error).length + 1)).map(
                                 ({ at, file, line, column }) => (
                                     // biome-ignore lint/correctness/useJsxKeyInIterable: This never gets rerendered
@@ -93,7 +96,7 @@ export default function ErrorBoundaryScreen(props: {
                 <LabeledCard
                     scrollable
                     label="Component Stack"
-                    style={{ flex: 1 }}
+                    style={styles.resizable}
                     rawContent={error.componentStack as string}
                 >
                     <Text selectable variant="text-md/medium">
@@ -105,10 +108,10 @@ export default function ErrorBoundaryScreen(props: {
                     </Text>
                 </LabeledCard>
             )}
-            <Card style={{ gap: 16, flexDirection: 'row' }}>
-                <Button style={{ flex: 1 }} variant="destructive" text="Reload Discord" onPress={props.reload} />
-                <Button style={{ flex: 1 }} text="Retry Render" onPress={props.rerender} />
-            </Card>
+            <Stack direction="horizontal" spacing={16}>
+                <Button style={styles.growable} variant="destructive" text="Reload Discord" onPress={props.reload} />
+                <Button style={styles.growable} text="Retry Render" onPress={props.rerender} />
+            </Stack>
         </SafeAreaView>
     )
 }
@@ -123,9 +126,9 @@ export function LabeledCard(props: LabeledCardProps) {
     const ViewComponent = props.scrollable ? ScrollView : View
 
     return (
-        <Card {...props} style={[styles.nestedView, ...(Array.isArray(props.style) ? props.style : [props.style])]}>
+        <Card {...props} style={[styles.scrollView, ...(Array.isArray(props.style) ? props.style : [props.style])]}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text variant="heading-xl/semibold" style={styles.headerText}>
+                <Text variant="heading-xl/semibold" style={styles.growable}>
                     {props.label}
                 </Text>
                 {props.rawContent && (
@@ -137,7 +140,7 @@ export function LabeledCard(props: LabeledCardProps) {
                     />
                 )}
             </View>
-            <ViewComponent style={styles.nestedView} fadingEdgeLength={32}>
+            <ViewComponent style={styles.scrollView} fadingEdgeLength={32}>
                 {props.children}
             </ViewComponent>
         </Card>
