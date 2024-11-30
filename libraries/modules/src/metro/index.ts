@@ -178,16 +178,8 @@ export async function initializeModules() {
 
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
     if (!cacheRestored) {
-        const unpatch = patcher.before(
-            ReactNative.AppRegistry,
-            'runApplication',
-            () => {
-                unpatch()
-                requireAssetModules()
-                recordTimestamp('Modules_RequiredAssets')
-            },
-            'createAssetCache',
-        )
+        requireAssetModules()
+        recordTimestamp('Modules_RequiredAssets')
     }
 
     cache.totalModules = metroDependencies.size
@@ -331,10 +323,7 @@ export function* modulesForFinder(key: string, fullLookup = false) {
             if (isModuleBlacklisted(mid)) continue
 
             const exports = requireModule(mid)
-            if (isModuleExportsBad(exports)) {
-                blacklistModule(id)
-                continue
-            }
+            if (!exports) continue
 
             yield [mid, exports]
         }
