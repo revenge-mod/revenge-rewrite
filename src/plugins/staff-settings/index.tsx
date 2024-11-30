@@ -34,7 +34,9 @@ registerPlugin<{
         beforeAppRender({ cleanup, storage, revenge: { assets } }) {
             isStaffSettingsShown = () => (storage[storageContextSymbol].ready ? storage.enabled : true)
 
-            cleanup((isStaffSettingsShown = () => originalValue), () =>
+            cleanup(
+                () => (isStaffSettingsShown = () => originalValue),
+                () =>
                 addTableRowsToAdvancedSectionInRevengePage(() => {
                     useObservable([storage])
 
