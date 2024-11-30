@@ -1,8 +1,6 @@
 import { lazyDestructure } from '@revenge-mod/utils/lazy'
 import { findByProps, findProp, findSingleProp } from '../finders'
 
-import { FlashList as _FlashList } from '@shopify/flash-list'
-
 import type { DiscordModules } from '../types'
 
 // React Native's included SafeAreaView only adds padding on iOS.
@@ -102,4 +100,6 @@ export const FormRadio = findSingleProp<DiscordModules.Components.FormRadio>('Fo
 export const FormCheckbox = findSingleProp<DiscordModules.Components.FormCheckbox>('FormCheckbox')!
 
 // Declarations are made in shims/deps.ts
-export const FlashList = _FlashList
+export const { FlashList, MasonryFlashList } = lazyDestructure(
+    () => findByProps.eager<typeof import('@shopify/flash-list')>('FlashList')!,
+)

@@ -1,6 +1,14 @@
 import { getAssetIndexByName } from '@revenge-mod/assets'
 import { createStyles, openAlert } from '@revenge-mod/modules/common'
-import { AlertActionButton, AlertModal, Card, FormSwitch, Stack, Text } from '@revenge-mod/modules/common/components'
+import {
+    AlertActionButton,
+    AlertModal,
+    Card,
+    FormSwitch,
+    MasonryFlashList,
+    Stack,
+    Text,
+} from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { plugins } from '@revenge-mod/plugins/internals'
 import { SemanticColor } from '@revenge-mod/ui/colors'
@@ -8,7 +16,6 @@ import { SearchInput } from '@revenge-mod/ui/components'
 
 import PageWrapper from './(Wrapper)'
 
-import { MasonryFlashList } from '@shopify/flash-list'
 import { useMemo, useState } from 'react'
 import { Image, PixelRatio, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 

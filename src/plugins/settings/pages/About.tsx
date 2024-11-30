@@ -2,8 +2,8 @@ import { clipboard, toasts } from '@revenge-mod/modules/common'
 import { TableRow, TableRowGroup, TableRowIcon, TableRowTrailingText } from '@revenge-mod/modules/common/components'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 
-import PageWrapper from './(Wrapper)'
 import { type ImageSourcePropType, ScrollView } from 'react-native'
+import PageWrapper from './(Wrapper)'
 
 import type { ComponentProps } from 'react'
 
