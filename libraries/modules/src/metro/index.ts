@@ -86,42 +86,53 @@ export function resolveModuleDependencies(modules: Metro.ModuleList, id: Metro.M
 
 function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
     // Allow patching already initialized modules
-    // I don't know why this is needed, as we only require index after we hook a few modules...
+    // These are critical modules like React, React Native, some polyfills, and native modules
     if (metroModule.isInitialized) {
+        logger.warn(`Hooking already initialized module: ${id}`)
+
+        if (isModuleExportsBad(metroModule.publicModule.exports)) {
+            blacklistModule(id)
+            return false
+        }
+
         const subs = subscriptions.get(id)
         if (subs) for (const sub of subs) sub(id, metroModule.publicModule.exports)
         for (const sub of allSubscriptionSet) sub(id, metroModule.publicModule.exports)
-    } else if (metroModule!.factory) {
-        const unpatch = patcher.instead(
-            metroModule as Metro.ModuleDefinition<false>,
-            'factory',
-            (args, origFunc) => {
-                unpatch()
 
-                const originalImportingId = importingModuleId
-                importingModuleId = id
-
-                const { 4: moduleObject } = args
-
-                try {
-                    origFunc(...args)
-                } catch (error) {
-                    logger.log(`Blacklisted module ${id} because it could not be initialized: ${error}`)
-                    blacklistModule(id)
-                }
-
-                if (isModuleExportsBad(moduleObject.exports)) blacklistModule(id)
-                else {
-                    const subs = subscriptions.get(id)
-                    if (subs) for (const sub of subs) sub(id, moduleObject.exports)
-                    for (const sub of allSubscriptionSet) sub(id, moduleObject.exports)
-                }
-
-                importingModuleId = originalImportingId
-            },
-            'moduleFactory',
-        )
+        return false
     }
+
+    const unpatch = patcher.instead(
+        metroModule as Metro.ModuleDefinition<false>,
+        'factory',
+        (args, origFunc) => {
+            unpatch()
+
+            const originalImportingId = importingModuleId
+            importingModuleId = id
+
+            const { 4: moduleObject } = args
+
+            try {
+                origFunc(...args)
+            } catch (error) {
+                logger.log(`Blacklisted module ${id} because it could not be initialized: ${error}`)
+                blacklistModule(id)
+            }
+
+            if (isModuleExportsBad(moduleObject.exports)) blacklistModule(id)
+            else {
+                const subs = subscriptions.get(id)
+                if (subs) for (const sub of subs) sub(id, moduleObject.exports)
+                for (const sub of allSubscriptionSet) sub(id, moduleObject.exports)
+            }
+
+            importingModuleId = originalImportingId
+        },
+        'moduleFactory',
+    )
+
+    return true
 }
 
 /**
@@ -155,19 +166,15 @@ export async function initializeModules() {
     __r(IndexMetroModuleId)
     recordTimestamp('Modules_IndexRequired')
 
-    // Without this delay, sometimes causes the app to be in a limbo state
-    // The reason is unknown...
-    setImmediate(() => {
-        let id = moduleIds.next().value
-        if (!id) return
+    let id = moduleIds.next().value
+    if (!id) return
 
-        do {
-            if (moduleShouldNotBeHooked(id)) continue
-            hookModule(id, metroModules[id]!)
-        } while ((id = moduleIds.next().value))
+    do {
+        if (moduleShouldNotBeHooked(id)) continue
+        hookModule(id, metroModules[id]!)
+    } while ((id = moduleIds.next().value))
 
-        recordTimestamp('Modules_HookedFactories')
-    })
+    recordTimestamp('Modules_HookedFactories')
 
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
     if (!cacheRestored) {
