@@ -409,11 +409,13 @@ export namespace DiscordModules {
         export type GhostInput = FC
 
         // Forms
-        export type FormSwitch = FC<ViewProps & {
-            value: boolean
-            onValueChange(value: boolean): void
-            disabled?: boolean
-        }>
+        export type FormSwitch = FC<
+            ViewProps & {
+                value: boolean
+                onValueChange(value: boolean): void
+                disabled?: boolean
+            }
+        >
         export type FormRadio = FC
         export type FormCheckbox = FC
 
