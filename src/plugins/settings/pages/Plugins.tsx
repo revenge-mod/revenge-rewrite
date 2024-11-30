@@ -48,7 +48,7 @@ function PluginCard({
     name,
     icon,
     core,
-    managable,
+    manageable,
     enabled: _enabled,
     author,
     description,
@@ -64,10 +64,10 @@ function PluginCard({
                     <Image source={getAssetIndexByName(icon ?? 'Revenge.PluginIcon')!} style={cardStyles.icon} />
                     <Text variant="heading-lg/semibold">{name}</Text>
                 </Stack>
-                <View style={{ opacity: managable ? 1 : 0.5 }}>
+                <View style={{ opacity: manageable ? 1 : 0.5 }}>
                     <FormSwitch
                         value={enabled}
-                        disabled={!managable}
+                        disabled={!manageable}
                         onValueChange={async val => {
                             if (!val && core) {
                                 const _continue = await new Promise<boolean>(resolve => {
@@ -146,7 +146,7 @@ interface PluginCardProps {
     version: string
     icon?: string
     enabled: boolean
-    managable: boolean
+    manageable: boolean
     core: boolean
     horizontalGaps: boolean
 }

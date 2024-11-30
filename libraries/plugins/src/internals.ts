@@ -27,7 +27,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             Omit<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>, keyof PluginDefinition>
         >,
     core = false,
-    managable = !core,
+    manageable = !core,
     predicate?: () => boolean,
 ) {
     const cleanups = new Set<() => unknown>()
@@ -48,7 +48,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         // Enabled by default if it is a core plugin, otherwise its enabled state will be modified after core plugins have started
         enabled: predicate?.() ?? core,
         core,
-        managable,
+        manageable,
         status: PluginStatus.Stopped,
         SettingsComponent: definition.settings,
         errors: [],
@@ -56,7 +56,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             return this.status === PluginStatus.Stopped
         },
         disable() {
-            if (!this.managable) throw new Error(`Cannot disable unmanagable plugin "${this.id}"`)
+            if (!this.manageable) throw new Error(`Cannot disable unmanageable plugin "${this.id}"`)
             if (!this.stopped) this.stop()
             this.enabled = false
         },
@@ -229,7 +229,7 @@ export type InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedR
     /** @internal */
     core: boolean
     /** @internal */
-    managable: boolean
+    manageable: boolean
     /** @internal */
     // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
     errors: any[]
