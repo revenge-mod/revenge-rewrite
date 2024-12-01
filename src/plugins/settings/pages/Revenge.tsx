@@ -34,11 +34,13 @@ export default function RevengeSettingsPage() {
                         onPress={() => BundleUpdaterManager.reload()}
                     />
                 </TableRowGroup>
-                <TableRowGroup title="Advanced">
-                    {[...rows].map((Row, index) => (
-                        <Row key={index.toString()} />
-                    ))}
-                </TableRowGroup>
+                {rows.size ? (
+                    <TableRowGroup title="Advanced">
+                        {[...rows].map((Row, index) => (
+                            <Row key={index.toString()} />
+                        ))}
+                    </TableRowGroup>
+                ) : null}
             </PageWrapper>
         </ScrollView>
     )
