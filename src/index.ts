@@ -24,11 +24,13 @@ async function initialize() {
 
         const ModulesLibraryPromise = createModulesLibrary()
 
-        const [{ AppLibrary, errorBoundaryPatchedPromise }, { AssetsLibrary }, UIColorsLibrary] = await Promise.all([
-            import('@revenge-mod/app'),
-            import('@revenge-mod/assets'),
-            import('@revenge-mod/ui/colors'),
-        ])
+        const [{ AppLibrary, errorBoundaryPatchedPromise }, { AssetsLibrary }, UIColorsLibrary, { ReactJSXLibrary }] =
+            await Promise.all([
+                import('@revenge-mod/app'),
+                import('@revenge-mod/assets'),
+                import('@revenge-mod/ui/colors'),
+                import('@revenge-mod/react/jsx'),
+            ])
 
         const ModulesLibrary = await ModulesLibraryPromise
 
@@ -49,6 +51,9 @@ async function initialize() {
             assets: AssetsLibrary,
             modules: ModulesLibrary,
             plugins: PluginsLibrary,
+            react: {
+                jsx: ReactJSXLibrary,
+            },
             ui: {
                 settings: SettingsUILibrary,
                 colors: UIColorsLibrary,

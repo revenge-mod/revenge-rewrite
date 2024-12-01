@@ -15,6 +15,7 @@
     "@revenge-mod/plugins": "workspace:*",
     "@revenge-mod/preferences": "workspace:*",
     "@revenge-mod/shared": "workspace:*",
+    "@revenge-mod/react": "workspace:*",
     "@revenge-mod/ui": "workspace:*",
     "@revenge-mod/utils": "workspace:*"
   },

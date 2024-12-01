@@ -91,6 +91,7 @@ export const assetsRegistry = findByProps<typeof ReactNativeInternals.AssetsRegi
 // Declarations are made in shims/deps.ts
 export const React = globalThis.React
 export const ReactNative = globalThis.ReactNative
+export const ReactJSXRuntime = findByProps<typeof import('react/jsx-runtime')>('jsx', 'jsxs')!
 
 /// OTHERS
 

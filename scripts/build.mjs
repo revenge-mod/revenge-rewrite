@@ -26,7 +26,7 @@ const config = {
     outfile: 'dist/revenge.js',
     format: 'iife',
     splitting: false,
-    external: ['react', 'react-native'],
+    external: ['react', 'react-native', 'react/jsx-runtime'],
     supported: {
         // Hermes does not actually support const and let, even though it syntactically
         // accepts it, but it's treated just like 'var' and causes issues

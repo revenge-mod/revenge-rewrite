@@ -2,6 +2,7 @@ import type { AppLibrary } from '@revenge-mod/app'
 import type { AssetsLibrary } from '@revenge-mod/assets'
 import type { DiscordModules, Metro, ModulesLibrary } from '@revenge-mod/modules'
 import type { PluginLibrary, PluginsLibrary } from '@revenge-mod/plugins'
+import type { ReactJSXLibrary } from '@revenge-mod/react/jsx'
 import type { SettingsUILibrary } from '@revenge-mod/ui/settings'
 import type { ErrorUtils as RNErrorUtils } from 'react-native'
 import type MessageQueue from 'react-native/Libraries/BatchedBridge/MessageQueue'
@@ -94,6 +95,9 @@ export interface RevengeLibrary {
     ui: {
         settings: SettingsUILibrary
         colors: typeof import('@revenge-mod/ui/colors')
+    }
+    react: {
+        jsx: ReactJSXLibrary
     }
 }
 
@@ -219,4 +223,10 @@ declare module '@revenge-mod/ui/settings' {
     const settingsUI: typeof import('./libraries/ui/src/settings')
     export * from './libraries/ui/src/settings'
     export default settingsUI
+}
+
+declare module '@revenge-mod/react/jsx' {
+    const reactJSX: typeof import('./libraries/react/src/jsx')
+    export * from './libraries/react/src/jsx'
+    export default reactJSX
 }
