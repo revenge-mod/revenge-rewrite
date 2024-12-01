@@ -35,7 +35,7 @@ export function createPatcherInstance(name: string) {
 
         // Patch the callback, so we can at least log a few things in case something fails
         args[2] = function patchedCallback(patchArgs, origOrRval) {
-            if (__DEV__) console.debug(`Patch ${name}:${debugKey} is intercepting`)
+            if (__REVENGE_DEV__) console.debug(`Patch ${name}:${debugKey} is intercepting`)
             try {
                 return callback.apply(this, [patchArgs, origOrRval])
             } catch (e) {
