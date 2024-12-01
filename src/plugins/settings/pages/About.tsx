@@ -1,5 +1,11 @@
 import { clipboard, toasts } from '@revenge-mod/modules/common'
-import { Icons, TableRow, TableRowGroup, TableRowIcon, TableRowTrailingText } from '@revenge-mod/modules/common/components'
+import {
+    Icons,
+    TableRow,
+    TableRowGroup,
+    TableRowIcon,
+    TableRowTrailingText,
+} from '@revenge-mod/modules/common/components'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 
 import { type ImageSourcePropType, ScrollView } from 'react-native'

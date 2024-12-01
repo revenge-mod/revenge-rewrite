@@ -79,7 +79,7 @@ function PluginCard({
                     value={enabled}
                     disabled={!manageable}
                     onValueChange={async enabled => {
-                        if (!enabled && core && !showDisableCorePluginConfirmation()) return
+                        if (!enabled && core && !(await showDisableCorePluginConfirmation())) return
 
                         const plugin = plugins[id]!
 
@@ -135,20 +135,20 @@ export default function PluginsSettingsPage() {
     return (
         <PageWrapper>
             <SearchInput size="md" onChange={query => setQuery(query.replaceAll(/\s/g, '').toLowerCase())} />
-                {/* TableRowGroupTitle probably has some margin, setting it to flex-end causes it to be in the center, lucky. */}
+            {/* TableRowGroupTitle probably has some margin, setting it to flex-end causes it to be in the center, lucky. */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <TableRowGroupTitle title="Core Plugins" />
                 <IconButton
                     icon={getAssetIndexByName('CircleQuestionIcon-primary')!}
                     size="sm"
-                    variant='secondary'
+                    variant="secondary"
                     onPress={() =>
                         openAlert(
                             'revenge.plugins.settings.plugins.core-plugins.description',
                             <AlertModal
                                 title="What are core plugins?"
-                                content="Core plugins are an essential part of Revenge. They provide core functionalities like allow you to access this settings menu. Disabling core plugins may cause unexpected behavior."
-                                actions={<AlertActionButton variant="secondary" text="Close" />}
+                                content="Core plugins are an essential part of Revenge. They provide core functionalities like allowing you to access this settings menu. Disabling core plugins may cause unexpected behavior."
+                                actions={<AlertActionButton variant="secondary" text="Got it" />}
                             />,
                         )
                     }
@@ -178,7 +178,7 @@ function showDisableCorePluginConfirmation() {
         openAlert(
             'revenge.plugins.settings.plugins.core-plugins.disable-warning',
             <AlertModal
-                title="Disable a core plugin?"
+                title="Disable core plugin?"
                 content="Core plugins are an essential part of Revenge. Disabling them may cause unexpected behavior."
                 actions={
                     <>

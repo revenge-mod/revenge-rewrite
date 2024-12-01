@@ -18,6 +18,7 @@ export const WhitelistedPluginObjectKeys = [
 export const PluginStatus = {
     Stopped: 1,
     Fetching: 2,
-    Starting: 3,
-    Started: 4,
+    StartedEarly: 3,
+    Starting: 4,
+    Started: 5,
 }

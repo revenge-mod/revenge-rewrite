@@ -1,6 +1,14 @@
 import { customAssets, getAssetByIndex, getAssetIndexByName } from '@revenge-mod/assets'
 import { clipboard, openAlert, toasts } from '@revenge-mod/modules/common'
-import { AlertActionButton, AlertModal, FlashList, Icons, Stack, TableRow, Text } from '@revenge-mod/modules/common/components'
+import {
+    AlertActionButton,
+    AlertModal,
+    FlashList,
+    Icons,
+    Stack,
+    TableRow,
+    Text,
+} from '@revenge-mod/modules/common/components'
 import { cache as metroCache } from '@revenge-mod/modules/metro'
 import { SearchInput } from '@revenge-mod/ui/components'
 

@@ -92,7 +92,7 @@ export default function DeveloperSettingsPage() {
                                 />
                             ) : (
                                 <TableRow
-                                    label={'Connect to React DevTools'}
+                                    label="Connect to React DevTools"
                                     icon={<TableRowIcon source={assets.getIndexByName('Revenge.ReactIcon')!} />}
                                     onPress={() => connectToDevTools(refDevToolsAddr.current)}
                                 />

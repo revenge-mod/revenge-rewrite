@@ -1,15 +1,22 @@
 import { isAppRendered } from '@revenge-mod/app'
+
 import type { Metro } from '@revenge-mod/modules'
 import { subscribeModule } from '@revenge-mod/modules/metro'
+
+import { pluginsStates } from '@revenge-mod/preferences'
+
 import { type Patcher, createPatcherInstance } from '@revenge-mod/patcher'
 import { awaitStorage, createStorage } from '@revenge-mod/storage'
+
 import { getErrorStack } from '@revenge-mod/utils/errors'
 import { objectSeal } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
-import type React from 'react'
-import type { PluginContext, PluginDefinition, PluginModuleSubscriptionContext, PluginStorage } from '.'
+
 import { PluginIdRegex, PluginStatus } from './constants'
 import { logger } from './shared'
+
+import type React from 'react'
+import type { PluginContext, PluginDefinition, PluginModuleSubscriptionContext, PluginStorage } from '.'
 
 export const appRenderedCallbacks = new Set<() => Promise<unknown>>()
 export const corePluginIds = new Set<string>()
@@ -45,18 +52,28 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
 
     const internalPlugin = objectSeal({
         ...definition,
-        // Enabled by default if it is a core plugin, otherwise its enabled state will be modified after core plugins have started
-        enabled: predicate?.() ?? core,
+        // Manageable?
+        // - Yes: Check preferences, default to false if it doesn't exist
+        // - No: Check predicate, default to if core
+        get enabled() {
+            return manageable ? (pluginsStates[definition.id]?.enabled ?? false) : (predicate?.() ?? core)
+        },
+        set enabled(val: boolean) {
+            if (!manageable) throw new Error(`Cannot enable/disable unmanageable plugin: ${this.id}`)
+
+            if (definition.id in pluginsStates) pluginsStates[definition.id]!.enabled = val
+            else pluginsStates[definition.id] = { enabled: val }
+        },
+        get stopped() {
+            return this.status === PluginStatus.Stopped || this.status === PluginStatus.StartedEarly
+        },
         core,
         manageable,
         status: PluginStatus.Stopped,
         SettingsComponent: definition.settings,
         errors: [],
-        get stopped() {
-            return this.status === PluginStatus.Stopped
-        },
         disable() {
-            if (!this.manageable) throw new Error(`Cannot disable unmanageable plugin "${this.id}"`)
+            if (!this.manageable) throw new Error(`Cannot disable unmanageable plugin: ${this.id}`)
             if (!this.stopped) this.stop()
             this.enabled = false
         },
@@ -65,12 +82,12 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             return !!this.beforeAppRender
         },
         startMetroModuleSubscriptions() {
-            if (this.onMetroModuleLoad) {
-                prepareStorageAndPatcher()
-                const unsub = subscribeModule.all((id, exports) =>
-                    this.onMetroModuleLoad!(instance, id, exports, unsub),
-                )
-            }
+            if (!this.onMetroModuleLoad || !this.enabled) return
+
+            prepareStorageAndPatcher()
+            const unsub = subscribeModule.all((id, exports) => this.onMetroModuleLoad!(instance, id, exports, unsub))
+
+            this.status = PluginStatus.StartedEarly
         },
         async start() {
             const handleError = (e: unknown) => {

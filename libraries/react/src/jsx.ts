@@ -3,7 +3,6 @@ import { patcher } from './shared'
 
 import type { ComponentProps, ElementType, JSXElementConstructor, ReactElement } from 'react'
 
-
 const beforeCallbacks: Record<string, Set<JSXBeforeComponentCreateCallback>> = {}
 const afterCallbacks: Record<string, Set<JSXAfterComponentCreateCallback>> = {}
 

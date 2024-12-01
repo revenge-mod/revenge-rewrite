@@ -1,3 +1,4 @@
+// shims/deps.ts
 require('!deps-shim!')
 
 import { lazyDestructure } from '@revenge-mod/utils/lazy'
@@ -89,8 +90,7 @@ export const FluxDispatcher = findByProps<DiscordModules.Flux.Dispatcher>('_inte
 
 export const assetsRegistry = findByProps<typeof ReactNativeInternals.AssetsRegistry>('registerAsset')!
 // Declarations are made in shims/deps.ts
-export const React = globalThis.React
-export const ReactNative = globalThis.ReactNative
+export const { React, ReactNative } = lazyDestructure(() => globalThis)
 export const ReactJSXRuntime = findByProps<typeof import('react/jsx-runtime')>('jsx', 'jsxs')!
 
 /// OTHERS

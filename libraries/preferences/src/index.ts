@@ -1,7 +1,7 @@
 import { createStorage } from '@revenge-mod/storage'
 
 export interface Settings {
-    safeMode?: {
+    safeMode: {
         enabled: boolean
         enabledNextLaunch: boolean
     }
@@ -16,6 +16,6 @@ export const settings = createStorage<Settings>('revenge/settings.json', {
     },
 })
 
-// const plugins = createStorage<Record<string, { url: string, enabled: boolean }>>('revenge/plugins.json', {
-//     initial: {},
-// })
+export const pluginsStates = createStorage<Record<string, { enabled: boolean }>>('revenge/plugins/states.json', {
+    initial: {},
+})

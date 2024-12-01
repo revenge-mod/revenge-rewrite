@@ -11,10 +11,11 @@ import { getErrorStack } from '@revenge-mod/utils/errors'
 import type { Metro } from '@revenge-mod/modules'
 import { createPatcherInstance } from '@revenge-mod/patcher'
 
+Object.freeze = Object.seal = o => o
+
 // ! This function is BLOCKING, so we need to make sure it's as fast as possible
 async function initialize() {
     recordTimestamp('Init_Initialize')
-    Object.freeze = Object.seal = o => o
 
     try {
         const [{ createModulesLibrary }, { SettingsUILibrary }] = await Promise.all([
@@ -24,18 +25,14 @@ async function initialize() {
 
         const ModulesLibraryPromise = createModulesLibrary()
 
-        const [{ AppLibrary, errorBoundaryPatchedPromise }, { AssetsLibrary }, UIColorsLibrary, { ReactJSXLibrary }] =
-            await Promise.all([
-                import('@revenge-mod/app'),
-                import('@revenge-mod/assets'),
-                import('@revenge-mod/ui/colors'),
-                import('@revenge-mod/react/jsx'),
-            ])
+        const [{ AppLibrary }, { AssetsLibrary }, UIColorsLibrary, { ReactJSXLibrary }] = await Promise.all([
+            import('@revenge-mod/app'),
+            import('@revenge-mod/assets'),
+            import('@revenge-mod/ui/colors'),
+            import('@revenge-mod/react/jsx'),
+        ])
 
         const ModulesLibrary = await ModulesLibraryPromise
-
-        // Initialize storages
-        const PreferencesLibrary = import('@revenge-mod/preferences')
 
         const [
             {
@@ -44,7 +41,12 @@ async function initialize() {
                 startPluginsMetroModuleSubscriptions: startCorePluginsMetroModuleSubscriptions,
             },
             { awaitStorage },
-        ] = await Promise.all([import('@revenge-mod/plugins'), import('@revenge-mod/storage')])
+            PreferencesLibrary,
+        ] = await Promise.all([
+            import('@revenge-mod/plugins'),
+            import('@revenge-mod/storage'),
+            import('@revenge-mod/preferences'),
+        ])
 
         globalThis.revenge = {
             app: AppLibrary,
@@ -60,27 +62,25 @@ async function initialize() {
             },
         }
 
-        const CorePlugins = import('./plugins').then(() => {
-            recordTimestamp('Plugins_CoreImported')
-            startCorePluginsMetroModuleSubscriptions()
-        })
+        await import('./plugins')
+        recordTimestamp('Plugins_CoreImported')
 
-        // We do not want to use await here even though we're in an async function
-        // We don't need to wait for plugins to finish loading before we start the app
-        // TODO: If we have issues when starting too many plugins, then we can use await
-        ;(async () => {
-            // Await the error boundary patching on non-iOS
-            // because iOS only patches ErrorBoundary after render
-            if (ReactNative.Platform.OS !== 'ios') await errorBoundaryPatchedPromise
+        const { settings, pluginsStates } = await PreferencesLibrary
+        await awaitStorage(settings, pluginsStates)
+        recordTimestamp('Storage_Initialized')
 
-            const { settings } = await PreferencesLibrary
-            await awaitStorage(settings)
-            recordTimestamp('Storage_Initialized')
+        startCorePluginsMetroModuleSubscriptions()
 
-            await CorePlugins
-            await startCorePlugins()
-            recordTimestamp('Plugins_CoreStarted')
-        })()
+        await startCorePlugins()
+        recordTimestamp('Plugins_CoreStarted')
+
+        // TODO
+        // try {
+        //     startExternalPlugins()
+        // } catch (e) {
+        //     settings.safeMode.enabledNextLaunch = true
+        //     throw e
+        // }
     } catch (e) {
         onError(e)
     }
@@ -92,7 +92,6 @@ function onError(e: unknown) {
 }
 
 let requireFunc: Metro.RequireFn | undefined
-let initialized = false
 
 const patcher = createPatcherInstance('revenge.library.init')
 const logger = createLogger('init')
@@ -154,11 +153,8 @@ Object.defineProperties(globalThis, {
         set(metroRequire) {
             requireFunc = function patchedRequire(id: number) {
                 if (id === IndexMetroModuleId) {
-                    // Preventing initializing too many times (in my testing, index was called like 10 times)
-                    if (initialized) return
-                    initialized = true
-                    onceIndexRequired()
                     requireFunc = metroRequire
+                    onceIndexRequired()
                 } else return metroRequire(id)
             }
         },
