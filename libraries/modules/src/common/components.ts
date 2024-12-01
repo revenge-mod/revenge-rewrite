@@ -95,11 +95,13 @@ export const PressableScale = findProp('PressableScale')
 // Tables
 export const TableRowTrailingText = findProp<DiscordModules.Components.TableRowTrailingText>('TableRowTrailingText')!
 
+/**
+ * You should probably use `FormSwitch` from `@revenge-mod/ui/components` instead. This does not style itself disabled even when you pass the `disabled` prop.
+ */
 export const FormSwitch = findSingleProp<DiscordModules.Components.FormSwitch>('FormSwitch')!
 export const FormRadio = findSingleProp<DiscordModules.Components.FormRadio>('FormRadio')!
 export const FormCheckbox = findSingleProp<DiscordModules.Components.FormCheckbox>('FormCheckbox')!
 
-// Declarations are made in shims/deps.ts
 export const { FlashList, MasonryFlashList } = lazyDestructure(
     () => findByProps.eager<typeof import('@shopify/flash-list')>('FlashList')!,
 )

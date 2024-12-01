@@ -303,10 +303,22 @@ export namespace DiscordModules {
     }
 
     export namespace Components {
+        export type BaseButtonProps = PressableProps & {
+            disabled?: boolean
+            size?: ButtonSize
+            variant?: 'primary' | 'secondary' | 'destructive' | 'active' | 'primary-overlay' | 'secondary-overlay'
+            loading?: boolean
+            grow?: boolean
+            scaleAmountInPx?: number
+        }
+
         // Buttons
-        export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg'
+        export type ButtonSize = 'sm' | 'md' | 'lg'
         export type Button = FC<
-            PressableProps & {
+            BaseButtonProps & {
+                icon?: number
+                loading?: boolean
+                iconPosition?: 'start' | 'end'
                 renderIcon?(): ReactNode
                 renderRightIcon?(): ReactNode
                 renderShine?(): ReactNode
@@ -315,28 +327,22 @@ export namespace DiscordModules {
                 textStyle?: TextStyle
                 loadingColorLight?: string
                 loadingColorDark?: string
-                disabled?: boolean
-                size?: ButtonSize
                 text: string
-                onPress?: () => unknown
-                variant?:
-                    | 'primary'
-                    | 'secondary'
-                    | 'destructive'
-                    | 'active'
-                    | 'primary-overlay'
-                    | 'green'
-                    | 'red'
-                    | 'grey'
-                    | 'lightgrey'
-                    | 'transparent'
-                    | 'white'
             }
         >
         export type TwinButtons = FC
-        export type IconButton = FC
+        export type IconButton = FC<
+            BaseButtonProps & {
+                icon?: number
+                label?: string
+            }
+        >
         export type RowButton = FC
-        export type ImageButton = FC
+        export type ImageButton = FC<
+            BaseButtonProps & {
+                image: ImageSourcePropType
+            }
+        >
         export type FloatingActionButton = FC
 
         // Layouts
