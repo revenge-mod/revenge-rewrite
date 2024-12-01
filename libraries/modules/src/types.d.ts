@@ -333,7 +333,7 @@ export namespace DiscordModules {
         export type TwinButtons = FC
         export type IconButton = FC<
             BaseButtonProps & {
-                icon?: number
+                icon: number
                 label?: string
             }
         >

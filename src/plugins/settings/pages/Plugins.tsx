@@ -4,7 +4,7 @@ import {
     AlertActionButton,
     AlertModal,
     Card,
-    ImageButton,
+    IconButton,
     MasonryFlashList,
     Stack,
     TableRowGroupTitle,
@@ -17,7 +17,6 @@ import { FormSwitch, SearchInput } from '@revenge-mod/ui/components'
 
 import PageWrapper from './(Wrapper)'
 
-import { findProp } from '@revenge-mod/modules/finders'
 import { useMemo, useState } from 'react'
 import { Image, PixelRatio, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 
@@ -136,10 +135,13 @@ export default function PluginsSettingsPage() {
     return (
         <PageWrapper>
             <SearchInput size="md" onChange={query => setQuery(query.replaceAll(/\s/g, '').toLowerCase())} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                {/* TableRowGroupTitle probably has some margin, setting it to flex-end causes it to be in the center, lucky. */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <TableRowGroupTitle title="Core Plugins" />
-                <ImageButton
-                    image={findProp('CopyIcon')!}
+                <IconButton
+                    icon={getAssetIndexByName('CircleQuestionIcon-primary')!}
+                    size="sm"
+                    variant='secondary'
                     onPress={() =>
                         openAlert(
                             'revenge.plugins.settings.plugins.core-plugins.description',
