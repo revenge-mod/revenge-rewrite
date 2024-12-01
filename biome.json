@@ -26,6 +26,9 @@
         },
         "noExplicitAny": {
           "level": "warn"
+        },
+        "noConfusingVoidType": {
+          "level": "off"
         }
       }
     }

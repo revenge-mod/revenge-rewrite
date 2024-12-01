@@ -33,7 +33,6 @@ type WrappableParams<N extends WrappableName, Parent extends AnyObject, Name ext
                * The arguments passed to the function
                */
               args: SafeParameters<Parent[Name]>,
-              // biome-ignore lint/suspicious/noConfusingVoidType: Nah, I don't think so
           ) => SafeParameters<Parent[Name]> | void
         : N extends 'after'
           ? (
@@ -46,7 +45,6 @@ type WrappableParams<N extends WrappableName, Parent extends AnyObject, Name ext
                  * The return value of the function
                  */
                 returnValue: ReturnType<Parent[Name]>,
-                // biome-ignore lint/suspicious/noConfusingVoidType: Nah, I don't think so
             ) => ReturnType<Parent[Name]> | void
           : N extends 'instead'
             ? (
@@ -93,7 +91,6 @@ type AwaitedWrappableParams<
                * The arguments passed to the function
                */
               args: SafeParameters<Awaited<Parent>[Name]>,
-              // biome-ignore lint/suspicious/noConfusingVoidType: Nah, I don't think so
           ) => SafeParameters<Awaited<Parent>[Name]> | void
         : N extends 'after'
           ? (
@@ -106,7 +103,6 @@ type AwaitedWrappableParams<
                  * The return value of the function
                  */
                 returnValue: ReturnType<Awaited<Parent>[Name]>,
-                // biome-ignore lint/suspicious/noConfusingVoidType: Nah, I don't think so
             ) => ReturnType<Awaited<Parent>[Name]> | void
           : N extends 'instead'
             ? (
