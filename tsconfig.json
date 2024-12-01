@@ -1,6 +1,11 @@
 {
   "extends": "./tsconfig.exported",
   "compilerOptions": {
-    "types": ["./types", "./types.scoped"]
+    "types": ["./types", "./types.scoped"],
+    "paths": {
+      "@revenge-mod/utils/*": ["./libraries/utils/src/*"],
+      "@revenge-mod/revenge": ["./types.d.ts"],
+      "@revenge-mod/shared/*": ["./libraries/shared/src/*"]
+    }
   }
 }

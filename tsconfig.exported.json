@@ -31,7 +31,6 @@
     "rootDir": ".",
     // TODO: Figure out a way to move this into types.d.ts
     "paths": {
-      "@revenge-mod/shared/*": ["./libraries/shared/src/*"],
       "@revenge-mod/utils/*": ["./libraries/utils/src/*"],
       "@revenge-mod/revenge": ["./types.d.ts"]
     },
