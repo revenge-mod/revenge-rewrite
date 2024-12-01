@@ -3,6 +3,7 @@ import { React, ReactNative } from '@revenge-mod/modules/common'
 import { findByName } from '@revenge-mod/modules/finders'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { createPatcherInstance } from '@revenge-mod/patcher'
+import { ReactJSXLibrary } from '@revenge-mod/react/jsx'
 import { createLogger } from '@revenge-mod/utils/library'
 
 import type { Component, FC, ReactNode } from 'react'
@@ -70,6 +71,8 @@ const unpatchCreateElement = patcher.after(
 const afterErrorBoundaryPatchable = ReactNative.Platform.OS === 'ios' ? afterAppRender : afterAppInitialize
 
 afterErrorBoundaryPatchable(async function patchErrorBoundary() {
+    if (ReactNative.Platform.OS === 'ios') ReactJSXLibrary.afterElementCreate('PortalKeyboardPlaceholderInner', () => null)
+
     const { default: Screen } = await import('./components/ErrorBoundaryScreen')
 
     setImmediate(() => {

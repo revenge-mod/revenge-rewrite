@@ -97,13 +97,6 @@ export function initializeModulePatches(patcher: Patcher, logger: LibraryLogger,
                 moment.locale(origLocale)
             }),
     )
-
-    if (ReactNative.Platform.OS === 'ios')
-        subscribePatchableModule(
-            'i',
-            exports => exports.default?.type?.name === 'PortalKeyboardPlaceholder',
-            exports => patcher.instead(exports.default, 'type', () => null),
-        )
 }
 
 function subscribePatchableModule(
