@@ -1,6 +1,6 @@
 import { customAssets, getAssetByIndex, getAssetIndexByName } from '@revenge-mod/assets'
 import { clipboard, openAlert, toasts } from '@revenge-mod/modules/common'
-import { AlertActionButton, AlertModal, FlashList, Stack, TableRow, Text } from '@revenge-mod/modules/common/components'
+import { AlertActionButton, AlertModal, FlashList, Icons, Stack, TableRow, Text } from '@revenge-mod/modules/common/components'
 import { cache as metroCache } from '@revenge-mod/modules/metro'
 import { SearchInput } from '@revenge-mod/ui/components'
 
@@ -99,7 +99,7 @@ function copyToClipboard(text: string) {
     toasts.open({
         key: 'revenge.plugins.developer-settings.asset-browser.copied',
         content: 'Copied to clipboard',
-        icon: getAssetIndexByName('toast_copy_link'),
+        icon: Icons.CopyIcon,
     })
 }
 

@@ -5,7 +5,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./common": "./src/common/index.ts",
-    "./common/components": "./src/common/components.ts",
+    "./common/components": "./src/common/components/index.ts",
+    "./common/components/icons": "./src/common/components/icons.ts",
     "./common/stores": "./src/common/stores.ts",
     "./finders": "./src/finders.ts",
     "./filters": "./src/filters.ts",

@@ -1,5 +1,5 @@
 import { clipboard, toasts } from '@revenge-mod/modules/common'
-import { TableRow, TableRowGroup, TableRowIcon, TableRowTrailingText } from '@revenge-mod/modules/common/components'
+import { Icons, TableRow, TableRowGroup, TableRowIcon, TableRowTrailingText } from '@revenge-mod/modules/common/components'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 
 import { type ImageSourcePropType, ScrollView } from 'react-native'
@@ -72,7 +72,7 @@ function VersionRow(
                 toasts.open({
                     key: `revenge.toasts.settings.about.copied:${props.label}`,
                     content: 'Copied to clipboard',
-                    icon: assets.getIndexByName('CopyIcon'),
+                    icon: Icons.CopyIcon,
                 })
             }}
         />

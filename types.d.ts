@@ -159,6 +159,12 @@ declare module '@revenge-mod/modules/common/components' {
     export default components
 }
 
+declare module '@revenge-mod/modules/common/components/icons' {
+    const icons: typeof import('./libraries/modules/src/common/components/icons')
+    export * from './libraries/modules/src/common/components/icons'
+    export default icons
+}
+
 declare module '@revenge-mod/modules/constants' {
     const constants: typeof import('./libraries/modules/src/constants')
     export * from './libraries/modules/src/constants'

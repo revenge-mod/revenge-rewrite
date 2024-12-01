@@ -1,7 +1,9 @@
 import { lazyDestructure } from '@revenge-mod/utils/lazy'
-import { findByProps, findProp, findSingleProp } from '../finders'
+import { findByProps, findProp, findSingleProp } from '../../finders'
 
-import type { DiscordModules } from '../types'
+import type { DiscordModules } from '../../types'
+
+export * as Icons from './icons'
 
 // React Native's included SafeAreaView only adds padding on iOS.
 export const { SafeAreaProvider, SafeAreaView } = lazyDestructure(
