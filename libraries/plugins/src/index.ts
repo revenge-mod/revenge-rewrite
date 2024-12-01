@@ -38,7 +38,7 @@ export function startCorePlugins() {
     const errors: AggregateError[] = []
 
     for (const id of corePluginIds) {
-        const plugin = plugins.get(id)!
+        const plugin = plugins[id]!
         // In case predicate returned false
         if (!plugin.enabled) continue
         promises.push(plugin.start!().catch(e => errors.push(e)))
@@ -62,7 +62,7 @@ export function startCorePlugins() {
 
 export function startPluginsMetroModuleSubscriptions() {
     logger.info('Starting Metro module subscriptions for plugins...')
-    for (const plugin of plugins.values()) plugin.startMetroModuleSubscriptions!()
+    for (const plugin of Object.values(plugins)) plugin.startMetroModuleSubscriptions!()
 }
 
 export type PluginsLibrary = typeof PluginsLibrary

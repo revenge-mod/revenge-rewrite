@@ -164,7 +164,7 @@ export default function PluginsSettingsPage() {
     const numColumns = Math.floor((dimensions.width - 16) / 448)
     const data = useMemo(
         () =>
-            [...plugins.values()].filter(
+            Object.values(plugins).filter(
                 plugin =>
                     plugin.name.toLowerCase().replaceAll(/\s/g, '').includes(query) ||
                     plugin.id.toLowerCase().includes(query),

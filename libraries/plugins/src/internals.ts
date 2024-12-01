@@ -13,11 +13,11 @@ import { logger } from './shared'
 
 export const appRenderedCallbacks = new Set<() => Promise<unknown>>()
 export const corePluginIds = new Set<string>()
-export const plugins = new Map<
+export const plugins: Record<
     InternalPluginDefinition<unknown, unknown, unknown>['id'],
     // biome-ignore lint/suspicious/noExplicitAny: I should really turn off this rule...
     PluginDefinition<any, any, any> & Omit<InternalPluginDefinition<any, any, any>, keyof PluginDefinition>
->()
+> = {}
 
 const highPriorityPluginIds = new Set<InternalPluginDefinition<unknown, unknown, unknown>['id']>()
 
@@ -32,7 +32,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
 ) {
     const cleanups = new Set<() => unknown>()
 
-    if (plugins.has(definition.id)) throw new Error(`Plugin "${definition.id}" already exists`)
+    if (definition.id in plugins) throw new Error(`Plugin "${definition.id}" already exists`)
     if (!PluginIdRegex.test(definition.id))
         throw new Error(`Cannot register plugin "${definition.id}", invalid ID format`)
 
@@ -184,7 +184,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
     }
 
     if (internalPlugin.core) corePluginIds.add(internalPlugin.id)
-    plugins.set(internalPlugin.id, internalPlugin)
+    plugins[internalPlugin.id] = internalPlugin
     if (internalPlugin.beforeAppRender) highPriorityPluginIds.add(internalPlugin.id)
 
     return proxy as PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>

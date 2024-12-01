@@ -50,9 +50,9 @@ export function getImportingModuleId() {
 
 export type MetroModuleSubscriptionCallback = (id: Metro.ModuleID, exports: Metro.ModuleExports) => unknown
 
-const subscriptions = new Map<Metro.ModuleID | 'all', Set<MetroModuleSubscriptionCallback>>()
-const allSubscriptionSet = new Set<MetroModuleSubscriptionCallback>()
-subscriptions.set('all', allSubscriptionSet)
+const subscriptions: Record<Metro.ModuleID | 'all', Set<MetroModuleSubscriptionCallback>> = {
+    all: new Set<MetroModuleSubscriptionCallback>(),
+}
 
 const metroDependencies = new Set<Metro.ModuleID>()
 
@@ -95,9 +95,9 @@ function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
             return false
         }
 
-        const subs = subscriptions.get(id)
+        const subs = subscriptions[id]
         if (subs) for (const sub of subs) sub(id, metroModule.publicModule.exports)
-        for (const sub of allSubscriptionSet) sub(id, metroModule.publicModule.exports)
+        for (const sub of subscriptions.all) sub(id, metroModule.publicModule.exports)
 
         return false
     }
@@ -122,9 +122,9 @@ function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
 
             if (isModuleExportsBad(moduleObject.exports)) blacklistModule(id)
             else {
-                const subs = subscriptions.get(id)
+                const subs = subscriptions[id]
                 if (subs) for (const sub of subs) sub(id, moduleObject.exports)
-                for (const sub of allSubscriptionSet) sub(id, moduleObject.exports)
+                for (const sub of subscriptions.all) sub(id, moduleObject.exports)
             }
 
             importingModuleId = originalImportingId
@@ -238,8 +238,8 @@ export function requireModule(id: Metro.ModuleID) {
  */
 export const subscribeModule = Object.assign(
     function subscribeModule(id: Metro.ModuleID, callback: MetroModuleSubscriptionCallback) {
-        if (!subscriptions.has(id)) subscriptions.set(id, new Set())
-        const set = subscriptions.get(id)!
+        if (!(id in subscriptions)) subscriptions[id] = new Set()
+        const set = subscriptions[id]!
         set.add(callback)
         return () => set.delete(callback)
     },
@@ -266,8 +266,8 @@ export const subscribeModule = Object.assign(
          * @returns A function to unsubscribe
          */
         all: function subscribeModuleAll(callback: MetroModuleSubscriptionCallback) {
-            allSubscriptionSet.add(callback)
-            return () => allSubscriptionSet.delete(callback)
+            subscriptions.all.add(callback)
+            return () => subscriptions.all.delete(callback)
         },
     },
 )
