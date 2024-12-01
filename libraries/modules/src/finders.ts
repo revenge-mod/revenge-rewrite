@@ -435,7 +435,7 @@ export type ByFilePath<T extends Metro.ModuleExports, DefaultExport extends bool
 export const findByFilePath = Object.assign(
     function findByFilePathLazy<T extends Metro.ModuleExports, D extends boolean>(
         path: string,
-        returnDefaultExport: D = true as D,
+        returnDefaultExport: D = false as D,
     ) {
         return find(byFilePath(path, returnDefaultExport)) as LazyModule<ByFilePath<T, D>>
     },
