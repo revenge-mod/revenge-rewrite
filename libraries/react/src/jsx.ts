@@ -34,13 +34,14 @@ const patchCallback = (
     if (name in afterCallbacks) {
         for (const cb of afterCallbacks[name]!) {
             const maybeTree = cb(Comp, props, tree)
-            if (maybeTree) tree = maybeTree
+            if (typeof maybeTree !== 'undefined') tree = maybeTree!
         }
     }
 
     return tree
 }
 
+// Without this timeout, patching succeeds, but results in app freeze (similar to freezing Metro module)
 setTimeout(() => {
     patcher.instead(ReactJSXRuntime, 'jsx', patchCallback, 'patchJsxRuntime')
     patcher.instead(ReactJSXRuntime, 'jsxs', patchCallback, 'patchJsxRuntime')
@@ -62,7 +63,7 @@ export type JSXAfterComponentCreateCallback<E extends ElementType = ElementType,
     Comp: E,
     props: P,
     tree: ReactElement,
-) => ReactElement | undefined | void
+) => ReactElement | null | undefined | void
 
 export function afterJSXElementCreate<E extends ElementType = ElementType, P = ComponentProps<E>>(
     elementName: string,
