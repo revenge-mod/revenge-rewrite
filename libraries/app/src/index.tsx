@@ -18,18 +18,18 @@ const renderCallbacks = new Set<AppGenericCallback>()
 export let isAppInitialized = false
 export let isAppRendered = false
 
-export function afterAppInitialized(callback: AppGenericCallback) {
+export function afterAppInitialize(callback: AppGenericCallback) {
     if (isAppInitialized) throw new Error('Cannot attach a callback after the app has already been initialized')
     initializeCallbacks.add(callback)
 }
 
-export function afterAppRendered(callback: AppGenericCallback) {
+export function afterAppRender(callback: AppGenericCallback) {
     if (isAppRendered) throw new Error('Cannot attach a callback after the App component has been rendered')
     renderCallbacks.add(callback)
 }
 
-afterAppInitialized(() => (isAppInitialized = true))
-afterAppRendered(() => (isAppRendered = true))
+afterAppInitialize(() => (isAppInitialized = true))
+afterAppRender(() => (isAppRendered = true))
 
 const unpatchRunApplication = patcher.after(
     ReactNative.AppRegistry,
@@ -70,7 +70,7 @@ export const errorBoundaryPatchedPromise = new Promise<void>(resolve => (resolve
 
 // TODO: NEEDS WOKAROUND
 // Patching ErrorBoundary afterInitialized causes the weird "Element type is invalid" error due to TextInputWrapper
-const afterErrorBoundaryPatchable = ReactNative.Platform.OS === 'ios' ? afterAppRendered : afterAppInitialized
+const afterErrorBoundaryPatchable = ReactNative.Platform.OS === 'ios' ? afterAppRender : afterAppInitialize
 
 afterErrorBoundaryPatchable(async function patchErrorBoundary() {
     const { default: Screen } = await import('./components/ErrorBoundaryScreen')
@@ -114,12 +114,12 @@ export const AppLibrary = {
      * Attaches a callback to be called when the app has been rendered
      * @param callback The callback to be called
      */
-    afterRendered: afterAppRendered,
+    afterRender: afterAppRender,
     /**
      * Attaches a callback to be called when the app has been initialized
      * @param callback The callback to be called
      */
-    afterInitialized: afterAppInitialized,
+    afterInitialize: afterAppInitialize,
     /**
      * Reloads the app
      */

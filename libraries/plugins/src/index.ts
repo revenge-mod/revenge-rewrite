@@ -1,4 +1,4 @@
-import { afterAppRendered } from '@revenge-mod/app'
+import { afterAppRender } from '@revenge-mod/app'
 import { getErrorStack } from '@revenge-mod/utils/errors'
 
 import { appRenderedCallbacks, corePluginIds, plugins, registerPlugin } from './internals'
@@ -8,7 +8,7 @@ import type { PluginDefinition, PluginStorage } from './types'
 
 export type * from './types'
 
-afterAppRendered(() => {
+afterAppRender(() => {
     for (const cb of appRenderedCallbacks) cb()
 })
 
