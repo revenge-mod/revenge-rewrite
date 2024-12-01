@@ -37,18 +37,18 @@ registerPlugin<{
             cleanup(
                 () => (isStaffSettingsShown = () => originalValue),
                 () =>
-                addTableRowsToAdvancedSectionInRevengePage(() => {
-                    useObservable([storage])
+                    addTableRowsToAdvancedSectionInRevengePage(() => {
+                        useObservable([storage])
 
-                    return (
-                        <TableSwitchRow
-                            label="Show Discord Staff Settings"
-                            icon={<TableRowIcon source={assets.getIndexByName('ic_progress_wrench_24px')!} />}
-                            value={storage.enabled}
-                            onValueChange={(v: boolean) => (storage.enabled = v)}
-                        />
-                    )
-                }),
+                        return (
+                            <TableSwitchRow
+                                label="Show Discord Staff Settings"
+                                icon={<TableRowIcon source={assets.getIndexByName('ic_progress_wrench_24px')!} />}
+                                value={storage.enabled}
+                                onValueChange={(v: boolean) => (storage.enabled = v)}
+                            />
+                        )
+                    }),
             )
         },
         initializeStorage: () => ({ enabled: false }),

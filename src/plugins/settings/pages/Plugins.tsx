@@ -4,18 +4,20 @@ import {
     AlertActionButton,
     AlertModal,
     Card,
-    FormSwitch,
+    ImageButton,
     MasonryFlashList,
     Stack,
+    TableRowGroupTitle,
     Text,
 } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { plugins } from '@revenge-mod/plugins/internals'
 import { SemanticColor } from '@revenge-mod/ui/colors'
-import { SearchInput } from '@revenge-mod/ui/components'
+import { FormSwitch, SearchInput } from '@revenge-mod/ui/components'
 
 import PageWrapper from './(Wrapper)'
 
+import { findProp } from '@revenge-mod/modules/finders'
 import { useMemo, useState } from 'react'
 import { Image, PixelRatio, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 
@@ -31,6 +33,9 @@ const usePluginCardStyles = createStyles({
         paddingVertical: 12,
         paddingHorizontal: 12,
         gap: 4,
+    },
+    withGap: {
+        marginRight: 12,
     },
     topContainer: {
         alignItems: 'center',
@@ -65,73 +70,29 @@ function PluginCard({
     const [enabled, setEnabled] = useState(_enabled)
 
     return (
-        <Card style={[cardStyles.card, ...(horizontalGaps ? [{ marginRight: 12 }] : [])]}>
+        <Card style={[cardStyles.card, horizontalGaps && cardStyles.withGap]}>
             <Stack direction="horizontal" style={styles.growable}>
                 <Stack spacing={8} direction="horizontal" style={[cardStyles.topContainer, styles.resizable]}>
                     <Image source={getAssetIndexByName(icon ?? 'Revenge.PluginIcon')!} style={cardStyles.icon} />
                     <Text variant="heading-lg/semibold">{name}</Text>
                 </Stack>
-                <View style={{ opacity: manageable ? 1 : 0.5 }}>
-                    <FormSwitch
-                        value={enabled}
-                        disabled={!manageable}
-                        onValueChange={async val => {
-                            if (!val && core) {
-                                const _continue = await new Promise<boolean>(resolve => {
-                                    openAlert(
-                                        'revenge.plugins.settings.plugins.core-plugins.disable-warning',
-                                        <AlertModal
-                                            title="Disable a core plugin?"
-                                            content="Core plugins are an essential part of Revenge. Disabling them may cause unexpected behavior."
-                                            actions={
-                                                <>
-                                                    <AlertActionButton
-                                                        variant="destructive"
-                                                        text="Disable anyways"
-                                                        onPress={() => resolve(true)}
-                                                    />
-                                                    <AlertActionButton
-                                                        variant="secondary"
-                                                        text="Cancel"
-                                                        onPress={() => resolve(false)}
-                                                    />
-                                                </>
-                                            }
-                                        />,
-                                    )
-                                })
+                <FormSwitch
+                    value={enabled}
+                    disabled={!manageable}
+                    onValueChange={async enabled => {
+                        if (!enabled && core && !showDisableCorePluginConfirmation()) return
 
-                                if (!_continue) return
-                            }
+                        const plugin = plugins[id]!
 
-                            const plugin = plugins.get(id)!
-                            if (val) {
-                                const reloadRequired = plugin.enable()
-                                if (reloadRequired)
-                                    openAlert(
-                                        'revenge.plugins.reload-required',
-                                        <AlertModal
-                                            title="Reload required"
-                                            content="The plugin you have enabled requires a reload to take effect. Would you like to reload now?"
-                                            actions={
-                                                <>
-                                                    <AlertActionButton
-                                                        variant="destructive"
-                                                        text="Reload"
-                                                        onPress={() => BundleUpdaterManager.reload()}
-                                                    />
-                                                    <AlertActionButton variant="secondary" text="Cancel" />
-                                                </>
-                                            }
-                                        />,
-                                    )
-                                else plugin.start()
-                            } else plugin.disable()
+                        if (enabled) {
+                            const reloadRequired = plugin.enable()
+                            if (reloadRequired) showReloadRequiredAlert()
+                            else await plugin.start()
+                        } else plugin.disable()
 
-                            setEnabled(val)
-                        }}
-                    />
-                </View>
+                        setEnabled(enabled)
+                    }}
+                />
             </Stack>
             <Stack spacing={4} direction="vertical" style={[cardStyles.alignedContainer, styles.growable]}>
                 <Text style={styles.growable} variant="heading-md/medium" color="text-muted">
@@ -175,6 +136,22 @@ export default function PluginsSettingsPage() {
     return (
         <PageWrapper>
             <SearchInput size="md" onChange={query => setQuery(query.replaceAll(/\s/g, '').toLowerCase())} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <TableRowGroupTitle title="Core Plugins" />
+                <ImageButton
+                    image={findProp('CopyIcon')!}
+                    onPress={() =>
+                        openAlert(
+                            'revenge.plugins.settings.plugins.core-plugins.description',
+                            <AlertModal
+                                title="What are core plugins?"
+                                content="Core plugins are an essential part of Revenge. They provide core functionalities like allow you to access this settings menu. Disabling core plugins may cause unexpected behavior."
+                                actions={<AlertActionButton variant="secondary" text="Close" />}
+                            />,
+                        )
+                    }
+                />
+            </View>
             <ScrollView contentContainerStyle={{ flex: 1 }}>
                 <MasonryFlashList
                     fadingEdgeLength={32}
@@ -191,5 +168,43 @@ export default function PluginsSettingsPage() {
                 />
             </ScrollView>
         </PageWrapper>
+    )
+}
+
+function showDisableCorePluginConfirmation() {
+    return new Promise<boolean>(resolve => {
+        openAlert(
+            'revenge.plugins.settings.plugins.core-plugins.disable-warning',
+            <AlertModal
+                title="Disable a core plugin?"
+                content="Core plugins are an essential part of Revenge. Disabling them may cause unexpected behavior."
+                actions={
+                    <>
+                        <AlertActionButton variant="destructive" text="Disable anyways" onPress={() => resolve(true)} />
+                        <AlertActionButton variant="secondary" text="Cancel" onPress={() => resolve(false)} />
+                    </>
+                }
+            />,
+        )
+    })
+}
+
+function showReloadRequiredAlert() {
+    openAlert(
+        'revenge.plugins.reload-required',
+        <AlertModal
+            title="Reload required"
+            content="The plugin you have enabled requires a reload to take effect. Would you like to reload now?"
+            actions={
+                <>
+                    <AlertActionButton
+                        variant="destructive"
+                        text="Reload"
+                        onPress={() => BundleUpdaterManager.reload()}
+                    />
+                    <AlertActionButton variant="secondary" text="Cancel" />
+                </>
+            }
+        />,
     )
 }
