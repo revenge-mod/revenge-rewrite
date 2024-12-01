@@ -34,7 +34,6 @@ const lazyHandler: ProxyHandler<any> = {
     ),
     has(target, p) {
         const contextHolder = proxyContextHolder.get(target)
-
         if (contextHolder?.options) {
             const { exemptedEntries: isolatedEntries } = contextHolder.options
             if (isolatedEntries && p in isolatedEntries) return true
@@ -54,8 +53,6 @@ const lazyHandler: ProxyHandler<any> = {
 
         const resolved = contextHolder?.factory()
         if (!resolved) throw new Error(`Cannot read properties of ${typeof resolved} (reading '${String(p)}')`)
-        // Fallback to normal access if the value is not an object
-        if (typeof resolved !== 'object') return resolved[p]
 
         return Reflect.get(resolved, p, receiver)
     },
@@ -63,8 +60,6 @@ const lazyHandler: ProxyHandler<any> = {
         const contextHolder = proxyContextHolder.get(target)
         const resolved = contextHolder?.factory()
         if (!resolved) throw new Error(`Cannot get keys of ${typeof resolved}`)
-        // Fallback to no keys if the value is not an object
-        if (typeof resolved !== 'object') return []
 
         const cacheKeys = Reflect.ownKeys(resolved)
         for (const key of unconfigurable) {
@@ -77,10 +72,6 @@ const lazyHandler: ProxyHandler<any> = {
         const contextHolder = proxyContextHolder.get(target)
         const resolved = contextHolder?.factory()
         if (!resolved) throw new Error(`Cannot get property descriptor of ${typeof resolved} (getting '${String(p)}')`)
-        if (typeof resolved !== 'object')
-            throw new Error(
-                `The value of type ${typeof resolved} does not have any descriptors (getting '${String(p)}')`,
-            )
 
         if (isUnconfigurable(p)) return Reflect.getOwnPropertyDescriptor(target, p)
 
