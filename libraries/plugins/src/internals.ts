@@ -16,7 +16,13 @@ import { PluginIdRegex, PluginStatus } from './constants'
 import { logger } from './shared'
 
 import type React from 'react'
-import type { PluginContext, PluginDefinition, PluginModuleSubscriptionContext, PluginStorage } from '.'
+import type {
+    PluginContext,
+    PluginDefinition,
+    PluginModuleSubscriptionContext,
+    PluginStorage,
+    PluginStopConfig,
+} from '.'
 
 export const appRenderedCallbacks = new Set<() => Promise<unknown>>()
 export const corePluginIds = new Set<string>()
@@ -27,6 +33,10 @@ export const plugins: Record<
 > = {}
 
 const highPriorityPluginIds = new Set<InternalPluginDefinition<unknown, unknown, unknown>['id']>()
+
+const DefaultStopConfig: Required<PluginStopConfig> = {
+    reloadRequired: false,
+}
 
 export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void, AppInitializedReturn = void>(
     definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &
@@ -52,10 +62,10 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
 
     const internalPlugin = objectSeal({
         ...definition,
-        // Manageable?
-        // - Yes: Check preferences, default to false if it doesn't exist
-        // - No: Check predicate, default to if core
         get enabled() {
+            // Manageable?
+            // - Yes: Check preferences, default to false if it doesn't exist
+            // - No: Check predicate, default to if core
             return manageable ? (pluginsStates[definition.id]?.enabled ?? false) : (predicate?.() ?? core)
         },
         set enabled(val: boolean) {
@@ -74,12 +84,15 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         errors: [],
         disable() {
             if (!this.manageable) throw new Error(`Cannot disable unmanageable plugin: ${this.id}`)
-            if (!this.stopped) this.stop()
+
             this.enabled = false
+            if (!this.stopped) return this.stop()
+
+            return DefaultStopConfig
         },
         enable() {
             this.enabled = true
-            return !!this.beforeAppRender
+            return !!(this.beforeAppRender || this.onMetroModuleLoad)
         },
         startMetroModuleSubscriptions() {
             if (!this.onMetroModuleLoad || !this.enabled) return
@@ -136,22 +149,20 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             } else this.status = PluginStatus.Started
         },
         stop() {
-            if (this.stopped) return
+            if (this.stopped) return DefaultStopConfig
 
             logger.log(`Stopping plugin: ${this.id}`)
 
+            let data: Required<PluginStopConfig> | undefined
+
             try {
-                this.beforeStop?.(instance)
+                const val = this.beforeStop?.(instance)
+                data ??= val ? Object.assign(DefaultStopConfig, val) : DefaultStopConfig
             } catch (e) {
                 this.errors.push(
                     new Error(`Plugin "${this.id}" encountered an error when stopping: ${e}`, { cause: e }),
                 )
             }
-
-            for (const cleanup of cleanups) cleanup()
-            if (!instance.patcher.destroyed) instance.patcher.destroy()
-
-            this.status = PluginStatus.Stopped
 
             // Since plugins always get stopped when encountering an error, we can throw this
             if (this.errors.length) {
@@ -159,6 +170,13 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
                 logger.error(msg)
                 throw new AggregateError(this.errors, msg)
             }
+
+            for (const cleanup of cleanups) cleanup()
+            if (!instance.patcher.destroyed) instance.patcher.destroy()
+
+            this.status = PluginStatus.Stopped
+
+            return data ?? DefaultStopConfig
         },
     } satisfies PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &
         Omit<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>, keyof PluginDefinition>)
@@ -223,31 +241,65 @@ export type InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedR
     ) => void
     /**
      * Disables the plugin
+     * @returns A full plugin stop config object
+     * @see {@link PluginStopConfig}
      */
-    disable(): void
-    /** @internal */
+    disable(): Required<PluginStopConfig>
+    /**
+     * Enables the plugin
+     * @internal
+     * @returns Whether a reload should be required
+     */
     enable(): boolean
-    /** @internal */
+    /**
+     * Starts the plugin's Metro module subscriptions (if it exists)
+     * @internal
+     */
     startMetroModuleSubscriptions: () => void
-    /** @internal */
+    /**
+     * Starts the plugin normal lifecycles
+     * @internal
+     */
     start(): Promise<void>
-    /** @internal */
-    stop(): unknown
-    /** @internal */
+    /**
+     * Stops the plugin
+     * @internal
+     * @returns A full plugin stop config object
+     */
+    stop(): Required<PluginStopConfig>
+    /**
+     * Whether the plugin is stopped
+     * @internal
+     */
     stopped: boolean
     /**
-     * Whether the plugin is enabled
+     * Whether the plugin is enabled. This will be set to `false` in the `beforeStop` lifecycle if the user disables the plugin.
      */
     enabled: boolean
-    /** @internal */
+    /**
+     * The plugin's status
+     * @internal
+     */
     status: (typeof PluginStatus)[keyof typeof PluginStatus]
-    /** @internal */
+    /**
+     * The plugin's settings component
+     * @internal
+     **/
     SettingsComponent?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
-    /** @internal */
+    /**
+     * Whether the plugin is a core plugin
+     * @internal
+     */
     core: boolean
-    /** @internal */
+    /**
+     * Whether the plugin is manageable (can be disabled/enabled)
+     * @internal
+     */
     manageable: boolean
-    /** @internal */
+    /**
+     * The plugin's errors
+     * @internal
+     **/
     // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
     errors: any[]
 }

@@ -85,9 +85,12 @@ function PluginCard({
 
                         if (enabled) {
                             const reloadRequired = plugin.enable()
-                            if (reloadRequired) showReloadRequiredAlert()
+                            if (reloadRequired) showReloadRequiredAlert(enabled)
                             else await plugin.start()
-                        } else plugin.disable()
+                        } else {
+                            const { reloadRequired } = plugin.disable()
+                            if (reloadRequired) showReloadRequiredAlert(enabled)
+                        }
 
                         setEnabled(enabled)
                     }}
@@ -191,12 +194,16 @@ function showDisableCorePluginConfirmation() {
     })
 }
 
-function showReloadRequiredAlert() {
+function showReloadRequiredAlert(enabling: boolean) {
     openAlert(
         'revenge.plugins.reload-required',
         <AlertModal
             title="Reload required"
-            content="The plugin you have enabled requires a reload to take effect. Would you like to reload now?"
+            content={
+                enabling
+                    ? 'The plugin you have enabled requires a reload to take effect. Would you like to reload now?'
+                    : 'The plugin you have disabled requires a reload to reverse its effects. Would you like to reload now?'
+            }
             actions={
                 <>
                     <AlertActionButton
@@ -204,7 +211,7 @@ function showReloadRequiredAlert() {
                         text="Reload"
                         onPress={() => BundleUpdaterManager.reload()}
                     />
-                    <AlertActionButton variant="secondary" text="Cancel" />
+                    <AlertActionButton variant="secondary" text="Not now" />
                 </>
             }
         />,
