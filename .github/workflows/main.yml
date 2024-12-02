@@ -1,0 +1,65 @@
+name: Build & Release
+on:
+  push:
+    branches:
+      - main
+      - release-branch
+  pull_request:
+    branches:
+      - main
+      - release-branch
+
+permissions: write-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '23'
+
+      - name: Install Bun
+        run: npm install --global bun
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build Revenge
+        run: npm run build -- --minify
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release revenge.min.js
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/revenge.min.js
+          asset_name: revenge.min.js
+          asset_content_type: application/javascript
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release revenge.js
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/revenge.js
+          asset_name: revenge.js
+          asset_content_type: application/javascript
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
