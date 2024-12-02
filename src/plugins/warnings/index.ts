@@ -18,7 +18,11 @@ registerPlugin<{
             const { legacy_alerts, toasts } = modules.common
 
             // Predicate is already used to indicate whether the plugin is enabled or not
-            if ((storage.supportWarningDismissedAt ?? Date.now()) + 6048e5 > Date.now()) {
+            if (
+                // We do !> instead of < in case the value of the left is NaN
+                !(Number(ClientInfoModule.Build) > MinimumSupportedBuildNumber) &&
+                (storage.supportWarningDismissedAt ?? Date.now()) + 6048e5 > Date.now()
+            ) {
                 legacy_alerts.show({
                     title: 'Support Warning',
                     body:
@@ -40,6 +44,4 @@ registerPlugin<{
     },
     true,
     false,
-    // We do !> instead of < in case the value of the left is NaN
-    () => !(Number(ClientInfoModule.Build) > MinimumSupportedBuildNumber),
 )
