@@ -7,19 +7,24 @@ on:
     branches:
       - main
 
-permissions: write-all
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-${{ matrix.bun }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.bun }}-bun-
 
       - name: Install Dependencies
         run: bun install
