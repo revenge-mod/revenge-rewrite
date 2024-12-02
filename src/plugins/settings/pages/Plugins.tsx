@@ -1,9 +1,12 @@
 import { getAssetIndexByName } from '@revenge-mod/assets'
+
 import { createStyles, openAlert } from '@revenge-mod/modules/common'
 import {
     AlertActionButton,
     AlertModal,
+    Button,
     Card,
+    ContextMenu,
     IconButton,
     MasonryFlashList,
     Stack,
@@ -11,14 +14,33 @@ import {
     Text,
 } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
+
 import { plugins } from '@revenge-mod/plugins/internals'
+
 import { SemanticColor } from '@revenge-mod/ui/colors'
 import { FormSwitch, SearchInput } from '@revenge-mod/ui/components'
 
 import PageWrapper from './(Wrapper)'
 
-import { useMemo, useState } from 'react'
+import {
+    createContext,
+    memo,
+    useContext,
+    useMemo,
+    useState,
+    type ComponentProps,
+    type FC,
+    type MemoExoticComponent,
+    type ReactElement,
+} from 'react'
 import { Image, PixelRatio, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
+
+import type { MasonryFlashListProps } from '@shopify/flash-list'
+import { CheckmarkLargeIcon } from '@revenge-mod/modules/common/components/icons'
+import { useObservable } from '@revenge-mod/storage'
+import { pluginsStates } from '@revenge-mod/preferences'
+import type { DiscordModules } from '@revenge-mod/modules'
+import { PluginContext, type Storage } from '..'
 
 const usePluginCardStyles = createStyles({
     icon: {
@@ -48,8 +70,28 @@ const styles = StyleSheet.create({
     growable: {
         flexGrow: 1,
     },
+    centerChildren: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     resizable: {
         flex: 1,
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        paddingBottom: 12,
+    },
+    queryContainer: {
+        flexDirection: 'row',
+        width: '100%',
+        gap: 8,
+    },
+    emptyImage: {
+        width: '40%',
+        height: '20%',
+        objectFit: 'contain',
     },
 })
 
@@ -58,7 +100,6 @@ function PluginCard({
     id,
     name,
     icon,
-    core,
     manageable,
     enabled: _enabled,
     author,
@@ -79,8 +120,6 @@ function PluginCard({
                     value={enabled}
                     disabled={!manageable}
                     onValueChange={async enabled => {
-                        if (!enabled && core && !(await showDisableCorePluginConfirmation())) return
-
                         const plugin = plugins[id]!
 
                         if (enabled) {
@@ -121,77 +160,209 @@ interface PluginCardProps {
     horizontalGaps: boolean
 }
 
+type PluginSettingsPageContextValue = Storage['plugins'] & {
+    setQuery: (query: string) => void
+    ContextMenuComponent: MemoExoticComponent<
+        FC<Pick<ComponentProps<DiscordModules.Components.ContextMenu>, 'children'>>
+    >
+}
+
+const PluginSettingsPageContext = createContext<PluginSettingsPageContextValue>(undefined!)
+
 export default function PluginsSettingsPage() {
+    const { storage } = useContext(PluginContext)
+    useObservable([pluginsStates, storage])
+
     const [query, setQuery] = useState('')
-    const dimensions = useWindowDimensions()
-    const numColumns = Math.floor((dimensions.width - 16) / 448)
-    const data = useMemo(
+    const { showCorePlugins, sortMode } = storage.plugins
+
+    const allPlugins = useMemo(
         () =>
-            Object.values(plugins).filter(
-                plugin =>
-                    plugin.name.toLowerCase().replaceAll(/\s/g, '').includes(query) ||
-                    plugin.id.toLowerCase().includes(query),
-            ),
-        [query],
+            Object.values(plugins)
+                .filter(
+                    plugin =>
+                        plugin.name.toLowerCase().replaceAll(/\s/g, '').includes(query) ||
+                        plugin.id.toLowerCase().includes(query),
+                )
+                .sort((a, b) =>
+                    storage.plugins.sortMode === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name),
+                ),
+        [query, storage.plugins.sortMode],
     )
+
+    const externalPluginsData = useMemo(() => allPlugins.filter(plugin => !plugin.core), [allPlugins])
+    const corePluginsData = useMemo(() => allPlugins.filter(plugin => plugin.core), [allPlugins])
+
+    const MemoizedContextMenu = memo(
+        ({ children }: Pick<ComponentProps<DiscordModules.Components.ContextMenu>, 'children'>) => {
+            return (
+                <ContextMenu
+                    title="Sort & Filter"
+                    items={[
+                        ...(pluginListEmpty
+                            ? []
+                            : [
+                                  [
+                                      {
+                                          label: 'Sort by name (A-Z)',
+                                          IconComponent: sortMode === 'asc' ? CheckmarkLargeIcon : undefined,
+                                          action: () => (storage.plugins.sortMode = 'asc'),
+                                      },
+                                      {
+                                          label: 'Sort by name (Z-A)',
+                                          IconComponent: sortMode === 'dsc' ? CheckmarkLargeIcon : undefined,
+                                          action: () => (storage.plugins.sortMode = 'dsc'),
+                                      },
+                                  ],
+                              ]),
+                        [
+                            {
+                                label: 'Show core plugins',
+                                IconComponent: showCorePlugins ? CheckmarkLargeIcon : undefined,
+                                variant: 'destructive',
+                                action: () => (storage.plugins.showCorePlugins = !showCorePlugins),
+                            },
+                        ],
+                    ]}
+                >
+                    {children}
+                </ContextMenu>
+            )
+        },
+    )
+
+    const pluginListEmpty = !(showCorePlugins
+        ? corePluginsData.length + externalPluginsData.length
+        : externalPluginsData.length)
 
     return (
         <PageWrapper>
-            <SearchInput size="md" onChange={query => setQuery(query.replaceAll(/\s/g, '').toLowerCase())} />
-            {/* TableRowGroupTitle probably has some margin, setting it to flex-end causes it to be in the center, lucky. */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <TableRowGroupTitle title="Core Plugins" />
-                <IconButton
-                    icon={getAssetIndexByName('CircleQuestionIcon-primary')!}
-                    size="sm"
-                    variant="secondary"
-                    onPress={() =>
-                        openAlert(
-                            'revenge.plugins.settings.plugins.core-plugins.description',
-                            <AlertModal
-                                title="What are core plugins?"
-                                content="Core plugins are an essential part of Revenge. They provide core functionalities like allowing you to access this settings menu. Disabling core plugins may cause unexpected behavior."
-                                actions={<AlertActionButton variant="secondary" text="Got it" />}
-                            />,
-                        )
-                    }
-                />
-            </View>
-            <ScrollView contentContainerStyle={{ flex: 1 }}>
-                <MasonryFlashList
-                    fadingEdgeLength={32}
-                    key={numColumns}
-                    data={data}
-                    renderItem={({ item, columnIndex }) => (
-                        <PluginCard {...item} horizontalGaps={dimensions.width > 464 && columnIndex < numColumns - 1} />
-                    )}
-                    // Don't ask...
-                    estimatedItemSize={24.01 + 32 + 62 * PixelRatio.getFontScale() ** 1.35}
-                    keyExtractor={item => item.id}
-                    numColumns={numColumns}
-                    keyboardShouldPersistTaps="handled"
-                />
-            </ScrollView>
+            <PluginSettingsPageContext.Provider
+                value={{ setQuery, showCorePlugins, sortMode, ContextMenuComponent: MemoizedContextMenu }}
+            >
+                {pluginListEmpty ? (
+                    <PluginsSettingsPageEmptyView />
+                ) : (
+                    <>
+                        <PluginsSettingsPageSearch />
+                        <ScrollView fadingEdgeLength={32} keyboardShouldPersistTaps="handled" style={styles.resizable}>
+                            <PluginsSettingsPageMasonaryFlashList data={externalPluginsData} />
+                            {showCorePluginsInformationAlert && (
+                                <PluginsSettingsPageMasonaryFlashList
+                                    header={
+                                        <View style={styles.headerContainer}>
+                                            {/* TableRowGroupTitle probably has some margin, setting it to flex-end causes it to be in the center, lucky. */}
+                                            <TableRowGroupTitle title="Core Plugins" />
+                                            <IconButton
+                                                icon={getAssetIndexByName('CircleQuestionIcon-primary')!}
+                                                size="sm"
+                                                variant="tertiary"
+                                                onPress={showCorePluginsInformationAlert}
+                                            />
+                                        </View>
+                                    }
+                                    data={corePluginsData}
+                                />
+                            )}
+                        </ScrollView>
+                    </>
+                )}
+            </PluginSettingsPageContext.Provider>
         </PageWrapper>
     )
 }
 
-function showDisableCorePluginConfirmation() {
-    return new Promise<boolean>(resolve => {
-        openAlert(
-            'revenge.plugins.settings.plugins.core-plugins.disable-warning',
-            <AlertModal
-                title="Disable core plugin?"
-                content="Core plugins are an essential part of Revenge. Disabling them may cause unexpected behavior."
-                actions={
-                    <>
-                        <AlertActionButton variant="destructive" text="Disable anyways" onPress={() => resolve(true)} />
-                        <AlertActionButton variant="secondary" text="Cancel" onPress={() => resolve(false)} />
-                    </>
-                }
-            />,
-        )
-    })
+function PluginsSettingsPageEmptyView() {
+    const { ContextMenuComponent } = useContext(PluginSettingsPageContext)
+
+    return (
+        <Stack spacing={24} style={[styles.growable, styles.centerChildren]}>
+            <Image source={getAssetIndexByName('empty')} style={styles.emptyImage} />
+            <Text variant="heading-lg/semibold">No plugins yet!</Text>
+            <View style={{ gap: 8 }}>
+                <Button
+                    size="lg"
+                    icon={getAssetIndexByName('DownloadIcon')}
+                    variant="primary"
+                    disabled
+                    text="Install a plugin"
+                />
+                <ContextMenuComponent>
+                    {props => (
+                        <Button
+                            {...props}
+                            size="lg"
+                            icon={getAssetIndexByName('FiltersHorizontalIcon')}
+                            variant="secondary"
+                            text="Change filters"
+                        />
+                    )}
+                </ContextMenuComponent>
+            </View>
+        </Stack>
+    )
+}
+
+type PluginsSettingsPageMasonaryFlashListData = Omit<PluginCardProps, 'horizontalGaps'>[]
+
+function PluginsSettingsPageMasonaryFlashList({
+    data,
+    header,
+}: {
+    header?: ReactElement
+    data: PluginsSettingsPageMasonaryFlashListData
+}) {
+    const dimensions = useWindowDimensions()
+    const numColumns = Math.floor((dimensions.width - 16) / 448)
+    // Don't ask...
+    const estimatedItemSize = 24.01 + 32 + 62 * PixelRatio.getFontScale() ** 1.35
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Nothing changes about this function, at all
+    const renderItem = useMemo(
+        () =>
+            ({
+                item,
+                columnIndex,
+            }: Parameters<
+                NonNullable<MasonryFlashListProps<PluginsSettingsPageMasonaryFlashListData[number]>['renderItem']>
+            >[0]) => <PluginCard {...item} horizontalGaps={dimensions.width > 464 && columnIndex < numColumns - 1} />,
+        [],
+    )
+
+    return (
+        <MasonryFlashList
+            stickyHeaderIndices={header ? [0] : undefined}
+            ListHeaderComponent={header}
+            renderItem={renderItem}
+            data={data}
+            keyExtractor={item => item.id}
+            numColumns={numColumns}
+            estimatedItemSize={estimatedItemSize}
+            keyboardShouldPersistTaps="handled"
+        />
+    )
+}
+
+function PluginsSettingsPageSearch() {
+    const { setQuery, ContextMenuComponent } = useContext(PluginSettingsPageContext)
+
+    return (
+        <View style={styles.queryContainer}>
+            <View style={styles.growable}>
+                <SearchInput
+                    isRound
+                    isClearable
+                    size="md"
+                    onChange={query => setQuery(query.replaceAll(/\s/g, '').toLowerCase())}
+                />
+            </View>
+            <ContextMenuComponent>
+                {props => (
+                    <IconButton {...props} icon={getAssetIndexByName('FiltersHorizontalIcon')!} variant="tertiary" />
+                )}
+            </ContextMenuComponent>
+        </View>
+    )
 }
 
 function showReloadRequiredAlert(enabling: boolean) {
@@ -214,6 +385,17 @@ function showReloadRequiredAlert(enabling: boolean) {
                     <AlertActionButton variant="secondary" text="Not now" />
                 </>
             }
+        />,
+    )
+}
+
+function showCorePluginsInformationAlert() {
+    return openAlert(
+        'revenge.plugins.settings.plugins.core-plugins.description',
+        <AlertModal
+            title="What are core plugins?"
+            content="Core plugins are an essential part of Revenge. They provide core functionalities like allowing you to access this settings menu. Disabling core plugins may cause unexpected behavior."
+            actions={<AlertActionButton variant="secondary" text="Got it" />}
         />,
     )
 }
