@@ -33,10 +33,14 @@ jobs:
       - name: Build Revenge
         run: npm run build -- --minify
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+      - name: Upload revenge.min.js
+        uses: actions/upload-artifact@v4
         with:
-          name: revenge-artifacts
-          path: |
-            ./dist/revenge.min.js
-            ./dist/revenge.js
+          name: revenge-min
+          path: ./dist/revenge.min.js
+
+      - name: Upload revenge.js
+        uses: actions/upload-artifact@v4
+        with:
+          name: revenge
+          path: ./dist/revenge.js
