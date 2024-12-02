@@ -1,0 +1,40 @@
+name: Build & Upload Artifact
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions: write-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build Revenge
+        run: bun run build -- --minify
+
+      - name: Upload revenge.min.js
+        uses: actions/upload-artifact@v4
+        with:
+          name: revenge-min
+          path: ./dist/revenge.min.js
+
+      - name: Upload revenge.js
+        uses: actions/upload-artifact@v4
+        with:
+          name: revenge
+          path: ./dist/revenge.js
