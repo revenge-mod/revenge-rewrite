@@ -16,3 +16,4 @@ export type IconComponentProps = {
 }
 
 export const CopyIcon = wrapIcon(findProp<IconComponent>('CopyIcon')!)
+export const CheckmarkLargeIcon = wrapIcon(findProp<IconComponent>('CheckmarkLargeIcon')!)

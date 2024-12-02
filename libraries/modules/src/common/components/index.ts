@@ -22,6 +22,9 @@ export const {
     FloatingActionButton,
     RowButton,
 
+    // Context Menus
+    ContextMenu,
+
     // Tables
 
     TableRow,
@@ -72,6 +75,8 @@ export const {
             ImageButton: DiscordModules.Components.ImageButton
             FloatingActionButton: DiscordModules.Components.FloatingActionButton
             RowButton: DiscordModules.Components.RowButton
+
+            ContextMenu: DiscordModules.Components.ContextMenu
 
             TableRow: DiscordModules.Components.TableRow
             TableSwitchRow: DiscordModules.Components.TableSwitchRow
