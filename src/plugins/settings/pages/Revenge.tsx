@@ -1,15 +1,16 @@
-import { NavigationNative } from '@revenge-mod/modules/common'
+import { getAssetIndexByName } from '@revenge-mod/assets'
+import { NavigationNative, links } from '@revenge-mod/modules/common'
 import { TableRow, TableRowGroup, TableRowIcon } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { settings } from '@revenge-mod/preferences'
 import { useObservable } from '@revenge-mod/storage'
 
 import PageWrapper from './(Wrapper)'
+import { DiscordURL, GitHubURL } from '../constants'
 
 import { ScrollView } from 'react-native'
 
 export default function RevengeSettingsPage() {
-    const { assets } = revenge
     const navigation = NavigationNative.useNavigation()
 
     useObservable([settings])
@@ -20,15 +21,35 @@ export default function RevengeSettingsPage() {
                 <TableRowGroup title="Info">
                     <TableRow
                         label="About"
-                        icon={<TableRowIcon source={assets.getIndexByName('CircleInformationIcon-primary')!} />}
+                        icon={<TableRowIcon source={getAssetIndexByName('CircleInformationIcon-primary')!} />}
                         arrow
                         onPress={() => navigation.push('RevengeAbout')}
+                    />
+                </TableRowGroup>
+                <TableRowGroup title="Revenge">
+                    <TableRow
+                        label="Discord"
+                        icon={<TableRowIcon source={getAssetIndexByName('Discord')!} />}
+                        arrow
+                        onPress={() => links.openDeeplink(DiscordURL)}
+                    />
+                    <TableRow
+                        label="GitHub"
+                        icon={<TableRowIcon source={getAssetIndexByName('img_account_sync_github_white')!} />}
+                        arrow
+                        onPress={() => links.openURL(GitHubURL)}
+                    />
+                    <TableRow
+                        label="Contributors"
+                        icon={<TableRowIcon source={getAssetIndexByName('FriendsIcon')!} />}
+                        arrow
+                        onPress={() => navigation.push('RevengeContributors')}
                     />
                 </TableRowGroup>
                 <TableRowGroup title="Actions">
                     <TableRow
                         label="Reload Discord"
-                        icon={<TableRowIcon source={assets.getIndexByName('RetryIcon')!} />}
+                        icon={<TableRowIcon source={getAssetIndexByName('RetryIcon')!} />}
                         // Passing BundleUpdaterManager.reload directly just explodes for some reason. Maybe onPress had args?
                         onPress={() => BundleUpdaterManager.reload()}
                     />
