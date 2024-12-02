@@ -8,9 +8,6 @@ import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { ComponentType } from 'react'
 import type { DiscordModules } from '../types'
 
-// ! Make sure everything is lazily loaded, otherwise the app will freeze
-// ! If lazily loading things break, we'll need to dynamically import after initializeModules
-
 export * as components from './components'
 export * as stores from './stores'
 
@@ -49,11 +46,11 @@ export const legacy_alerts = findByProps('openLazy', 'close')!
 
 export const alerts = findByProps('openAlert', 'dismissAlert')!
 export const channels = findByProps('getVoiceChannelId')!
-export const links = findByProps<DiscordModules.LinkingUtils>('openDeepLink')!
+export const links = findByProps<DiscordModules.LinkingUtils>('openURL', 'openDeeplink')!
 export const clipboard = findByProps<DiscordModules.ClipboardUtils>('getImagePNG')!
 export const invites = findByProps<DiscordModules.InviteUtils>('createInvite')!
 export const commands = findByProps('getBuiltInCommands')!
-export const toasts = findByFilePath('modules/toast/native/ToastActionCreators.tsx', true)!
+export const toasts = findByFilePath<DiscordModules.ToastActionCreators, true>('modules/toast/native/ToastActionCreators.tsx', true)!
 export const messages = findByProps<DiscordModules.MessageUtils>('sendBotMessage')!
 
 export const NavigationStack = findByProps<typeof import('@react-navigation/stack')>('createStackNavigator')!

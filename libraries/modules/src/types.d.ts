@@ -181,6 +181,21 @@ export type LazyModule<T> = T extends unknown | undefined
 /// COMMON
 
 export namespace DiscordModules {
+    export interface ToastActionCreators {
+        open(options: {
+            key: string
+            content?: string
+            icon?: number | FC
+            IconComponent?: FC
+            /**
+             * The icon's color, same string format as `<Text>`'s color prop
+             */
+            iconColor?: string
+            containerStyle?: ViewStyle
+        })
+        close(): void
+    }
+
     export interface Alerts {
         openAlert(key: string, alert: JSX.Element): void
         dismissAlerts(): void
@@ -209,7 +224,7 @@ export namespace DiscordModules {
          * Opens a deep link
          * @param link The deep link to open
          */
-        openDeepLink(link?: string): void
+        openDeeplink(link?: string): void
     }
 
     export namespace Flux {
@@ -306,7 +321,14 @@ export namespace DiscordModules {
         export type BaseButtonProps = PressableProps & {
             disabled?: boolean
             size?: ButtonSize
-            variant?: 'primary' | 'secondary' | 'tertiary' | 'destructive' | 'active' | 'primary-overlay' | 'secondary-overlay'
+            variant?:
+                | 'primary'
+                | 'secondary'
+                | 'tertiary'
+                | 'destructive'
+                | 'active'
+                | 'primary-overlay'
+                | 'secondary-overlay'
             loading?: boolean
             grow?: boolean
             scaleAmountInPx?: number
@@ -549,8 +571,20 @@ export namespace DiscordModules {
         export type AlertActionButton = Button
 
         // Menus
-        export type ContextMenu = FC
-        export type ContextMenuContainer = FC
+        export type ContextMenu = FC<{
+            title: string
+            triggerOnLongPress?: boolean
+            items: Array<ContextMenuItem | ContextMenuItem[]>
+            align?: 'left' | 'right' | 'above' | 'below'
+            children: (props: Partial<BaseButtonProps>) => ReactNode
+        }>
+
+        export type ContextMenuItem = {
+            label: string
+            IconComponent?: FC
+            variant?: 'default' | 'destructive'
+            action(): void
+        }
 
         // Other
         export type Slider = FC
