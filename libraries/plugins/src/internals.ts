@@ -3,7 +3,7 @@ import { isAppRendered } from '@revenge-mod/app'
 import type { Metro } from '@revenge-mod/modules'
 import { subscribeModule } from '@revenge-mod/modules/metro'
 
-import { pluginsStates } from '@revenge-mod/preferences'
+import { pluginsStates, type PluginStates } from '@revenge-mod/preferences'
 
 import { type Patcher, createPatcherInstance } from '@revenge-mod/patcher'
 import { awaitStorage, createStorage } from '@revenge-mod/storage'
@@ -60,26 +60,42 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         })
     }
 
+    let status = PluginStatus.Stopped
+    const startedStatus =
+        definition.beforeAppRender || definition.afterAppRender ? PluginStatus.Started : PluginStatus.StartedEarly
+
     const internalPlugin = objectSeal({
         ...definition,
+        state: lazyValue(
+            () =>
+                // Manageable?
+                // - Yes: Check preferences, default to false if it doesn't exist
+                // - No: Check predicate, default to if core
+                (pluginsStates[definition.id] ??= {
+                    enabled: manageable ? false : (predicate?.() ?? core),
+                    errors: [],
+                }),
+        ),
         get enabled() {
-            // Manageable?
-            // - Yes: Check preferences, default to false if it doesn't exist
-            // - No: Check predicate, default to if core
-            return manageable ? (pluginsStates[definition.id]?.enabled ?? false) : (predicate?.() ?? core)
+            return this.state.enabled
         },
         set enabled(val: boolean) {
             if (!manageable) throw new Error(`Cannot enable/disable unmanageable plugin: ${this.id}`)
-
-            if (definition.id in pluginsStates) pluginsStates[definition.id]!.enabled = val
-            else pluginsStates[definition.id] = { enabled: val }
+            this.state.enabled = val
         },
         get stopped() {
+            // TODO: Maybe do something about this
             return this.status === PluginStatus.Stopped || this.status === PluginStatus.StartedEarly
         },
         core,
         manageable,
-        status: PluginStatus.Stopped,
+        get status() {
+            return status
+        },
+        set status(val) {
+            status = val
+            if (val === startedStatus) this.state.errors = []
+        },
         SettingsComponent: definition.settings,
         errors: [],
         disable() {
@@ -166,6 +182,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
 
             // Since plugins always get stopped when encountering an error, we can throw this
             if (this.errors.length) {
+                this.state.errors.push(...this.errors)
                 const msg = `Plugin "${this.id}" encountered ${this.errors.length} errors\n${this.errors.map(getErrorStack).join('\n')}`
                 logger.error(msg)
                 throw new AggregateError(this.errors, msg)
@@ -229,6 +246,7 @@ export type InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedR
     PluginDefinition<PluginStorage, AppLaunchedReturn, AppInitializedReturn>,
     'settings'
 > & {
+    state: PluginStates[PluginDefinition['id']]
     /**
      * Runs when a Metro module loads, useful for patching modules very early on.
      * @internal
