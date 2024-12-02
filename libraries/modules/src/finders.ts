@@ -95,15 +95,19 @@ export const find = Object.assign(
     },
 )
 
+export type NonExact<T = unknown> = Branded<T, 'NonExact'>
+
 export type ByProps<
     Struct = Record<string, Metro.ModuleExports[string]>,
     AdditionalProps extends string = string,
 > = Undefinable<
-    Struct & {
-        [Key in AdditionalProps[number]]: Metro.ModuleExports[Key]
-    } & {
-        [Key in PropertyKey]: Metro.ModuleExports[Key]
-    }
+    Struct extends NonExact
+        ? Struct & {
+              [Key in AdditionalProps]: Metro.ModuleExports[Key]
+          } & {
+              [Key in PropertyKey]: Metro.ModuleExports[Key]
+          }
+        : Struct
 >
 
 /**
