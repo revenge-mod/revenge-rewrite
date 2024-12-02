@@ -1,7 +1,16 @@
 import { ReactJSXRuntime } from '@revenge-mod/modules/common'
 import { patcher } from './shared'
 
-import type { ComponentProps, ElementType, JSXElementConstructor, ReactElement } from 'react'
+import type { ComponentProps, ElementType, ReactElement } from 'react'
+import { StyleSheet, type ViewProps } from 'react-native'
+
+const styles = StyleSheet.create({
+    hidden: {
+        display: 'none',
+    },
+})
+
+let patched = false
 
 const beforeCallbacks: Record<string, Set<JSXBeforeComponentCreateCallback>> = {}
 const afterCallbacks: Record<string, Set<JSXAfterComponentCreateCallback>> = {}
@@ -12,20 +21,24 @@ const patchCallback = (
 ) => {
     const [Comp, props] = args
 
+    // Hopefully fixes iOS "invalid element type" issue after patching ErrorBoundary
+    // Comp can be undefined for some reason
+    // @ts-expect-error
+    if (typeof (Comp?.type ?? Comp) === 'undefined') {
+        args[0] = 'RCTView' as keyof JSX.IntrinsicElements
+        args[1] = { style: styles.hidden } satisfies ViewProps
+        return orig.apply(ReactJSXRuntime, args)
+    }
+
     const name =
         typeof Comp === 'string'
             ? Comp
             : (Comp?.name ??
               // @ts-expect-error
-              (typeof Comp?.type === 'string' ? Comp.type : (Comp?.type as JSXElementConstructor<unknown>)?.name) ??
+              (typeof Comp?.type === 'string' ? Comp.type : Comp?.type?.name) ??
               Comp?.displayName)
 
-    if (!name) {
-        // Hopefully fixes iOS "invalid element type" issue after patching ErrorBoundary
-        // Comp can be undefined for some reason
-        if (typeof (Comp?.type ?? Comp) === "undefined") args[0] = null
-        return orig.apply(ReactJSXRuntime, args)
-    }
+    if (!name) return orig.apply(ReactJSXRuntime, args)
 
     let newArgs = args
     if (name in beforeCallbacks)
@@ -46,11 +59,16 @@ const patchCallback = (
     return tree
 }
 
-// Without this timeout, patching succeeds, but results in app freeze (similar to freezing Metro module)
-setTimeout(() => {
-    patcher.instead(ReactJSXRuntime, 'jsx', patchCallback, 'patchJsxRuntime')
-    patcher.instead(ReactJSXRuntime, 'jsxs', patchCallback, 'patchJsxRuntime')
-})
+const patchJsxRuntimeIfNotPatched = () => {
+    if (patched) return
+    patched = true
+
+    // Without this timeout, patching succeeds, but results in app freeze (similar to freezing Metro module)
+    setTimeout(() => {
+        patcher.instead(ReactJSXRuntime, 'jsx', patchCallback, 'patchJsxRuntime')
+        patcher.instead(ReactJSXRuntime, 'jsxs', patchCallback, 'patchJsxRuntime')
+    })
+}
 
 export const ReactJSXLibrary = {
     beforeElementCreate: beforeJSXElementCreate,
@@ -74,6 +92,7 @@ export function afterJSXElementCreate<E extends ElementType = ElementType, P = C
     elementName: string,
     callback: JSXAfterComponentCreateCallback<E, P>,
 ) {
+    patchJsxRuntimeIfNotPatched()
     if (!(elementName in afterCallbacks)) afterCallbacks[elementName] = new Set()
     afterCallbacks[elementName]!.add(callback as JSXAfterComponentCreateCallback)
 }
@@ -82,6 +101,7 @@ export function beforeJSXElementCreate<E extends ElementType = ElementType, P = 
     elementName: string,
     callback: JSXBeforeComponentCreateCallback<E, P>,
 ) {
+    patchJsxRuntimeIfNotPatched()
     if (!(elementName in beforeCallbacks)) beforeCallbacks[elementName] = new Set()
     beforeCallbacks[elementName]!.add(callback as JSXBeforeComponentCreateCallback)
 }
