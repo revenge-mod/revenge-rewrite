@@ -14,24 +14,21 @@ permissions: write-all
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '23'
-
       - name: Install Bun
-        run: npm install --global bun
+        run: curl -fsSL https://bun.sh/install | bash
+
+      - name: Set up Bun
+        run: echo 'export BUN_INSTALL="/home/runner/.bun"' >> $GITHUB_ENV
 
       - name: Install Dependencies
         run: bun install
 
       - name: Build Revenge
-        run: npm run build -- --minify
+        run: bun run build -- --minify
 
       - name: Upload revenge.min.js
         uses: actions/upload-artifact@v4
