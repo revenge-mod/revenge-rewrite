@@ -70,6 +70,14 @@ const patchJsxRuntimeIfNotPatched = () => {
     })
 }
 
+const unpatchIfNoListenersLeft = () => {
+    if (Object.values(beforeCallbacks).some(set => set.size) || Object.values(afterCallbacks).some(set => set.size))
+        return
+
+    patcher.unpatchAll()
+    patched = false
+}
+
 export const ReactJSXLibrary = {
     beforeElementCreate: beforeJSXElementCreate,
     afterElementCreate: afterJSXElementCreate,
@@ -93,8 +101,14 @@ export function afterJSXElementCreate<E extends ElementType = ElementType, P = C
     callback: JSXAfterComponentCreateCallback<E, P>,
 ) {
     patchJsxRuntimeIfNotPatched()
-    if (!(elementName in afterCallbacks)) afterCallbacks[elementName] = new Set()
-    afterCallbacks[elementName]!.add(callback as JSXAfterComponentCreateCallback)
+
+    const set = (afterCallbacks[elementName] ??= new Set())
+    set.add(callback as JSXAfterComponentCreateCallback)
+
+    return () => {
+        set.delete(callback as JSXAfterComponentCreateCallback)
+        unpatchIfNoListenersLeft()
+    }
 }
 
 export function beforeJSXElementCreate<E extends ElementType = ElementType, P = ComponentProps<E>>(
@@ -102,8 +116,14 @@ export function beforeJSXElementCreate<E extends ElementType = ElementType, P = 
     callback: JSXBeforeComponentCreateCallback<E, P>,
 ) {
     patchJsxRuntimeIfNotPatched()
-    if (!(elementName in beforeCallbacks)) beforeCallbacks[elementName] = new Set()
-    beforeCallbacks[elementName]!.add(callback as JSXBeforeComponentCreateCallback)
+
+    const set = (beforeCallbacks[elementName] ??= new Set())
+    set.add(callback as JSXBeforeComponentCreateCallback)
+
+    return () => {
+        set.delete(callback as JSXBeforeComponentCreateCallback)
+        unpatchIfNoListenersLeft()
+    }
 }
 
 // @ts-expect-error
