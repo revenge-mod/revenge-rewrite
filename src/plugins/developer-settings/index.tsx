@@ -8,7 +8,7 @@ import DeveloperSettingsPage from './pages/Developer'
 
 import { DevToolsEvents, connectToDevTools } from './devtools'
 
-import type { PluginDefinition } from '@revenge-mod/plugins'
+import type { PluginContextFor } from '@revenge-mod/plugins'
 import type { FunctionComponent } from 'react'
 
 const plugin = registerPlugin<{
@@ -98,6 +98,4 @@ const plugin = registerPlugin<{
     true,
 )
 
-type PluginContextFor<T> = T extends PluginDefinition ? Parameters<NonNullable<T['afterAppRender']>>[0] : never
-
-export const PluginContext = React.createContext<PluginContextFor<typeof plugin>>(null!)
+export const PluginContext = React.createContext<PluginContextFor<typeof plugin, 'AfterAppRender'>>(null!)
