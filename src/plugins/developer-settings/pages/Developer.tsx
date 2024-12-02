@@ -10,7 +10,7 @@ import {
     TextArea,
     TextInput,
 } from '@revenge-mod/modules/common/components'
-import { BundleUpdaterManager } from '@revenge-mod/modules/native'
+import { BundleUpdaterManager, FileModule } from '@revenge-mod/modules/native'
 import { storageContextSymbol, useObservable } from '@revenge-mod/storage'
 
 import PageWrapper from '../../../plugins/settings/pages/(Wrapper)'
@@ -162,6 +162,16 @@ export default function DeveloperSettingsPage() {
                         icon={<TableRowIcon variant="danger" source={assets.getIndexByName('TrashIcon')!} />}
                         onPress={async () => {
                             await settings[storageContextSymbol].file.delete()
+                            BundleUpdaterManager.reload()
+                        }}
+                    />
+                    <TableRow
+                        variant="danger"
+                        label="Clear Plugins Data"
+                        subLabel="This will remove the all plugin-related data and reload the app."
+                        icon={<TableRowIcon variant="danger" source={assets.getIndexByName('TrashIcon')!} />}
+                        onPress={async () => {
+                            await FileModule.clearFolder('documents', './revenge/plugins')
                             BundleUpdaterManager.reload()
                         }}
                     />
