@@ -6,7 +6,6 @@ import { useObservable } from '@revenge-mod/storage'
 
 import PageWrapper from './(Wrapper)'
 
-import type { ComponentType } from 'react'
 import { ScrollView } from 'react-native'
 
 export default function RevengeSettingsPage() {
@@ -34,28 +33,7 @@ export default function RevengeSettingsPage() {
                         onPress={() => BundleUpdaterManager.reload()}
                     />
                 </TableRowGroup>
-                {rows.size ? (
-                    <TableRowGroup title="Advanced">
-                        {[...rows].map((Row, index) => (
-                            <Row key={index.toString()} />
-                        ))}
-                    </TableRowGroup>
-                ) : null}
             </PageWrapper>
         </ScrollView>
     )
-}
-
-const rows = new Set<ComponentType>()
-
-/**
- * Yes, this is oddly specific, but who cares
- * @internal
- */
-export function addTableRowsToAdvancedSectionInRevengePage(...comps: ComponentType[]) {
-    for (const comp of comps) rows.add(comp)
-
-    return () => {
-        for (const comp of comps) rows.delete(comp)
-    }
 }
