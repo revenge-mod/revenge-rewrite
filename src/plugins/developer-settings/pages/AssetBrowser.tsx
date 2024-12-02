@@ -13,7 +13,7 @@ import { cache as metroCache } from '@revenge-mod/modules/metro'
 import { SearchInput } from '@revenge-mod/ui/components'
 
 import { useState } from 'react'
-import { Image, View } from 'react-native'
+import { Image } from 'react-native'
 
 import type { Metro } from '@revenge-mod/modules'
 import type { ReactNativeInternals } from '@revenge-mod/revenge'

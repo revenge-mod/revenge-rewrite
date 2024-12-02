@@ -1,3 +1,4 @@
+import { getAssetIndexByName } from '@revenge-mod/assets'
 import { clipboard, toasts } from '@revenge-mod/modules/common'
 import {
     Icons,
@@ -8,12 +9,11 @@ import {
 } from '@revenge-mod/modules/common/components'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 
-import { type ImageSourcePropType, ScrollView } from 'react-native'
 import PageWrapper from './(Wrapper)'
 
-import type { ComponentProps } from 'react'
+import { ScrollView } from 'react-native'
 
-const { assets } = revenge
+import type { ComponentProps } from 'react'
 
 export default function AboutSettingsPage() {
     const runtimeProps = (HermesInternal as HermesInternalObject).getRuntimeProperties()
@@ -25,12 +25,12 @@ export default function AboutSettingsPage() {
                     {[
                         {
                             label: 'Revenge',
-                            icon: assets.getIndexByName('Revenge.RevengeIcon')!,
+                            icon: 'Revenge.RevengeIcon',
                             trailing: `${__REVENGE_RELEASE__} (${__REVENGE_HASH__}${__REVENGE_HASH_DIRTY__ ? '-dirty' : ''})`,
                         },
                         {
                             label: 'Discord',
-                            icon: assets.getIndexByName('Discord')!,
+                            icon: 'Discord',
                             trailing: `${ClientInfoModule.Version} (${ClientInfoModule.Build})`,
                         },
                     ].map(props => (
@@ -42,17 +42,17 @@ export default function AboutSettingsPage() {
                     {[
                         {
                             label: 'React',
-                            icon: assets.getIndexByName('Revenge.ReactIcon')!,
+                            icon: 'Revenge.ReactIcon',
                             trailing: React.version,
                         },
                         {
                             label: 'React Native',
-                            icon: assets.getIndexByName('Revenge.ReactIcon')!,
+                            icon: 'Revenge.ReactIcon',
                             trailing: runtimeProps['OSS Release Version']!.slice(7),
                         },
                         {
                             label: 'Hermes Bytecode',
-                            icon: assets.getIndexByName('Revenge.HermesIcon')!,
+                            icon: 'Revenge.HermesIcon',
                             trailing: `${runtimeProps['Bytecode Version']} (${runtimeProps.Build})`,
                         },
                     ].map(props => (
@@ -66,12 +66,12 @@ export default function AboutSettingsPage() {
 }
 
 function VersionRow(
-    props: Omit<ComponentProps<typeof TableRow>, 'icon' | 'trailing'> & { icon: ImageSourcePropType; trailing: string },
+    props: Omit<ComponentProps<typeof TableRow>, 'icon' | 'trailing'> & { icon: string; trailing: string },
 ) {
     return (
         <TableRow
             label={props.label}
-            icon={<TableRowIcon source={props.icon} />}
+            icon={<TableRowIcon source={getAssetIndexByName(props.icon)!} />}
             trailing={<TableRowTrailingText text={props.trailing!} />}
             onPress={() => {
                 clipboard.setString(`${props.label} - ${props.trailing}`)
