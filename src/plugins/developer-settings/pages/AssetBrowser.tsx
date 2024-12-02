@@ -7,16 +7,18 @@ import {
     Icons,
     Stack,
     TableRow,
+    TableRowGroup,
     Text,
 } from '@revenge-mod/modules/common/components'
 import { cache as metroCache } from '@revenge-mod/modules/metro'
 import { SearchInput } from '@revenge-mod/ui/components'
 
 import { useState } from 'react'
-import { Image, View } from 'react-native'
+import { Image } from 'react-native'
 
 import type { Metro } from '@revenge-mod/modules'
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
+import PageWrapper from 'src/plugins/settings/pages/(Wrapper)'
 
 const DisplayableTypes = new Set(['png', 'jpg', 'svg', 'webp'])
 
@@ -115,34 +117,39 @@ export default function AssetBrowserSettingsPage() {
     const [search, setSearch] = useState('')
 
     return (
-        <View style={{ gap: 16, paddingHorizontal: 16, paddingTop: 16, flexGrow: 1 }}>
+        <PageWrapper>
             <SearchInput size="md" style={{ margin: 10 }} onChange={(v: string) => setSearch(v)} />
-            <FlashList
-                data={Object.keys(metroCache.assets)
-                    .concat(Object.keys(customAssets))
-                    .filter(name => {
-                        const source =
-                            name in metroCache.assets
-                                ? metroCache.assets
-                                : name in customAssets
-                                  ? customAssets
-                                  : undefined
+            <TableRowGroup>
+                <FlashList
+                    style={{ flex: 1 }}
+                    data={Object.keys(metroCache.assets)
+                        .concat(Object.keys(customAssets))
+                        .filter(name => {
+                            const source =
+                                name in metroCache.assets
+                                    ? metroCache.assets
+                                    : name in customAssets
+                                      ? customAssets
+                                      : undefined
 
-                        if (!source) return false
-                        return name.toLowerCase().includes(search.toLowerCase()) || source[name]?.toString() === search
-                    })
-                    .map(name => {
-                        const index = (metroCache.assets[name] ?? customAssets[name])!
+                            if (!source) return false
+                            return (
+                                name.toLowerCase().includes(search.toLowerCase()) || source[name]?.toString() === search
+                            )
+                        })
+                        .map(name => {
+                            const index = (metroCache.assets[name] ?? customAssets[name])!
 
-                        return {
-                            index,
-                            asset: getAssetByIndex(index)!,
-                            moduleId: metroCache.assetModules[name],
-                        }
-                    })}
-                renderItem={({ item }) => <AssetDisplay {...item} />}
-                estimatedItemSize={80}
-            />
-        </View>
+                            return {
+                                index,
+                                asset: getAssetByIndex(index)!,
+                                moduleId: metroCache.assetModules[name],
+                            }
+                        })}
+                    renderItem={({ item }) => <AssetDisplay {...item} />}
+                    estimatedItemSize={80}
+                />
+            </TableRowGroup>
+        </PageWrapper>
     )
 }
