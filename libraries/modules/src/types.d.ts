@@ -306,7 +306,7 @@ export namespace DiscordModules {
         export type BaseButtonProps = PressableProps & {
             disabled?: boolean
             size?: ButtonSize
-            variant?: 'primary' | 'secondary' | 'destructive' | 'active' | 'primary-overlay' | 'secondary-overlay'
+            variant?: 'primary' | 'secondary' | 'tertiary' | 'destructive' | 'active' | 'primary-overlay' | 'secondary-overlay'
             loading?: boolean
             grow?: boolean
             scaleAmountInPx?: number
@@ -407,6 +407,7 @@ export namespace DiscordModules {
 
         export type TextInput = FC<
             TextFieldProps & {
+                isRound?: boolean
                 label?: string
             }
         >
