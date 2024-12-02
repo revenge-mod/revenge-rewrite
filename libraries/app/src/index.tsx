@@ -66,18 +66,16 @@ const unpatchCreateElement = patcher.after(
     'runRenderCallbacks',
 )
 
-// TODO: NEEDS WOKAROUND
-// Patching ErrorBoundary afterInitialized causes the weird "Element type is invalid" error due to TextInputWrapper
 const afterErrorBoundaryPatchable = ReactNative.Platform.OS === 'ios' ? afterAppRender : afterAppInitialize
 
 afterErrorBoundaryPatchable(async function patchErrorBoundary() {
-    if (ReactNative.Platform.OS === 'ios') ReactJSXLibrary.afterElementCreate('PortalKeyboardPlaceholderInner', () => null)
-
     const { default: Screen } = await import('./components/ErrorBoundaryScreen')
 
     setImmediate(() => {
         patcher.after.await(
-            findByName.async<ErrorBoundaryComponentPrototype, true>('ErrorBoundary').then(it => it!.prototype),
+            findByName
+                .async<{ new (): ErrorBoundaryComponentPrototype }, true>('ErrorBoundary')
+                .then(it => it!.prototype),
             'render',
             function () {
                 if (this.state.error)
