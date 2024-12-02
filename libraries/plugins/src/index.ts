@@ -4,7 +4,7 @@ import { getErrorStack } from '@revenge-mod/utils/errors'
 import { appRenderedCallbacks, corePluginIds, plugins, registerPlugin } from './internals'
 import { logger } from './shared'
 
-import type { PluginDefinition, PluginStorage } from './types'
+import type { PluginDefinition, PluginStage, PluginStorage } from './types'
 
 export type * from './types'
 
@@ -66,3 +66,7 @@ export function startPluginsMetroModuleSubscriptions() {
 }
 
 export type PluginsLibrary = typeof PluginsLibrary
+
+export type PluginContextFor<Definition, Stage extends PluginStage> = Definition extends PluginDefinition
+    ? Parameters<NonNullable<Definition[Uncapitalize<Stage>]>>[0]
+    : never
