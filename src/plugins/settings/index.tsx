@@ -12,13 +12,24 @@ import {
 } from '@revenge-mod/ui/settings'
 
 import AboutSettingsPage from './pages/About'
+import ContributorsSettingsPage from './pages/Contributors'
 import CustomPageRenderer from './pages/CustomPageRenderer'
 import PluginsSettingsPage from './pages/Plugins'
 import RevengeSettingsPage from './pages/Revenge'
 
-import type { FC } from 'react'
+import Contributors from './contributors'
 
-registerPlugin(
+import { createContext, type FC } from 'react'
+import type { PluginContextFor } from '@revenge-mod/plugins'
+
+export type Storage = {
+    plugins: {
+        sortMode: 'asc' | 'dsc'
+        showCorePlugins: boolean
+    }
+}
+
+const plugin = registerPlugin<Storage>(
     {
         name: 'Settings',
         author: 'Revenge',
@@ -26,14 +37,28 @@ registerPlugin(
         id: 'revenge.settings',
         version: '1.0.0',
         icon: 'SettingsIcon',
-        async afterAppRender({
-            patcher,
-            revenge: {
-                assets,
-                modules,
-                ui: { settings: sui },
-            },
-        }) {
+        async afterAppRender(context) {
+            const {
+                patcher,
+                revenge: {
+                    assets,
+                    modules,
+                    ui: { settings: sui },
+                },
+            } = context
+
+            for (const member of Contributors.team.concat(Contributors.contributors)) {
+                if (!member.icon) continue
+
+                assets.registerCustom(
+                    {
+                        name: `Revenge.Contributors.${member.name}`,
+                        type: 'webp',
+                    },
+                    member.icon,
+                )
+            }
+
             sui.createSection({
                 name: 'Revenge',
                 settings: {
@@ -47,7 +72,11 @@ registerPlugin(
                         type: 'route',
                         label: 'Plugins',
                         icon: assets.getIndexByName('Revenge.PluginIcon'),
-                        component: PluginsSettingsPage,
+                        component: () => (
+                            <PluginContext.Provider value={context}>
+                                <PluginsSettingsPage />
+                            </PluginContext.Provider>
+                        ),
                     },
                 },
             })
@@ -57,6 +86,13 @@ registerPlugin(
                 label: 'About',
                 component: AboutSettingsPage,
                 icon: assets.getIndexByName('CircleInformationIcon-primary'),
+            })
+
+            sui.createRoute('RevengeContributors', {
+                type: 'route',
+                label: 'Contributors',
+                component: ContributorsSettingsPage,
+                icon: assets.getIndexByName('FriendsIcon'),
             })
 
             sui.createRoute('RevengeCustomPage', {
@@ -81,7 +117,7 @@ registerPlugin(
                 configurable: true,
                 get: () =>
                     ({
-                        ...getCustomRows(),
+                        ...getCustomSettingRows(),
                         ...rendererConfig,
                     }) satisfies Record<string, RawRowConfig>,
                 set: v => (rendererConfig = v),
@@ -123,23 +159,31 @@ registerPlugin(
                 'addNewSettingsSections',
             )
         },
+        initializeStorage: () => ({
+            plugins: {
+                sortMode: 'asc',
+                showCorePlugins: true,
+            },
+        }),
     },
     true,
 )
 
-export const getCustomRows = () => {
+export const PluginContext = createContext<PluginContextFor<typeof plugin, 'AfterAppRender'>>(null!)
+
+function getCustomSettingRows() {
     // OMG, UNBOUND REFERENCE????
     return [...Object.values(customData.sections), { name: '(unbound)', settings: customData.rows }]
         .map(section =>
             Object.entries(section.settings).reduce<Record<string, RawRowConfig>>((rows, [key, row]) => {
-                rows[key] = transformRowToRawRow(key, row)
+                rows[key] = transformSettingRowToRawSettingRow(key, row)
                 return rows
             }, {}),
         )
         .reduce((rows, newRows) => Object.assign(rows, newRows), {})
 }
 
-const transformRowToRawRow = (key: string, row: RowConfig): RawRowConfig => {
+function transformSettingRowToRawSettingRow(key: string, row: RowConfig): RawRowConfig {
     return {
         title: () => row.label,
         parent: row.parent ?? null,
