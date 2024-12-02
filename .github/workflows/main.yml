@@ -1,13 +1,11 @@
-name: Build & Release
+name: Build & Upload Artifact
 on:
   push:
     branches:
       - main
-      - release-branch
   pull_request:
     branches:
       - main
-      - release-branch
 
 permissions: write-all
 
