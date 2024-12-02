@@ -33,33 +33,10 @@ jobs:
       - name: Build Revenge
         run: npm run build -- --minify
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
         with:
-          tag_name: ${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Release revenge.min.js
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/revenge.min.js
-          asset_name: revenge.min.js
-          asset_content_type: application/javascript
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Release revenge.js
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/revenge.js
-          asset_name: revenge.js
-          asset_content_type: application/javascript
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: revenge-artifacts
+          path: |
+            ./dist/revenge.min.js
+            ./dist/revenge.js
