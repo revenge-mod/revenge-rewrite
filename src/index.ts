@@ -41,7 +41,7 @@ async function initialize() {
                 startPluginsMetroModuleSubscriptions: startCorePluginsMetroModuleSubscriptions,
             },
             { awaitStorage },
-            PreferencesLibrary,
+            { settings, pluginsStates },
         ] = await Promise.all([
             import('@revenge-mod/plugins'),
             import('@revenge-mod/storage'),
@@ -65,7 +65,6 @@ async function initialize() {
         await import('./plugins')
         recordTimestamp('Plugins_CoreImported')
 
-        const { settings, pluginsStates } = await PreferencesLibrary
         await awaitStorage(settings, pluginsStates)
         recordTimestamp('Storage_Initialized')
 
