@@ -15,12 +15,17 @@ const patchCallback = (
     const name =
         typeof Comp === 'string'
             ? Comp
-            : (Comp.name ??
+            : (Comp?.name ??
               // @ts-expect-error
-              (typeof Comp.type === 'string' ? Comp.type : (Comp.type as JSXElementConstructor<unknown>)?.name) ??
-              Comp.displayName)
+              (typeof Comp?.type === 'string' ? Comp.type : (Comp?.type as JSXElementConstructor<unknown>)?.name) ??
+              Comp?.displayName)
 
-    if (!name) return orig.apply(ReactJSXRuntime, args)
+    if (!name) {
+        // Hopefully fixes iOS "invalid element type" issue after patching ErrorBoundary
+        // Comp can be undefined for some reason
+        if (typeof (Comp?.type ?? Comp) === "undefined") args[0] = null
+        return orig.apply(ReactJSXRuntime, args)
+    }
 
     let newArgs = args
     if (name in beforeCallbacks)
