@@ -14,7 +14,6 @@ registerPlugin(
                 exports.default = new Proxy(exports.default, {
                     get(target, property, receiver) {
                         if (property === 'isDeveloper') return true
-                        
 
                         return Reflect.get(target, property, receiver)
                     },
@@ -23,7 +22,7 @@ registerPlugin(
         },
         beforeStop() {
             return { reloadRequired: true }
-        }
+        },
     },
     true,
     true,

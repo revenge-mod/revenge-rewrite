@@ -54,9 +54,12 @@ export type PluginDefinition<Storage = any, AppLaunchedReturn = any, AppInitiali
      * Runs before your plugin is stopped
      * @param context The context for this lifecycle
      */
-    beforeStop?: (context: PluginContext<'BeforeStop', Storage, AppLaunchedReturn, AppInitializedReturn>) => {
-        reloadRequired?: boolean
-    } | undefined | void
+    beforeStop?: (context: PluginContext<'BeforeStop', Storage, AppLaunchedReturn, AppInitializedReturn>) =>
+        | {
+              reloadRequired?: boolean
+          }
+        | undefined
+        | void
 } & {
     settings?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
     initializeStorage?: () => Storage

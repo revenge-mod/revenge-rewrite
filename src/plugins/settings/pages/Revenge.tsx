@@ -5,8 +5,8 @@ import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { settings } from '@revenge-mod/preferences'
 import { useObservable } from '@revenge-mod/storage'
 
-import PageWrapper from './(Wrapper)'
 import { DiscordURL, GitHubURL } from '../constants'
+import PageWrapper from './(Wrapper)'
 
 import { ScrollView } from 'react-native'
 

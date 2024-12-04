@@ -19,8 +19,8 @@ import RevengeSettingsPage from './pages/Revenge'
 
 import Contributors from './contributors'
 
-import { createContext, type FC } from 'react'
 import type { PluginContextFor } from '@revenge-mod/plugins'
+import { type FC, createContext } from 'react'
 
 export type Storage = {
     plugins: {

@@ -50,7 +50,10 @@ export const links = findByProps<DiscordModules.LinkingUtils>('openURL', 'openDe
 export const clipboard = findByProps<DiscordModules.ClipboardUtils>('getImagePNG')!
 export const invites = findByProps<DiscordModules.InviteUtils>('createInvite')!
 export const commands = findByProps('getBuiltInCommands')!
-export const toasts = findByFilePath<DiscordModules.ToastActionCreators, true>('modules/toast/native/ToastActionCreators.tsx', true)!
+export const toasts = findByFilePath<DiscordModules.ToastActionCreators, true>(
+    'modules/toast/native/ToastActionCreators.tsx',
+    true,
+)!
 export const messages = findByProps<DiscordModules.MessageUtils>('sendBotMessage')!
 
 export const NavigationStack = findByProps<typeof import('@react-navigation/stack')>('createStackNavigator')!

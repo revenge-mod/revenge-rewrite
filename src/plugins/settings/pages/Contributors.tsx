@@ -4,8 +4,8 @@ import { TableRow, TableRowGroup, TableRowIcon } from '@revenge-mod/modules/comm
 
 import { Image, ScrollView, StyleSheet } from 'react-native'
 
-import PageWrapper from './(Wrapper)'
 import Contributors from '../contributors'
+import PageWrapper from './(Wrapper)'
 
 const styles = StyleSheet.create({
     avatar: {

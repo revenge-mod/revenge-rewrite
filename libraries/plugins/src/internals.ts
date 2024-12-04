@@ -3,7 +3,7 @@ import { isAppRendered } from '@revenge-mod/app'
 import type { Metro } from '@revenge-mod/modules'
 import { subscribeModule } from '@revenge-mod/modules/metro'
 
-import { pluginsStates, type PluginStates } from '@revenge-mod/preferences'
+import { type PluginStates, pluginsStates } from '@revenge-mod/preferences'
 
 import { type Patcher, createPatcherInstance } from '@revenge-mod/patcher'
 import { awaitStorage, createStorage } from '@revenge-mod/storage'
@@ -20,8 +20,8 @@ import type {
     PluginContext,
     PluginDefinition,
     PluginModuleSubscriptionContext,
-    PluginStorage,
     PluginStopConfig,
+    PluginStorage,
 } from '.'
 
 export const appRenderedCallbacks = new Set<() => Promise<unknown>>()

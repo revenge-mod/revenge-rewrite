@@ -23,23 +23,23 @@ import { FormSwitch, SearchInput } from '@revenge-mod/ui/components'
 import PageWrapper from './(Wrapper)'
 
 import {
+    type ComponentProps,
+    type FC,
+    type MemoExoticComponent,
+    type ReactElement,
     createContext,
     memo,
     useContext,
     useMemo,
     useState,
-    type ComponentProps,
-    type FC,
-    type MemoExoticComponent,
-    type ReactElement,
 } from 'react'
 import { Image, PixelRatio, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 
-import type { MasonryFlashListProps } from '@shopify/flash-list'
-import { CheckmarkLargeIcon } from '@revenge-mod/modules/common/components/icons'
-import { useObservable } from '@revenge-mod/storage'
-import { pluginsStates } from '@revenge-mod/preferences'
 import type { DiscordModules } from '@revenge-mod/modules'
+import { CheckmarkLargeIcon } from '@revenge-mod/modules/common/components/icons'
+import { pluginsStates } from '@revenge-mod/preferences'
+import { useObservable } from '@revenge-mod/storage'
+import type { MasonryFlashListProps } from '@shopify/flash-list'
 import { PluginContext, type Storage } from '..'
 
 const usePluginCardStyles = createStyles({
