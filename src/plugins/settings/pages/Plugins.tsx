@@ -239,7 +239,7 @@ export default function PluginsSettingsPage() {
     const pluginListNoResults = pluginListEmpty && query
 
     return (
-        <PageWrapper>
+        <PageWrapper withTopControls>
             <PluginSettingsPageContext.Provider
                 value={{ setQuery, showCorePlugins, sortMode, ContextMenuComponent: MemoizedContextMenu }}
             >
