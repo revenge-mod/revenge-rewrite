@@ -1,9 +1,11 @@
 import {
+    FirstAssetTypeRegisteredKey,
     IndexMetroModuleId,
     MetroCacheKey,
     MetroCacheVersion,
     MetroModuleFlags,
     MetroModuleLookupFlags,
+    assetCacheIndexSymbol,
 } from '../constants'
 import { byProps } from '../filters'
 import { findId } from '../finders'
@@ -34,14 +36,21 @@ export const cache = {
      */
     lookupFlags: {} as MetroCacheObject['l'],
     /**
-     * Registry for assets, the key being the name, and the value being the asset index
+     * Registry for assets, the key being the name, and the value being objects with the asset type as key and the index as value
      * #### This is in-memory.
      */
-    assets: {} as Record<Asset['name'], number>,
+    assets: {
+        [assetCacheIndexSymbol]: {},
+    } as Record<Asset['name'], Record<Asset['type'], number>> & {
+        [assetCacheIndexSymbol]: Record<number, Asset['name']>
+    },
     /**
-     * Registry for assets modules, the key being the name, and the value being the module ID of the module that registers the asset
+     * Registry for assets modules, the key being the name,
+     * and the value being objects with the asset type as key and the module ID of the module that registers the asset as value
      */
-    assetModules: {} as MetroCacheObject['a'],
+    assetModules: {
+        [assetCacheIndexSymbol]: {},
+    } as MetroCacheObject['a'],
     /**
      * Registry for patchable modules, the key being the patch, and the value being the module ID of the module to patch
      *
@@ -88,6 +97,9 @@ export async function restoreCache() {
     cache.exportsFlags = storedCache.e
     cache.lookupFlags = storedCache.l
     cache.assetModules = storedCache.a
+
+    cache.assets[assetCacheIndexSymbol] = {}
+    cache.assetModules[assetCacheIndexSymbol] = {}
 
     return true
 }
@@ -193,10 +205,20 @@ export function cacheModuleAsBlacklisted(id: Metro.ModuleIDKey) {
 type Asset = ReactNativeInternals.AssetsRegistry.PackagerAsset
 
 /** @internal */
-export function cacheAsset(name: Asset['name'], index: number, moduleId: Metro.ModuleID) {
-    cache.assets[name] = index
-    cache.assetModules[name] = moduleId
+export function cacheAsset(name: Asset['name'], index: number, moduleId: Metro.ModuleID, type: Asset['type']) {
+    cache.assets[name] ??= {}
+    // @ts-expect-error: Why is TypeScript like this?
+    cache.assetModules[name] ??= { [FirstAssetTypeRegisteredKey]: type }
+
+    cache.assets[name][type] = index
+    cache.assetModules[name]![type] ??= moduleId
+
+    // All in-memory
+    cache.assets[assetCacheIndexSymbol][index] = name
+    cache.assetModules[assetCacheIndexSymbol][index] = cache.assetModules[name]![type]
+
     cache.exportsFlags[moduleId]! |= MetroModuleFlags.Asset
+
     saveCache()
 }
 
@@ -219,7 +241,10 @@ export interface MetroCacheObject {
     t: number
     e: Record<Metro.ModuleIDKey, number>
     l: Record<string, MetroLookupCacheRegistry | undefined>
-    a: Record<Asset['name'], Metro.ModuleID>
+    a: Record<
+        Asset['name'],
+        Record<Asset['type'], Metro.ModuleID> & { [FirstAssetTypeRegisteredKey]: Asset['type'] }
+    > & { [assetCacheIndexSymbol]: Record<number, Metro.ModuleID> }
     p: Record<'f' | 'r' | 'b' | 's' | 'd' | 'm', number | undefined>
 }
 

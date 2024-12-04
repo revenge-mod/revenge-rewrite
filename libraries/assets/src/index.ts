@@ -3,6 +3,8 @@ import { findByName } from '@revenge-mod/modules/finders'
 import { cacheAsset, getImportingModuleId, cache as metroCache, requireModule } from '@revenge-mod/modules/metro'
 import { createPatcherInstance } from '@revenge-mod/patcher'
 
+import { FirstAssetTypeRegisteredKey, assetCacheIndexSymbol } from '@revenge-mod/modules/constants'
+
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { ImageSourcePropType } from 'react-native'
 
@@ -17,13 +19,15 @@ type CustomAsset = PackagerAsset & {
     [CustomAssetBrandKey]: string
 }
 
+let defaultPreferredType: PackagerAsset['type'] = ReactNative.Platform.OS === 'ios' ? 'png' : 'svg'
+
 patcher.after(
     assetsRegistry,
     'registerAsset',
     ([asset], index) => {
         if (CustomAssetBrandKey in asset) return
         const moduleId = getImportingModuleId()
-        cacheAsset(asset.name, index, moduleId)
+        cacheAsset(asset.name, index, moduleId, asset.type)
     },
     'patchRegisterAsset',
 )
@@ -64,11 +68,23 @@ export const AssetsLibrary = {
     getByName: getAssetByName,
     getIndexByName: getAssetIndexByName,
     getByIndex: getAssetByIndex,
+    getModuleIdByName: getAssetModuleIdByName,
+    getModuleIdByIndex: getAssetModuleIdByIndex,
+    getTypesByName: getAssetTypesByName,
+    getTypesByIndex: getAssetTypesByIndex,
+    setDefaultPreferredType: setDefaultPreferredAssetType,
 }
 
 export type AssetsLibrary = typeof AssetsLibrary
 
 export function registerCustomAsset(asset: Pick<PackagerAsset, 'width' | 'height' | 'type' | 'name'>, source: string) {
+    // TODO: Support multiple custom assets with the same name
+
+    if (asset.name in customAssets)
+        throw new Error(
+            'Custom asset with the same name already exists, and registering multiple custom assets with the same name is not supported yet',
+        )
+
     return (customAssets[asset.name] = assetsRegistry.registerAsset({
         ...asset,
         __packager_asset: true,
@@ -79,6 +95,11 @@ export function registerCustomAsset(asset: Pick<PackagerAsset, 'width' | 'height
     } as PackagerAsset))
 }
 
+/**
+ * Returns whether the asset is a custom asset, registered by a plugin
+ * @param asset The asset to check
+ * @returns Whether the asset is a custom asset
+ */
 export function isCustomAsset(asset: PackagerAsset): asset is CustomAsset {
     return CustomAssetBrandKey in asset
 }
@@ -88,8 +109,9 @@ export function isCustomAsset(asset: PackagerAsset): asset is CustomAsset {
  * @param name The name of the asset
  * @returns The asset tied to the name
  */
-export function getAssetByName(name: string) {
-    return getAssetByIndex((customAssets[name] ?? metroCache.assets[name])!)
+export function getAssetByName(name: string, preferredType: PackagerAsset['type'] = defaultPreferredType) {
+    if (name in customAssets) return getAssetByIndex(customAssets[name]!)
+    return getAssetByIndex(getAssetIndexByName(name, preferredType)!)
 }
 
 /**
@@ -102,14 +124,78 @@ export function getAssetByIndex(index: number) {
 }
 
 /**
- * Returns the asset index tied to given name
+ * Returns the preferred asset index tied to given name
  * @param name The name of the asset
- * @returns The asset index tied to the name
+ * @param preferredType The preferred asset type
+ * @returns The preferred asset index tied to the name
  */
-export function getAssetIndexByName(name: string) {
+export function getAssetIndexByName(name: string, preferredType: PackagerAsset['type'] = defaultPreferredType) {
     if (name in customAssets) return customAssets[name]
 
-    const moduleId = metroCache.assetModules[name]
-    if (!moduleId) return
-    return (metroCache.assets[name] ??= requireModule(moduleId))
+    const assetModule = metroCache.assetModules[name]
+    if (!assetModule) return
+
+    const mid = assetModule[preferredType] ?? assetModule[getFirstRegisteredAssetTypeByName(name)!]
+    if (typeof mid === 'undefined') return
+
+    return requireModule(mid)
+}
+
+/**
+ * Returns the asset's registrar module ID tied to the given asset name
+ * @param name The name of the asset
+ * @param preferredType The preferred asset type
+ * @returns The asset's registrar module ID
+ */
+export function getAssetModuleIdByName(name: string, preferredType: PackagerAsset['type'] = defaultPreferredType) {
+    const moduleIds = metroCache.assetModules[name]
+    if (!moduleIds) return
+    return moduleIds[preferredType] ?? moduleIds[getFirstRegisteredAssetTypeByName(name)!]
+}
+
+/**
+ * Returns the asset's registrar module ID tied to the given asset index
+ * @param index The index of the asset
+ * @returns The asset's registrar module ID
+ */
+export function getAssetModuleIdByIndex(index: number) {
+    return metroCache.assetModules[assetCacheIndexSymbol][index]
+}
+
+/**
+ * Returns the preferred asset's types tied to the given asset name
+ * @param name The name of the asset
+ * @param preferredType The preferred asset type
+ * @returns The preferred asset's types tied to the name
+ */
+export function getAssetTypesByName(name: string, preferredType: PackagerAsset['type'] = defaultPreferredType) {
+    return getAssetTypesByIndex(getAssetIndexByName(name, preferredType)!)
+}
+
+/**
+ * Returns the asset's types tied to the given asset index
+ * @param index The index of the asset
+ * @returns The asset's types tied to the index
+ */
+export function getAssetTypesByIndex(index: number) {
+    return Object.keys(metroCache.assetModules[assetCacheIndexSymbol][index] ?? {})
+}
+
+/**
+ * Returns the first registered asset type tied to the given asset name
+ * @param name The name of the asset
+ * @returns The first registered asset type tied to the name
+ */
+export function getFirstRegisteredAssetTypeByName(name: string): PackagerAsset['type'] | undefined {
+    return metroCache.assetModules[name]?.[FirstAssetTypeRegisteredKey]
+}
+
+/**
+ * Sets the default preferred asset type
+ * - Android: `svg`
+ * - iOS: `png` (iOS cannot display SVGs natively)
+ * @param type
+ */
+export function setDefaultPreferredAssetType(type: PackagerAsset['type']) {
+    defaultPreferredType = type
 }

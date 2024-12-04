@@ -109,16 +109,18 @@ function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
             unpatch()
 
             const originalImportingId = importingModuleId
-            importingModuleId = id
 
             const { 4: moduleObject } = args
 
             try {
+                importingModuleId = id
                 origFunc(...args)
             } catch (error) {
                 logger.log(`Blacklisted module ${id} because it could not be initialized: ${error}`)
                 blacklistModule(id)
             }
+
+            importingModuleId = originalImportingId
 
             if (isModuleExportsBad(moduleObject.exports)) blacklistModule(id)
             else {
@@ -126,8 +128,6 @@ function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
                 if (subs) for (const sub of subs) sub(id, moduleObject.exports)
                 for (const sub of subscriptions.all) sub(id, moduleObject.exports)
             }
-
-            importingModuleId = originalImportingId
         },
         'moduleFactory',
     )

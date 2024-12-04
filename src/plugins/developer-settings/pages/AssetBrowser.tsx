@@ -1,4 +1,4 @@
-import { customAssets, getAssetByIndex, getAssetIndexByName } from '@revenge-mod/assets'
+import { customAssets, getAssetByIndex, getAssetIndexByName, getAssetModuleIdByIndex } from '@revenge-mod/assets'
 import { clipboard, openAlert, toasts } from '@revenge-mod/modules/common'
 import {
     AlertActionButton,
@@ -9,15 +9,16 @@ import {
     TableRow,
     Text,
 } from '@revenge-mod/modules/common/components'
-import { cache as metroCache } from '@revenge-mod/modules/metro'
+import { cache as metroCache, requireModule } from '@revenge-mod/modules/metro'
 import { SearchInput } from '@revenge-mod/ui/components'
 
 import { useState } from 'react'
 import { Image } from 'react-native'
 
+import PageWrapper from '../../../plugins/settings/pages/(Wrapper)'
+
 import type { Metro } from '@revenge-mod/modules'
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
-import PageWrapper from 'src/plugins/settings/pages/(Wrapper)'
 
 const DisplayableTypes = new Set(['png', 'jpg', 'svg', 'webp'])
 
@@ -119,26 +120,29 @@ export default function AssetBrowserSettingsPage() {
         <PageWrapper>
             <SearchInput size="md" onChange={(v: string) => setSearch(v)} />
             <FlashList
-                data={Object.keys(metroCache.assets)
-                    .concat(Object.keys(customAssets))
-                    .filter(name => {
-                        const source =
-                            name in metroCache.assets
-                                ? metroCache.assets
-                                : name in customAssets
-                                  ? customAssets
-                                  : undefined
-
-                        if (!source) return false
-                        return name.toLowerCase().includes(search.toLowerCase()) || source[name]?.toString() === search
+                data={Object.values(metroCache.assetModules)
+                    .flatMap(
+                        reg =>
+                            Object.values(reg)
+                                .filter(x => typeof x === 'number')
+                                .map(requireModule) as number[],
+                    )
+                    .concat(Object.values(customAssets))
+                    .map(index => {
+                        const asset = getAssetByIndex(index)
+                        return [index, asset!] as const
                     })
-                    .map(name => {
-                        const index = (metroCache.assets[name] ?? customAssets[name])!
-
+                    .filter(
+                        ([index, asset]) =>
+                            asset.name.toLowerCase().includes(search.toLowerCase()) ||
+                            index.toString().includes(search) ||
+                            asset.type.includes(search),
+                    )
+                    .map(([index, asset]) => {
                         return {
                             index,
-                            asset: getAssetByIndex(index)!,
-                            moduleId: metroCache.assetModules[name],
+                            asset,
+                            moduleId: getAssetModuleIdByIndex(index),
                         }
                     })}
                 renderItem={({ item }) => <AssetDisplay {...item} />}
