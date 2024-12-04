@@ -235,36 +235,47 @@ export default function PluginsSettingsPage() {
         ? corePluginsData.length + externalPluginsData.length
         : externalPluginsData.length)
 
+    // TODO: Maybe create 2 separate data lists for non-filtered and filtered plugins
+    const pluginListNoResults = pluginListEmpty && query
+
     return (
         <PageWrapper>
             <PluginSettingsPageContext.Provider
                 value={{ setQuery, showCorePlugins, sortMode, ContextMenuComponent: MemoizedContextMenu }}
             >
-                {pluginListEmpty ? (
+                {pluginListEmpty && !pluginListNoResults ? (
                     <PluginsSettingsPageEmptyView />
                 ) : (
                     <>
                         <PluginsSettingsPageSearch />
-                        <ScrollView fadingEdgeLength={32} keyboardShouldPersistTaps="handled" style={styles.resizable}>
-                            <PluginsSettingsPageMasonaryFlashList data={externalPluginsData} />
-                            {showCorePluginsInformationAlert && (
-                                <PluginsSettingsPageMasonaryFlashList
-                                    header={
-                                        <View style={styles.headerContainer}>
-                                            {/* TableRowGroupTitle probably has some margin, setting it to flex-end causes it to be in the center, lucky. */}
-                                            <TableRowGroupTitle title="Core Plugins" />
-                                            <IconButton
-                                                icon={getAssetIndexByName('CircleQuestionIcon-primary')!}
-                                                size="sm"
-                                                variant="tertiary"
-                                                onPress={showCorePluginsInformationAlert}
-                                            />
-                                        </View>
-                                    }
-                                    data={corePluginsData}
-                                />
-                            )}
-                        </ScrollView>
+                        {pluginListNoResults ? (
+                            <PluginsSettingsPageNoResultsView />
+                        ) : (
+                            <ScrollView
+                                fadingEdgeLength={32}
+                                keyboardShouldPersistTaps="handled"
+                                style={styles.resizable}
+                            >
+                                <PluginsSettingsPageMasonaryFlashList data={externalPluginsData} />
+                                {showCorePluginsInformationAlert && (
+                                    <PluginsSettingsPageMasonaryFlashList
+                                        header={
+                                            <View style={styles.headerContainer}>
+                                                {/* TableRowGroupTitle probably has some margin, setting it to flex-end causes it to be in the center, lucky. */}
+                                                <TableRowGroupTitle title="Core Plugins" />
+                                                <IconButton
+                                                    icon={getAssetIndexByName('CircleQuestionIcon-primary')!}
+                                                    size="sm"
+                                                    variant="tertiary"
+                                                    onPress={showCorePluginsInformationAlert}
+                                                />
+                                            </View>
+                                        }
+                                        data={corePluginsData}
+                                    />
+                                )}
+                            </ScrollView>
+                        )}
                     </>
                 )}
             </PluginSettingsPageContext.Provider>
@@ -299,6 +310,15 @@ function PluginsSettingsPageEmptyView() {
                     )}
                 </ContextMenuComponent>
             </View>
+        </Stack>
+    )
+}
+
+function PluginsSettingsPageNoResultsView() {
+    return (
+        <Stack spacing={24} style={[styles.growable, styles.centerChildren]}>
+            <Image source={getAssetIndexByName('empty_quick_switcher')} style={styles.emptyImage} />
+            <Text variant="heading-lg/semibold">No results...</Text>
         </Stack>
     )
 }
