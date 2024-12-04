@@ -18,22 +18,24 @@ export default {
             name: 'Marsh',
             icon: 'https://github.com/marshift.png',
             url: 'https://marsh.zone',
-            roles: ['Collaborator']
+            roles: ['Collaborator'],
         },
         {
             name: 'Cristian',
             icon: 'https://github.com/Cristiandis.png',
             url: 'https://github.com/Cristiandis',
-            roles: ['Contributor', 'Early iOS Tester']
+            roles: ['Contributor', 'Early iOS Tester'],
         },
         {
             name: 'Bread Cat',
-            roles: ['Early iOS Tester']
+            icon: 'https://github.com/breadcat0314.png',
+            roles: ['Early iOS Tester'],
+            url: 'https://github.com/breadcat0314',
         },
         {
             name: 'Puhbu',
             icon: 'https://github.com/puhbu.png',
-            roles: ['Early Android Tester']
-        }
+            roles: ['Early Android Tester'],
+        },
     ],
 } as Record<'team' | 'contributors', Array<{ name: string; icon?: string; url?: string; roles: string[] }>>
