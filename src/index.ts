@@ -36,7 +36,6 @@ async function initialize() {
 
         const [
             {
-                PluginsLibrary,
                 startCorePlugins,
                 startPluginsMetroModuleSubscriptions: startCorePluginsMetroModuleSubscriptions,
             },
@@ -52,7 +51,6 @@ async function initialize() {
             app: AppLibrary,
             assets: AssetsLibrary,
             modules: ModulesLibrary,
-            plugins: PluginsLibrary,
             react: {
                 jsx: ReactJSXLibrary,
             },
