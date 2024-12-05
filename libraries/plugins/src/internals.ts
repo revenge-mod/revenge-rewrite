@@ -7,6 +7,7 @@ import { type PluginStates, pluginsStates } from '@revenge-mod/preferences'
 
 import { type Patcher, createPatcherInstance } from '@revenge-mod/patcher'
 import { awaitStorage, createStorage } from '@revenge-mod/storage'
+import { PluginStoragePath } from '@revenge-mod/shared/paths'
 
 import { getErrorStack } from '@revenge-mod/utils/errors'
 import { objectSeal } from '@revenge-mod/utils/functions'
@@ -19,6 +20,7 @@ import type React from 'react'
 import type {
     PluginContext,
     PluginDefinition,
+    PluginManifest,
     PluginModuleSubscriptionContext,
     PluginStopConfig,
     PluginStorage,
@@ -40,6 +42,7 @@ const DefaultStopConfig: Required<PluginStopConfig> = {
 
 export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void, AppInitializedReturn = void>(
     definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &
+        PluginManifest &
         Partial<
             Omit<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>, keyof PluginDefinition>
         >,
@@ -55,7 +58,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
 
     const prepareStorageAndPatcher = () => {
         instance.patcher ||= createPatcherInstance(`revenge.plugins.plugin#${definition.id}`)
-        instance.storage ||= createStorage(`revenge/plugins/${definition.id}/storage.json`, {
+        instance.storage ||= createStorage(PluginStoragePath(definition.id), {
             initial: definition.initializeStorage?.() ?? {},
         })
     }
@@ -245,79 +248,80 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
 export type InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> = Omit<
     PluginDefinition<PluginStorage, AppLaunchedReturn, AppInitializedReturn>,
     'settings'
-> & {
-    state: PluginStates[PluginDefinition['id']]
-    /**
-     * Runs when a Metro module loads, useful for patching modules very early on.
-     * @internal
-     */
-    onMetroModuleLoad?: (
-        context: PluginModuleSubscriptionContext<Storage>,
-        id: Metro.ModuleID,
-        exports: Metro.ModuleExports,
-        unsubscribe: () => void,
-    ) => void
-    /**
-     * Disables the plugin
-     * @returns A full plugin stop config object
-     * @see {@link PluginStopConfig}
-     */
-    disable(): Required<PluginStopConfig>
-    /**
-     * Enables the plugin
-     * @internal
-     * @returns Whether a reload should be required
-     */
-    enable(): boolean
-    /**
-     * Starts the plugin's Metro module subscriptions (if it exists)
-     * @internal
-     */
-    startMetroModuleSubscriptions: () => void
-    /**
-     * Starts the plugin normal lifecycles
-     * @internal
-     */
-    start(): Promise<void>
-    /**
-     * Stops the plugin
-     * @internal
-     * @returns A full plugin stop config object
-     */
-    stop(): Required<PluginStopConfig>
-    /**
-     * Whether the plugin is stopped
-     * @internal
-     */
-    stopped: boolean
-    /**
-     * Whether the plugin is enabled. This will be set to `false` in the `beforeStop` lifecycle if the user disables the plugin.
-     */
-    enabled: boolean
-    /**
-     * The plugin's status
-     * @internal
-     */
-    status: (typeof PluginStatus)[keyof typeof PluginStatus]
-    /**
-     * The plugin's settings component
-     * @internal
-     **/
-    SettingsComponent?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
-    /**
-     * Whether the plugin is a core plugin
-     * @internal
-     */
-    core: boolean
-    /**
-     * Whether the plugin is manageable (can be disabled/enabled)
-     * @internal
-     */
-    manageable: boolean
-    /**
-     * The plugin's errors
-     * @internal
-     **/
-    // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
-    errors: any[]
-}
+> &
+    PluginManifest & {
+        state: PluginStates[PluginManifest['id']]
+        /**
+         * Runs when a Metro module loads, useful for patching modules very early on.
+         * @internal
+         */
+        onMetroModuleLoad?: (
+            context: PluginModuleSubscriptionContext<Storage>,
+            id: Metro.ModuleID,
+            exports: Metro.ModuleExports,
+            unsubscribe: () => void,
+        ) => void
+        /**
+         * Disables the plugin
+         * @returns A full plugin stop config object
+         * @see {@link PluginStopConfig}
+         */
+        disable(): Required<PluginStopConfig>
+        /**
+         * Enables the plugin
+         * @internal
+         * @returns Whether a reload should be required
+         */
+        enable(): boolean
+        /**
+         * Starts the plugin's Metro module subscriptions (if it exists)
+         * @internal
+         */
+        startMetroModuleSubscriptions: () => void
+        /**
+         * Starts the plugin normal lifecycles
+         * @internal
+         */
+        start(): Promise<void>
+        /**
+         * Stops the plugin
+         * @internal
+         * @returns A full plugin stop config object
+         */
+        stop(): Required<PluginStopConfig>
+        /**
+         * Whether the plugin is stopped
+         * @internal
+         */
+        stopped: boolean
+        /**
+         * Whether the plugin is enabled. This will be set to `false` in the `beforeStop` lifecycle if the user disables the plugin.
+         */
+        enabled: boolean
+        /**
+         * The plugin's status
+         * @internal
+         */
+        status: (typeof PluginStatus)[keyof typeof PluginStatus]
+        /**
+         * The plugin's settings component
+         * @internal
+         **/
+        SettingsComponent?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
+        /**
+         * Whether the plugin is a core plugin
+         * @internal
+         */
+        core: boolean
+        /**
+         * Whether the plugin is manageable (can be disabled/enabled)
+         * @internal
+         */
+        manageable: boolean
+        /**
+         * The plugin's errors
+         * @internal
+         **/
+        // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
+        errors: any[]
+    }

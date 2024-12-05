@@ -26,23 +26,24 @@ import {
 import { settings } from '@revenge-mod/preferences'
 import { ScrollView } from 'react-native'
 import { PluginContext } from '..'
+import { useContext, useEffect, useRef, useState } from 'react'
+import { PluginsDirectoryPath } from '@revenge-mod/shared/paths'
 
 export default function DeveloperSettingsPage() {
+    const context = useContext(PluginContext)
     const {
         storage,
         revenge: { assets, modules },
-    } = React.useContext(PluginContext)
+    } = context
 
     useObservable([storage])
 
     const navigation = NavigationNative.useNavigation()
 
-    const refEvalCode = React.useRef('')
-    const refDevToolsAddr = React.useRef(storage.reactDevTools.address || 'localhost:8097')
+    const refDevToolsAddr = useRef(storage.reactDevTools.address || 'localhost:8097')
+    const [connected, setConnected] = useState(DevToolsContext.connected)
 
-    const [connected, setConnected] = React.useState(DevToolsContext.connected)
-
-    React.useEffect(() => {
+    useEffect(() => {
         const listener: DevToolsEventsListeners['*'] = evt => {
             if (evt === 'connect') setConnected(true)
             else setConnected(false)
@@ -114,38 +115,9 @@ export default function DeveloperSettingsPage() {
                         onPress={() => {
                             alerts.openAlert(
                                 'revenge.plugins.storage.evaluate',
-                                <AlertModal
-                                    title="Evaluate JavaScript"
-                                    extraContent={
-                                        <TextArea
-                                            autoFocus
-                                            label="Code"
-                                            size="md"
-                                            placeholder="ReactNative.NativeModules.BundleUpdaterManager.reload()"
-                                            onChange={(v: string) => (refEvalCode.current = v)}
-                                        />
-                                    }
-                                    actions={
-                                        <Stack>
-                                            <AlertActionButton
-                                                text="Evaluate"
-                                                variant="primary"
-                                                onPress={() =>
-                                                    alert(
-                                                        modules.findProp<
-                                                            (val: unknown, opts?: { depth?: number }) => string
-                                                        >('inspect')!(
-                                                            // biome-ignore lint/security/noGlobalEval: This is intentional
-                                                            globalThis.eval(refEvalCode.current),
-                                                            { depth: 5 },
-                                                        ),
-                                                    )
-                                                }
-                                            />
-                                            <AlertActionButton text="Cancel" variant="secondary" />
-                                        </Stack>
-                                    }
-                                />,
+                                <PluginContext.Provider value={context}>
+                                    <DeveloperSettingsPageEvaluateJavaScriptAlert />
+                                </PluginContext.Provider>,
                             )
                         }}
                     />
@@ -171,7 +143,7 @@ export default function DeveloperSettingsPage() {
                         subLabel="This will remove the all plugin-related data and reload the app."
                         icon={<TableRowIcon variant="danger" source={assets.getIndexByName('TrashIcon')!} />}
                         onPress={async () => {
-                            await FileModule.clearFolder('documents', './revenge/plugins')
+                            await FileModule.clearFolder('documents', PluginsDirectoryPath)
                             BundleUpdaterManager.reload()
                         }}
                     />
@@ -223,5 +195,58 @@ export default function DeveloperSettingsPage() {
                 </TableRowGroup>
             </PageWrapper>
         </ScrollView>
+    )
+}
+
+function DeveloperSettingsPageEvaluateJavaScriptAlert() {
+    const {
+        revenge: { modules },
+    } = useContext(PluginContext)
+
+    const [evalAwaitResult, setEvalAwaitResult] = useState(true)
+    const codeRef = useRef('')
+
+    return (
+        <AlertModal
+            title="Evaluate JavaScript"
+            extraContent={
+                <Stack>
+                    <TextArea
+                        autoFocus
+                        label="Code"
+                        size="md"
+                        placeholder="ReactNative.NativeModules.BundleUpdaterManager.reload()"
+                        onChange={(v: string) => (codeRef.current = v)}
+                    />
+                    <TableRowGroup>
+                        <TableSwitchRow
+                            label="Await result"
+                            value={evalAwaitResult}
+                            onValueChange={v => setEvalAwaitResult(v)}
+                        />
+                    </TableRowGroup>
+                </Stack>
+            }
+            actions={
+                <Stack>
+                    <AlertActionButton
+                        text="Evaluate"
+                        variant="primary"
+                        onPress={async () => {
+                            // biome-ignore lint/security/noGlobalEval: This is intentional
+                            const res = globalThis.eval(codeRef.current)
+
+                            alert(
+                                modules.findProp<(val: unknown, opts?: { depth?: number }) => string>('inspect')!(
+                                    res instanceof Promise && evalAwaitResult ? await res : res,
+                                    { depth: 5 },
+                                ),
+                            )
+                        }}
+                    />
+                    <AlertActionButton text="Cancel" variant="secondary" />
+                </Stack>
+            }
+        />
     )
 }

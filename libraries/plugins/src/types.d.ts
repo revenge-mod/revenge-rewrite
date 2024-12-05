@@ -6,8 +6,7 @@ import type React from 'react'
 import type { WhitelistedPluginObjectKeys } from './constants'
 import type { InternalPluginDefinition } from './internals'
 
-// biome-ignore lint/suspicious/noExplicitAny: Defaulting to unknown does NOT work
-export type PluginDefinition<Storage = any, AppLaunchedReturn = any, AppInitializedReturn = any> = {
+export interface PluginManifest {
     /**
      * The friendly name of the plugin
      */
@@ -32,7 +31,10 @@ export type PluginDefinition<Storage = any, AppLaunchedReturn = any, AppInitiali
      * The icon of the plugin
      */
     icon?: string
+}
 
+// biome-ignore lint/suspicious/noExplicitAny: Defaulting to unknown does NOT work
+export type PluginDefinition<Storage = any, AppLaunchedReturn = any, AppInitializedReturn = any> = {
     /**
      * Runs before the app gets rendered AND even before the plugin is refetched and updated.
      * If your plugin receives a new update, your old version will continue to run until the user decides to reload the app.

@@ -1,7 +1,6 @@
 import type { AppLibrary } from '@revenge-mod/app'
 import type { AssetsLibrary } from '@revenge-mod/assets'
 import type { DiscordModules, Metro, ModulesLibrary } from '@revenge-mod/modules'
-import type { PluginLibrary, PluginsLibrary } from '@revenge-mod/plugins'
 import type { ReactJSXLibrary } from '@revenge-mod/react/jsx'
 import type { SettingsUILibrary } from '@revenge-mod/ui/settings'
 import type { ErrorUtils as RNErrorUtils } from 'react-native'
@@ -91,7 +90,6 @@ export interface RevengeLibrary {
      * @see {@link https://metrobundler.dev/}
      */
     modules: ModulesLibrary
-    plugins: PluginsLibrary
     ui: {
         settings: SettingsUILibrary
         colors: typeof import('@revenge-mod/ui/colors')

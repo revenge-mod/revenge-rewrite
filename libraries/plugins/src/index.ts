@@ -1,10 +1,10 @@
 import { afterAppRender } from '@revenge-mod/app'
 import { getErrorStack } from '@revenge-mod/utils/errors'
 
-import { appRenderedCallbacks, corePluginIds, plugins, registerPlugin } from './internals'
+import { appRenderedCallbacks, corePluginIds, plugins } from './internals'
 import { logger } from './shared'
 
-import type { PluginDefinition, PluginStage, PluginStorage } from './types'
+import type { PluginDefinition, PluginStage } from './types'
 
 export type * from './types'
 
@@ -12,19 +12,9 @@ afterAppRender(() => {
     for (const cb of appRenderedCallbacks) cb()
 })
 
-export const PluginsLibrary = {
-    /**
-     * Defines a plugin
-     * @param definition The plugin definition
-     * @returns The plugin object
-     */
-    definePlugin,
-}
-
-export function definePlugin<Storage = PluginStorage, AppLaunchedReturn = void, AppInitializedReturn = void>(
-    definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>,
-) {
-    return registerPlugin(definition)
+export function installPlugin() {
+    // TODO
+    throw new Error('Not implemented')
 }
 
 /**
@@ -64,8 +54,6 @@ export function startPluginsMetroModuleSubscriptions() {
     logger.info('Starting Metro module subscriptions for plugins...')
     for (const plugin of Object.values(plugins)) plugin.startMetroModuleSubscriptions!()
 }
-
-export type PluginsLibrary = typeof PluginsLibrary
 
 export type PluginContextFor<Definition, Stage extends PluginStage> = Definition extends PluginDefinition
     ? Parameters<NonNullable<Definition[Uncapitalize<Stage>]>>[0]

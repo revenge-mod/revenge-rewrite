@@ -1,3 +1,4 @@
+import { PluginsStatesFilePath, SettingsFilePath } from '@revenge-mod/shared/paths'
 import { createStorage } from '@revenge-mod/storage'
 
 export interface Settings {
@@ -15,7 +16,7 @@ export type SerializedPluginError = {
     stack: string
 }
 
-export const settings = createStorage<Settings>('revenge/settings.json', {
+export const settings = createStorage<Settings>(SettingsFilePath, {
     initial: {
         safeMode: {
             enabled: false,
@@ -24,6 +25,6 @@ export const settings = createStorage<Settings>('revenge/settings.json', {
     },
 })
 
-export const pluginsStates = createStorage<PluginStates>('revenge/plugins/states.json', {
+export const pluginsStates = createStorage<PluginStates>(PluginsStatesFilePath, {
     initial: {},
 })
