@@ -54,6 +54,7 @@ export const toasts = findByFilePath<DiscordModules.ToastActionCreators, true>(
     'modules/toast/native/ToastActionCreators.tsx',
     true,
 )!
+export const filePicker = findByProps<DiscordModules.FilePickerUtils>('handleDocumentSelection')!
 export const messages = findByProps<DiscordModules.MessageUtils>('sendBotMessage')!
 
 export const NavigationStack = findByProps<typeof import('@react-navigation/stack')>('createStackNavigator')!

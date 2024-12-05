@@ -181,6 +181,18 @@ export type LazyModule<T> = T extends unknown | undefined
 /// COMMON
 
 export namespace DiscordModules {
+    export interface FilePickerFile {
+        fileCopyUri: string | null
+        size: number
+        name: string
+        type: string
+        uri: string
+    }
+
+    export interface FilePickerUtils {
+        handleDocumentSelection(options?: { pickMultiple?: boolean }): Promise<FilePickerFile[]>
+    }
+
     export interface ToastActionCreators {
         open(options: {
             key: string
