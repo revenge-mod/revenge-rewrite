@@ -2,7 +2,7 @@ import { ReactJSXRuntime } from '@revenge-mod/modules/common'
 import { patcher } from './shared'
 
 import type { ComponentProps, ElementType, ReactElement } from 'react'
-import { StyleSheet, type ViewProps } from 'react-native'
+import { Platform, StyleSheet, type ViewProps } from 'react-native'
 
 const styles = StyleSheet.create({
     hidden: {
@@ -11,6 +11,7 @@ const styles = StyleSheet.create({
 })
 
 let patched = false
+const persistentPatch = Platform.OS === 'ios'
 
 const beforeCallbacks: Record<string, Set<JSXBeforeComponentCreateCallback>> = {}
 const afterCallbacks: Record<string, Set<JSXAfterComponentCreateCallback>> = {}
@@ -59,18 +60,19 @@ const patchCallback = (
     return tree
 }
 
+// Without setTimeout, causes app freeze
+setTimeout(() => persistentPatch && patchJsxRuntimeIfNotPatched())
+
 const patchJsxRuntimeIfNotPatched = () => {
     if (patched) return
     patched = true
 
-    // Without this timeout, patching succeeds, but results in app freeze (similar to freezing Metro module)
-    setTimeout(() => {
-        patcher.instead(ReactJSXRuntime, 'jsx', patchCallback, 'patchJsxRuntime')
-        patcher.instead(ReactJSXRuntime, 'jsxs', patchCallback, 'patchJsxRuntime')
-    })
+    patcher.instead(ReactJSXRuntime, 'jsx', patchCallback, 'patchJsxRuntime')
+    patcher.instead(ReactJSXRuntime, 'jsxs', patchCallback, 'patchJsxRuntime')
 }
 
 const unpatchIfNoListenersLeft = () => {
+    if (persistentPatch) return
     if (Object.values(beforeCallbacks).some(set => set.size) || Object.values(afterCallbacks).some(set => set.size))
         return
 
