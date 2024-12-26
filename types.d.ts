@@ -1,3 +1,4 @@
+import type { Buffer as _Buffer } from 'buffer'
 import type { AppLibrary } from '@revenge-mod/app'
 import type { AssetsLibrary } from '@revenge-mod/assets'
 import type { DiscordModules, Metro, ModulesLibrary } from '@revenge-mod/modules'
@@ -9,6 +10,8 @@ import type MessageQueue from 'react-native/Libraries/BatchedBridge/MessageQueue
 // All of these typings are exported, be careful what you export here!
 
 declare global {
+    var Buffer: typeof _Buffer
+
     var nativeModuleProxy: Record<string, unknown>
     var modules: Metro.ModuleList
     var __r: Metro.RequireFn

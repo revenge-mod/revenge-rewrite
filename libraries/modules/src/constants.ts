@@ -29,17 +29,17 @@ export const MetroCacheVersion = 2
 /**
  * The storage key for the Metro cache
  */
-export const MetroCacheKey = 'RevengeMetroCache'
+export const MetroCacheRelativeFilePath = 'RevengeMetroCache'
+
+/**
+ * The key for the first asset type registered
+ */
+export const FirstAssetTypeRegisteredKey = '__firstAssetTypeRegistered'
 
 /**
  * The key for a module's file path (using a symbol does not work for some reason)
  */
 export const MetroModuleFilePathKey = '__moduleFilePath'
-
-/**
- * The key for an asset's first registered type
- */
-export const FirstAssetTypeRegisteredKey = '__firstTypeRegistered'
 
 /**
  * The symbol to access asset caches using indexes instead of names

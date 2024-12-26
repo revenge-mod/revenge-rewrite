@@ -1,7 +1,7 @@
 import {
     FirstAssetTypeRegisteredKey,
     IndexMetroModuleId,
-    MetroCacheKey,
+    MetroCacheRelativeFilePath,
     MetroCacheVersion,
     MetroModuleFlags,
     MetroModuleLookupFlags,
@@ -9,7 +9,7 @@ import {
 } from '../constants'
 import { byProps } from '../filters'
 import { findId } from '../finders'
-import { CacheModule, ClientInfoModule } from '../native'
+import { ClientInfoModule, FileModule } from '../native'
 import { logger } from '../shared'
 import {
     blacklistModule,
@@ -76,8 +76,10 @@ export async function restoreCache() {
     // For testing:
     // invalidateCache()
 
-    const savedCache = await CacheModule.getItem(MetroCacheKey)
-    if (!savedCache) return false
+    const path = `${FileModule.getConstants().CacheDirPath}/${MetroCacheRelativeFilePath}`
+
+    if (!(await FileModule.fileExists(path))) return false
+    const savedCache = await FileModule.readFile(path, 'utf8')
 
     const storedCache = JSON.parse(savedCache) as MetroCacheObject
     logger.log(
@@ -145,8 +147,9 @@ let saveCacheDebounceTimeoutId: number
 export function saveCache() {
     if (saveCacheDebounceTimeoutId) clearTimeout(saveCacheDebounceTimeoutId)
     saveCacheDebounceTimeoutId = setTimeout(() => {
-        CacheModule.setItem(
-            MetroCacheKey,
+        FileModule.writeFile(
+            'cache',
+            MetroCacheRelativeFilePath,
             JSON.stringify({
                 v: MetroCacheVersion,
                 b: ClientInfoModule.Build,
@@ -156,6 +159,7 @@ export function saveCache() {
                 a: cache.assetModules,
                 p: cache.patchableModules,
             } satisfies MetroCacheObject),
+            'utf8',
         )
 
         logger.log(`Cache saved (${cache.totalModules} modules)`)
@@ -164,7 +168,7 @@ export function saveCache() {
 
 /** @internal */
 export function invalidateCache() {
-    CacheModule.removeItem(MetroCacheKey)
+    FileModule.removeFile('cache', MetroCacheRelativeFilePath)
     logger.warn('Cache invalidated')
 }
 

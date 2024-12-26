@@ -35,10 +35,7 @@ async function initialize() {
         const ModulesLibrary = await ModulesLibraryPromise
 
         const [
-            {
-                startCorePlugins,
-                startPluginsMetroModuleSubscriptions: startCorePluginsMetroModuleSubscriptions,
-            },
+            { startCorePlugins, startPluginsMetroModuleSubscriptions: startCorePluginsMetroModuleSubscriptions },
             { awaitStorage },
             { settings, pluginsStates },
         ] = await Promise.all([

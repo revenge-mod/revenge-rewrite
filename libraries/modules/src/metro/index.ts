@@ -21,8 +21,6 @@ import { initializeModulePatches } from './patches'
 import type { Metro } from '../types'
 
 export {
-    type MetroCacheObject,
-    type MetroLookupCacheRegistry,
     cacheAsset,
     cacheModuleAsBlacklisted,
     cacherFor,

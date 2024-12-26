@@ -15,5 +15,6 @@ export type IconComponentProps = {
     color?: string
 }
 
-export const CopyIcon = wrapIcon(findProp<IconComponent>('CopyIcon')!)
 export const CheckmarkLargeIcon = wrapIcon(findProp<IconComponent>('CheckmarkLargeIcon')!)
+export const CopyIcon = wrapIcon(findProp<IconComponent>('CopyIcon')!)
+export const FolderIcon = wrapIcon(findProp<IconComponent>('FolderIcon')!)

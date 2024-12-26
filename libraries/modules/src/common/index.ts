@@ -4,6 +4,7 @@ require('!deps-shim!')
 import { lazyDestructure } from '@revenge-mod/utils/lazy'
 import { findByFilePath, findByName, findByProps } from '../finders'
 
+import type { StackNavigationOptions } from '@react-navigation/stack'
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { ComponentType } from 'react'
 import type { DiscordModules } from '../types'
@@ -67,7 +68,7 @@ export const NavigationNative = findByProps<
 >('NavigationContainer')!
 
 export type NavigationNativeStackParamList = {
-    RevengeCustomPage: { title: string; render: ComponentType }
+    RevengeCustomPage: { render: ComponentType } & StackNavigationOptions
     // biome-ignore lint/suspicious/noExplicitAny: https://github.com/react-navigation/react-navigation/issues/9037
     [Page: string]: any
 }
@@ -100,3 +101,5 @@ export const semver = findByProps<typeof import('semver')>('SEMVER_SPEC_VERSION'
 export const xxhash64 = findByProps<typeof import('@intrnl/xxhash64')>('XXH64')!
 export const nobleHashesUtils = findByProps<typeof import('@noble/hashes/utils')>('randomBytes')!
 export * from 'events'
+
+export const _ = findByProps<typeof import('lodash')>('cloneDeep')!
