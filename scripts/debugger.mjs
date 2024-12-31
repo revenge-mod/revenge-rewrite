@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 import * as repl from 'node:repl'
 import { WebSocketServer } from 'ws'
+import os from 'os'
 import chalk from 'chalk'
 import clipboardy from 'clipboardy'
-import { join, resolve } from 'node:path'
-import { existsSync } from 'node:fs'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { join, resolve } from 'path'
+import { existsSync } from 'fs'
+import { mkdir, writeFile } from 'fs/promises'
 
 const debuggerHistoryPath = resolve(join('node_modules', 'debugger'))
 
@@ -32,12 +33,12 @@ const logAsClient = message => console.info(clientColorify(null, message))
 const logAsClientWarn = message => console.warn(clientColorify('warn', message))
 const logAsClientError = message => console.error(clientColorify('error', message))
 
-const copyPrompt = ' --copy'
-const clearHistoryPrompt = '--ch'
+const copyPrompt = '--copy'
+const clearHistoryPrompt = '--clear'
 
 export function serve() {
     let websocketOpen = false
-    let awaitingReply
+    let nextReply
 
     const wss = new WebSocketServer({
         port: 9090,
@@ -46,25 +47,25 @@ export function serve() {
         if (websocketOpen) return
         websocketOpen = true
 
-        logAsDebugger('Starting debugger session')
+        logAsDebugger('Client connected')
 
         ws.on('message', data => {
             try {
                 /** @type {{ level: "info" | "warn" | "error", message: string, nonce?: string }} */
                 const json = JSON.parse(data.toString())
 
-                if (awaitingReply?.cb && awaitingReply?.nonce && awaitingReply.nonce === json.nonce) {
-                    if (json.level === 'info' && awaitingReply.toCopy) {
+                if (nextReply?.cb && nextReply?.nonce && nextReply.nonce === json.nonce) {
+                    if (json.level === 'info' && nextReply.toCopy) {
                         clipboardy.write(json.message)
-                        awaitingReply.cb(null, debuggerColorify('Copied result to clipboard'))
+                        nextReply.cb(null, debuggerColorify('Copied result to clipboard'))
                     } else
-                        awaitingReply.cb(
+                        nextReply.cb(
                             null,
                             json.level === 'error'
                                 ? clientColorify('error', json.message)
                                 : clientColorify(null, json.message),
                         )
-                    awaitingReply = null
+                    nextReply = null
                     isPrompting = true
                 } else {
                     if (json.level === 'error') logAsClientError(json.message)
@@ -88,11 +89,11 @@ export function serve() {
                     const code = input.trim()
                     if (code === clearHistoryPrompt) {
                         writeFile(join(debuggerHistoryPath, 'history.txt'), '')
-                        logAsDebugger('Cleared repl history')
+                        logAsDebugger('Cleared REPL history')
                         return cb()
                     }
 
-                    awaitingReply = {
+                    nextReply = {
                         nonce: crypto.randomUUID(),
                         cb,
                         toCopy: code.endsWith(copyPrompt),
@@ -100,7 +101,7 @@ export function serve() {
                     ws.send(
                         JSON.stringify({
                             code: code.endsWith(copyPrompt) ? code.slice(0, -copyPrompt.length) : code,
-                            nonce: awaitingReply.nonce,
+                            nonce: nextReply.nonce,
                         }),
                     )
                 } catch (e) {
@@ -116,19 +117,27 @@ export function serve() {
         rl.on('close', () => {
             isPrompting = false
             ws.close()
-            logAsDebugger('Closing debugger, press Ctrl+C to exit')
         })
 
         ws.on('close', () => {
-            logAsDebugger('Websocket was closed')
+            logAsDebugger('Client disconnected')
             rl.close()
             websocketOpen = false
         })
     })
 
-    logAsDebugger('Debugger ready at :9090')
-    logAsDebugger(`Add${chalk.bold(copyPrompt)} to your prompt to copy the result to clipboard`)
-    logAsDebugger(`Type ${chalk.bold(clearHistoryPrompt)} to clear your repl history `)
+    console.info(chalk.red('\nDebugger ready, available on:\n'))
+    const netInterfaces = os.networkInterfaces()
+    for (const netinterfaces of Object.values(netInterfaces)) {
+        for (const details of netinterfaces || []) {
+            if (details.family !== 'IPv4') continue
+            const port = chalk.yellowBright(wss.address()?.port.toString())
+            console.info(`  ${chalk.gray('http://')}${details.address}:${port}`)
+        }
+    }
+
+    console.log(chalk.gray.underline(`\nRun with ${chalk.bold.white(copyPrompt)}  to your prompt to copy the result to clipboard`))
+    console.log(chalk.gray.underline(`Run with ${chalk.bold.white(clearHistoryPrompt)} to clear your REPL history\n`))
 
     return wss
 }

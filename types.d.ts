@@ -43,6 +43,8 @@ declare global {
         now(): number
     }
 
+    declare function nativeLoggingHook(str: string, level: number): void
+
     declare function setTimeout(cb: (...args: unknown[]) => unknown, timeout?: number): number
     /**
      * Calls the garbage collector
