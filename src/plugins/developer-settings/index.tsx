@@ -1,3 +1,5 @@
+/// <reference path="./debugger.d.ts" />
+
 import { toasts } from '@revenge-mod/modules/common'
 import { registerPlugin } from '@revenge-mod/plugins/internals'
 import { sleep } from '@revenge-mod/utils/functions'
@@ -6,13 +8,19 @@ import AssetBrowserSettingsPage from './pages/AssetBrowser'
 import DebugPerformanceTimesSettingsPage from './pages/DebugPerformanceTimes'
 import DeveloperSettingsPage from './pages/Developer'
 
+import { connectToDebugger, DebuggerContext } from './debugger'
 import { DevToolsEvents, connectToDevTools } from './devtools'
 
 import type { PluginContextFor } from '@revenge-mod/plugins'
 import type { FunctionComponent } from 'react'
+import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 
 const plugin = registerPlugin<{
     reactDevTools: {
+        address: string
+        autoConnect: boolean
+    }
+    debugger: {
         address: string
         autoConnect: boolean
     }
@@ -58,6 +66,9 @@ const plugin = registerPlugin<{
 
             if (storage.reactDevTools.autoConnect && globalThis.__reactDevTools)
                 connectToDevTools(storage.reactDevTools.address)
+            if (storage.debugger.autoConnect) connectToDebugger(storage.debugger.address, context.revenge)
+
+            setupDebugger(context)
 
             // Wait for the section to be added by the Settings plugin
             await sleep(0)
@@ -92,10 +103,62 @@ const plugin = registerPlugin<{
                 address: 'localhost:8097',
                 autoConnect: false,
             },
+            debugger: {
+                address: 'localhost:9090',
+                autoConnect: false,
+            },
         }),
     },
     true,
     true,
 )
+
+function setupDebugger({ patcher, cleanup }: PluginContextFor<typeof plugin, 'AfterAppRender'>) {
+    const debuggerCleanups = new Set<() => unknown>()
+
+    patcher.before(
+        globalThis,
+        'nativeLoggingHook',
+        ([message, level]) => {
+            if (DebuggerContext.ws?.readyState === WebSocket.OPEN)
+                DebuggerContext.ws.send(
+                    JSON.stringify({
+                        level: level === 3 ? 'error' : level === 2 ? 'warn' : 'info',
+                        message,
+                    }),
+                )
+        },
+        'loggerPatch',
+    )
+
+    globalThis.dbgr = {
+        reload: () => BundleUpdaterManager.reload(),
+        patcher: {
+            snipe: (object, key, callback) =>
+                debuggerCleanups.add(
+                    patcher.after(
+                        object,
+                        key,
+                        callback ?? ((args, ret) => console.log('[SNIPER]', args, ret)),
+                        'revenge.plugins.developer-settings.debugger.patcher.snipe',
+                    ),
+                ),
+            noop: (object, key) =>
+                debuggerCleanups.add(patcher.instead(object, key, () => void 0, 'revenge.plugins.developer-settings.debugger.patcher.noop')),
+            wipe: () => {
+                for (const c of debuggerCleanups) c()
+                debuggerCleanups.clear()
+            },
+        },
+    }
+
+    cleanup(
+        // biome-ignore lint/performance/noDelete: This happens once
+        () => delete globalThis.dbgr,
+        () => {
+            for (const c of debuggerCleanups) c()
+        },
+    )
+}
 
 export const PluginContext = React.createContext<PluginContextFor<typeof plugin, 'AfterAppRender'>>(null!)

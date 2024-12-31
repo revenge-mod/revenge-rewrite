@@ -599,7 +599,17 @@ export namespace DiscordModules {
         }
 
         // Other
-        export type Slider = FC
+        export type Slider = FC<{
+            value: number
+            step: number
+            minimumValue: number
+            maximumValue: number
+            onValueChange?: (value: number) => void
+            onSlidingStart?: () => void
+            onSlidingComplete?: () => void
+            startIcon?: ReactNode
+            endIcon?: ReactNode
+        }>
         export type FlashList = FC
         export type Text = FC<
             TextProps & {
