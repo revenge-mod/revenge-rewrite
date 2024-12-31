@@ -12,6 +12,12 @@ export default {
             icon: 'https://github.com/oSumAtrIX.png',
             roles: ['Project Manager', 'Android Development'],
         },
+        {
+            name: 'Nexpid',
+            url: 'https://github.com/nexpid',
+            icon: 'https://github.com/nexpid.png',
+            roles: ['Developer'],
+        },
     ],
     contributors: [
         {
@@ -37,5 +43,11 @@ export default {
             icon: 'https://github.com/puhbu.png',
             roles: ['Early Android Tester'],
         },
+        {
+            name: 'true1ann',
+            url: 'https://github.com/true1ann',
+            icon: 'https://github.com/true1ann.png',
+            roles: ['CI Contributor']
+        }
     ],
 } as Record<'team' | 'contributors', Array<{ name: string; icon?: string; url?: string; roles: string[] }>>
