@@ -14,6 +14,8 @@ registerPlugin<{
         id: 'revenge.warnings',
         version: '1.0.0',
         icon: 'WarningIcon',
+    },
+    {
         afterAppRender({ revenge: { assets, modules }, storage }) {
             const { legacy_alerts, toasts } = modules.common
 
@@ -42,6 +44,5 @@ registerPlugin<{
             }
         },
     },
-    true,
-    false,
+    { core: true, manageable: false },
 )

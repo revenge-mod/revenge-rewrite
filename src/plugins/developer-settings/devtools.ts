@@ -5,9 +5,7 @@ export const DevToolsEvents = new EventEmitter<DevToolsEventsListeners>()
 export type DevToolsEventsListeners = {
     connect: () => void
     disconnect: () => void
-    // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
     error: (err: any) => void
-    // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
     '*': (event: keyof DevToolsEventsListeners, err?: any) => void
 }
 
@@ -18,7 +16,6 @@ export const DevToolsContext = {
 } as {
     ws: WebSocket | undefined
     connected: boolean
-    // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
     error?: any
 }
 

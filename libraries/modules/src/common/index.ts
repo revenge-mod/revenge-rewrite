@@ -69,7 +69,6 @@ export const NavigationNative = findByProps<
 
 export type NavigationNativeStackParamList = {
     RevengeCustomPage: { render: ComponentType } & StackNavigationOptions
-    // biome-ignore lint/suspicious/noExplicitAny: https://github.com/react-navigation/react-navigation/issues/9037
     [Page: string]: any
 }
 

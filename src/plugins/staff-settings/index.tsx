@@ -8,6 +8,8 @@ registerPlugin(
         id: 'revenge.staff-settings',
         version: '1.0.0',
         icon: 'StaffBadgeIcon',
+    },
+    {
         onMetroModuleLoad(_, __, exports, unsub) {
             if (exports.default?.constructor?.displayName === 'DeveloperExperimentStore') {
                 unsub()
@@ -24,6 +26,9 @@ registerPlugin(
             return { reloadRequired: true }
         },
     },
-    true,
-    true,
+    {
+        core: true,
+        manageable: true,
+        enabled: false,
+    },
 )

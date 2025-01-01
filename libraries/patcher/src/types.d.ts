@@ -3,7 +3,6 @@ import type { Metro } from '@revenge-mod/modules'
 type WrappableName = 'after' | 'before' | 'instead'
 type UnpatchFunction = () => boolean
 
-// biome-ignore lint/suspicious/noExplicitAny: This is a valid use case
 type SafeParameters<T> = T extends (...args: infer P) => any ? P : any[]
 
 type KeysWithFunctionValues<T extends AnyObject> = {

@@ -1,11 +1,9 @@
 import { patcherLazyModuleSymbol } from '.'
 import type { AwaitedWrappable, OnceModuleLoadedCallback, Wrappable, WrappableName } from './types'
 
-// biome-ignore lint/suspicious/noExplicitAny: This is alright, I think
 type CallableFunction = (...args: any[]) => any
 
 export function createExtendedPatchFunction<N extends WrappableName>(fn: CallableFunction) {
-    // biome-ignore lint/suspicious/noExplicitAny: I'm not going out of my way to type this
     function patchFn(this: any, ...args: any) {
         if (patcherLazyModuleSymbol in args[0]) {
             const onceModuleLoaded = args[0][patcherLazyModuleSymbol] as OnceModuleLoadedCallback
@@ -25,7 +23,6 @@ export function createExtendedPatchFunction<N extends WrappableName>(fn: Callabl
         return fn.apply(this, args)
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: I'm not going out of my way to type this
     function promisePatchFn(this: any, ...args: [Promise<any>, ...any[]]) {
         const thenable = args[0]
         if (!thenable || !('then' in thenable)) throw new Error('Cannot await a non-thenable object')

@@ -176,3 +176,6 @@ dist
 
 # TypeScript
 tsdoc-metadata.json
+
+# Private
+.private

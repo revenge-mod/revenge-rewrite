@@ -47,7 +47,7 @@ export default {
             name: 'true1ann',
             url: 'https://github.com/true1ann',
             icon: 'https://github.com/true1ann.png',
-            roles: ['CI Contributor']
-        }
+            roles: ['CI Contributor'],
+        },
     ],
 } as Record<'team' | 'contributors', Array<{ name: string; icon?: string; url?: string; roles: string[] }>>

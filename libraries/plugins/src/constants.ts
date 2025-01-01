@@ -1,7 +1,9 @@
 import type { InternalPluginDefinition } from './internals'
+import type { PluginStopConfig } from './types'
 
-export const PluginIdRegex = /^[a-z0-9-_\.]{1,128}$/
-
+/**
+ * The keys that plugins are allowed to access in the plugin object
+ */
 export const WhitelistedPluginObjectKeys = [
     'description',
     'disable',
@@ -12,13 +14,32 @@ export const WhitelistedPluginObjectKeys = [
     'stop',
     'author',
     'errors',
-    // biome-ignore lint/suspicious/noExplicitAny: get out
 ] as const satisfies ReadonlyArray<keyof InternalPluginDefinition<any, any, any>>
 
-export const PluginStatus = {
-    Stopped: 1,
-    Fetching: 2,
-    StartedEarly: 3,
-    Starting: 4,
-    Started: 5,
+export const DefaultPluginStopConfig: Required<PluginStopConfig> = {
+    reloadRequired: false,
 }
+
+export const PluginStatus = {
+    Stopped: 0,
+    Fetching: 1,
+    Starting: 2,
+    Started: 3,
+}
+
+export type PluginStatus = (typeof PluginStatus)[keyof typeof PluginStatus]
+
+export const PluginZipFileSizeLimit = 16 * 1024 * 1024 // 16 MB
+
+export const InstallPluginResult = {
+    Success: 0,
+    AlreadyInstalled: 1,
+    InvalidManifest: 2,
+    InvalidFileFormat: 10,
+    InvalidKeyFileFormat: 11,
+    InvalidSignatureFileFormat: 12,
+    SignatureVerificationFailed: 20,
+    UnsignedUserConfirmationNeeded: 21,
+} as const
+
+export type PluginInstallResult = (typeof InstallPluginResult)[keyof typeof InstallPluginResult]

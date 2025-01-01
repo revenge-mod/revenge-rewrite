@@ -50,7 +50,6 @@ export type ToggleRowConfig = BaseRowConfig & {
     onValueChange: (value: boolean) => unknown
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: stop complaining rahhh
 export type RouteRowConfig<CT extends ComponentType<any> = ComponentType<any>> = BaseRowConfig & {
     type: 'route'
     component: CT

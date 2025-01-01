@@ -14,6 +14,8 @@ registerPlugin(
         id: 'revenge.assets',
         version: '1.0.0',
         icon: 'ImageIcon',
+    },
+    {
         beforeAppRender() {
             registerCustomAsset(
                 {
@@ -48,5 +50,7 @@ registerPlugin(
             )
         },
     },
-    true,
+    {
+        core: true,
+    },
 )

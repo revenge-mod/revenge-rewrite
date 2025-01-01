@@ -97,6 +97,8 @@ export const {
         }>('TextField', 'ContextMenu')!,
 )
 
+export const IntlLink = findProp<DiscordModules.Components.IntlLink>('IntlLink')!
+
 export const PressableScale = findProp('PressableScale')
 
 // Tables

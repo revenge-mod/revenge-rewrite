@@ -7,5 +7,6 @@
       "@revenge-mod/revenge": ["./types.d.ts"],
       "@revenge-mod/shared/*": ["./libraries/shared/src/*"]
     }
-  }
+  },
+  "exclude": ["scripts", "dist"]
 }

@@ -13,8 +13,14 @@ declare module '@revenge-mod/modules/finders' {
 }
 
 declare module '@revenge-mod/preferences' {
-    const preferences: typeof import('./libraries/preferences')
-    export * from './libraries/preferences'
+    const preferences: typeof import('./libraries/preferences/src/index')
+    export * from './libraries/preferences/src/index'
+    export default preferences
+}
+
+declare module '@revenge-mod/trust' {
+    const preferences: typeof import('./libraries/trust/src/index')
+    export * from './libraries/trust/src/index'
     export default preferences
 }
 

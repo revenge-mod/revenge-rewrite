@@ -6,7 +6,9 @@
   "scripts": {},
   "exports": {
     ".": "./src/index.ts",
-    "./internals": "./src/internals.ts"
+    "./constants": "./src/constants.ts",
+    "./internals": "./src/internals.ts",
+    "./schemas": "./src/schemas.ts"
   },
   "dependencies": {
     "@revenge-mod/app": "workspace:*",

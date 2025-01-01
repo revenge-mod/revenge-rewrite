@@ -25,7 +25,7 @@
           "level": "off"
         },
         "noExplicitAny": {
-          "level": "warn"
+          "level": "off"
         },
         "noConfusingVoidType": {
           "level": "off"

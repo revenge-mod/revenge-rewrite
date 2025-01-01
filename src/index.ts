@@ -34,16 +34,15 @@ async function initialize() {
 
         const ModulesLibrary = await ModulesLibraryPromise
 
-        const [
-            { startCorePlugins, startPluginsMetroModuleSubscriptions: startCorePluginsMetroModuleSubscriptions },
-            { awaitStorage },
-            { settings, pluginsStates },
-        ] = await Promise.all([
-            import('@revenge-mod/plugins'),
-            import('@revenge-mod/storage'),
-            import('@revenge-mod/preferences'),
-        ])
+        const [{ startPlugins, registerExternalPlugins }, { awaitStorage }, { settings, pluginsStates }] =
+            await Promise.all([
+                import('@revenge-mod/plugins'),
+                import('@revenge-mod/storage'),
+                import('@revenge-mod/preferences'),
+            ])
 
+        // TODO: Don't expose this global, instead pass to plugin contexts, for development, expose it via the developer-settings plugin
+        // TODO: Only expose revenge.plugins.registerPlugin
         globalThis.revenge = {
             app: AppLibrary,
             assets: AssetsLibrary,
@@ -58,23 +57,16 @@ async function initialize() {
         }
 
         await import('./plugins')
-        recordTimestamp('Plugins_CoreImported')
+        await registerExternalPlugins()
+        recordTimestamp('Plugins_Registered')
 
         await awaitStorage(settings, pluginsStates)
         recordTimestamp('Storage_Initialized')
 
-        startCorePluginsMetroModuleSubscriptions()
-
-        await startCorePlugins()
-        recordTimestamp('Plugins_CoreStarted')
-
-        // TODO
-        // try {
-        //     startExternalPlugins()
-        // } catch (e) {
-        //     settings.safeMode.enabledNextLaunch = true
-        //     throw e
-        // }
+        // TODO: Safe mode when plugins fail to load
+        // Maybe put logic in ErrorBoundary
+        await startPlugins()
+        recordTimestamp('Plugins_Started')
     } catch (e) {
         onError(e)
     }
@@ -114,7 +106,6 @@ function onceIndexRequired() {
 
     const batchedBridge = __fbBatchedBridge
 
-    // biome-ignore lint/suspicious/noExplicitAny: Too lazy to type this
     const callQueue: any[] = []
     const unpatch = patcher.instead(
         batchedBridge,

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
+import { existsSync } from 'fs'
 import * as repl from 'node:repl'
-import { WebSocketServer } from 'ws'
 import os from 'os'
+import { join, resolve } from 'path'
 import chalk from 'chalk'
 import clipboardy from 'clipboardy'
-import { join, resolve } from 'path'
-import { existsSync } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'
+import { WebSocketServer } from 'ws'
 
 const debuggerHistoryPath = resolve(join('node_modules', 'debugger'))
 
@@ -22,7 +22,7 @@ const debuggerColorify = message => (isPrompting ? '\n' : '') + chalk.bold.blue(
 const clientColorify = (style, message) =>
     (isPrompting ? '\n' : '') +
     (style === 'error'
-        ? chalk.bold.red('[Revenge] ERR! ') + chalk.red(message)
+        ? chalk.bold.red('[Revenge] ') + chalk.red(message)
         : style === 'warn'
           ? chalk.bold.yellow('[Revenge] ') + chalk.yellow(message)
           : chalk.bold.green('[Revenge] ') + message)
@@ -136,7 +136,11 @@ export function serve() {
         }
     }
 
-    console.log(chalk.gray.underline(`\nRun with ${chalk.bold.white(copyPrompt)}  to your prompt to copy the result to clipboard`))
+    console.log(
+        chalk.gray.underline(
+            `\nRun with ${chalk.bold.white(copyPrompt)}  to your prompt to copy the result to clipboard`,
+        ),
+    )
     console.log(chalk.gray.underline(`Run with ${chalk.bold.white(clearHistoryPrompt)} to clear your REPL history\n`))
 
     return wss

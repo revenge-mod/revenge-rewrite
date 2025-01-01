@@ -7,6 +7,7 @@
     "lib": [
       "ES2015",
       "ES2016.Array.Include",
+      "DOM",
       "ES2017.Object",
       "ES2017.TypedArrays",
       "ES2018.Regexp",

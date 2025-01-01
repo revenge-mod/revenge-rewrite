@@ -6,9 +6,7 @@ export const DebuggerEvents = new EventEmitter<DebuggerEventsListeners>()
 export type DebuggerEventsListeners = {
     connect: () => void
     disconnect: () => void
-    // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
     error: (err: any) => void
-    // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
     '*': (event: keyof DebuggerEventsListeners, err?: any) => void
 }
 

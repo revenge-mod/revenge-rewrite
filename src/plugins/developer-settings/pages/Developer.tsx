@@ -16,25 +16,25 @@ import { storageContextSymbol, useObservable } from '@revenge-mod/storage'
 import PageWrapper from '../../../plugins/settings/pages/(Wrapper)'
 
 import {
+    DebuggerContext,
+    DebuggerEvents,
+    type DebuggerEventsListeners,
+    connectToDebugger,
+    disconnectFromDebugger,
+} from '../debugger'
+import {
     DevToolsContext,
     DevToolsEvents,
     type DevToolsEventsListeners,
     connectToDevTools,
     disconnectFromDevTools,
 } from '../devtools'
-import {
-    connectToDebugger,
-    DebuggerContext,
-    DebuggerEvents,
-    disconnectFromDebugger,
-    type DebuggerEventsListeners,
-} from '../debugger'
 
 import { settings } from '@revenge-mod/preferences'
+import { PluginsDirectoryPath } from '@revenge-mod/shared/paths'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { ScrollView } from 'react-native'
 import { PluginContext } from '..'
-import { useContext, useEffect, useRef, useState } from 'react'
-import { PluginsDirectoryPath } from '@revenge-mod/shared/paths'
 
 export default function DeveloperSettingsPage() {
     const context = useContext(PluginContext)

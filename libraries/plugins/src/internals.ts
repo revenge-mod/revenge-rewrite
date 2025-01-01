@@ -1,130 +1,126 @@
-import { isAppRendered } from '@revenge-mod/app'
-
-import type { Metro } from '@revenge-mod/modules'
+import { afterAppRender, isAppRendered } from '@revenge-mod/app'
 import { subscribeModule } from '@revenge-mod/modules/metro'
-
+import { createPatcherInstance } from '@revenge-mod/patcher'
+import { DefaultPluginStopConfig, PluginStatus, WhitelistedPluginObjectKeys } from '@revenge-mod/plugins/constants'
+import type { PluginManifest } from '@revenge-mod/plugins/schemas'
 import { type PluginStates, pluginsStates } from '@revenge-mod/preferences'
-
-import { type Patcher, createPatcherInstance } from '@revenge-mod/patcher'
+import { ExternalPluginsMetadataFilePath, PluginStoragePath } from '@revenge-mod/shared/paths'
 import { awaitStorage, createStorage } from '@revenge-mod/storage'
-import { PluginStoragePath } from '@revenge-mod/shared/paths'
-
 import { getErrorStack } from '@revenge-mod/utils/errors'
-import { objectSeal } from '@revenge-mod/utils/functions'
+import { objectFreeze, objectSeal } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
-
-import { PluginIdRegex, PluginStatus } from './constants'
+import type { FC } from 'react'
 import { logger } from './shared'
+import type { PluginContext, PluginDefinition, PluginStopConfig, PluginStorage } from './types'
 
-import type React from 'react'
-import type {
-    PluginContext,
-    PluginDefinition,
-    PluginManifest,
-    PluginModuleSubscriptionContext,
-    PluginStopConfig,
-    PluginStorage,
-} from '.'
+export const registeredPlugins: Record<PluginManifest['id'], InternalPluginDefinition> = {}
+export const externalPluginsMetadata = createStorage<Record<PluginManifest['id'], ExternalPluginMetadata>>(
+    ExternalPluginsMetadataFilePath,
+)
 
-export const appRenderedCallbacks = new Set<() => Promise<unknown>>()
-export const corePluginIds = new Set<string>()
-export const plugins: Record<
-    InternalPluginDefinition<unknown, unknown, unknown>['id'],
-    // biome-ignore lint/suspicious/noExplicitAny: I should really turn off this rule...
-    PluginDefinition<any, any, any> & Omit<InternalPluginDefinition<any, any, any>, keyof PluginDefinition>
-> = {}
+export type ExternalPluginMetadata =
+    | {
+          local: true
+          source?: undefined
+      }
+    | {
+          local: false
+          source: string
+      }
 
-const highPriorityPluginIds = new Set<InternalPluginDefinition<unknown, unknown, unknown>['id']>()
-
-const DefaultStopConfig: Required<PluginStopConfig> = {
-    reloadRequired: false,
+interface RegisterPluginOptions {
+    core?: boolean
+    manageable?: boolean
+    enabled?: boolean
 }
 
 export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void, AppInitializedReturn = void>(
-    definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &
-        PluginManifest &
-        Partial<
-            Omit<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>, keyof PluginDefinition>
-        >,
-    core = false,
-    manageable = !core,
-    predicate?: () => boolean,
+    manifest: PluginManifest,
+    definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>,
+    opts: RegisterPluginOptions = {},
 ) {
-    const cleanups = new Set<() => unknown>()
+    if (manifest.id in registeredPlugins) throw new Error(`Plugin "${manifest.id}" is already registered`)
 
-    if (definition.id in plugins) throw new Error(`Plugin "${definition.id}" already exists`)
-    if (!PluginIdRegex.test(definition.id))
-        throw new Error(`Cannot register plugin "${definition.id}", invalid ID format`)
-
-    const prepareStorageAndPatcher = () => {
-        instance.patcher ||= createPatcherInstance(`revenge.plugins.plugin#${definition.id}`)
-        instance.storage ||= createStorage(PluginStoragePath(definition.id), {
-            initial: definition.initializeStorage?.() ?? {},
-        })
+    const options: Required<RegisterPluginOptions> = {
+        core: opts.core ?? false,
+        manageable: opts.manageable ?? !opts.core,
+        enabled: opts.enabled ?? !!opts.core,
     }
 
-    let status = PluginStatus.Stopped
-    const startedStatus =
-        definition.beforeAppRender || definition.afterAppRender ? PluginStatus.Started : PluginStatus.StartedEarly
+    let status: PluginStatus = PluginStatus.Stopped
+    const cleanups = new Set<() => unknown>()
 
-    const internalPlugin = objectSeal({
-        ...definition,
+    const def: InternalPluginDefinition = {
+        ...manifest,
+        core: options.core,
+        manageable: options.manageable,
+        lifecycles: {
+            prepare() {
+                ctx.patcher ||= createPatcherInstance(`revenge.plugins.plugin(${manifest.id})`)
+                ctx.storage ||= createStorage(PluginStoragePath(manifest.id), {
+                    initial: definition.initializeStorage?.() ?? {},
+                })
+            },
+            subscribeModules: definition.onMetroModuleLoad
+                ? () => {
+                      def.lifecycles.prepare()
+
+                      const unsub = subscribeModule.all((id, exports) =>
+                          definition.onMetroModuleLoad!(ctx, id, exports, unsub),
+                      )
+
+                      def.status = PluginStatus.Started
+                  }
+                : undefined,
+            beforeAppRender: definition.beforeAppRender,
+            afterAppRender: definition.afterAppRender,
+            beforeStop: definition.beforeStop,
+        },
         state: lazyValue(
             () =>
-                // Manageable?
-                // - Yes: Check preferences, default to false if it doesn't exist
-                // - No: Check predicate, default to if core
-                (pluginsStates[definition.id] ??= {
-                    enabled: manageable ? false : (predicate?.() ?? core),
+                (pluginsStates[manifest.id] ??= {
+                    // Core plugins are enabled by default
+                    // While external plugins are disabled by default
+                    enabled: options.enabled,
                     errors: [],
                 }),
         ),
-        get enabled() {
-            return this.state.enabled
-        },
-        set enabled(val: boolean) {
-            if (!manageable) throw new Error(`Cannot enable/disable unmanageable plugin: ${this.id}`)
-            this.state.enabled = val
-        },
-        get stopped() {
-            // TODO: Maybe do something about this
-            return this.status === PluginStatus.Stopped || this.status === PluginStatus.StartedEarly
-        },
-        core,
-        manageable,
         get status() {
             return status
         },
-        set status(val) {
+        set status(val: PluginStatus) {
             status = val
-            if (val === startedStatus) this.state.errors = []
+            if (!this.stopped) this.state.errors = []
+        },
+        get enabled() {
+            return this.state.enabled
+        },
+        set enabled(value: boolean) {
+            if (!this.manageable) return
+            this.state.enabled = value
+        },
+        get stopped() {
+            return this.status === PluginStatus.Stopped
         },
         SettingsComponent: definition.settings,
-        errors: [],
         disable() {
             if (!this.manageable) throw new Error(`Cannot disable unmanageable plugin: ${this.id}`)
 
             this.enabled = false
             if (!this.stopped) return this.stop()
 
-            return DefaultStopConfig
+            return DefaultPluginStopConfig
         },
         enable() {
+            if (!this.manageable) throw new Error(`Cannot enable unmanageable plugin: ${this.id}`)
             this.enabled = true
-            return !!(this.beforeAppRender || this.onMetroModuleLoad)
         },
-        startMetroModuleSubscriptions() {
-            if (!this.onMetroModuleLoad || !this.enabled) return
-
-            prepareStorageAndPatcher()
-            const unsub = subscribeModule.all((id, exports) => this.onMetroModuleLoad!(instance, id, exports, unsub))
-
-            this.status = PluginStatus.StartedEarly
-        },
+        errors: [],
         async start() {
             const handleError = (e: unknown) => {
                 this.errors.push(e)
-                this.stop()
+                // Disabling stops the plugin
+                this.disable()
             }
 
             if (!this.enabled) return handleError(new Error(`Plugin "${this.id}" must be enabled before starting`))
@@ -133,53 +129,64 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             logger.log(`Starting plugin: ${this.id}`)
             this.status = PluginStatus.Starting
 
-            if (isAppRendered && this.beforeAppRender)
+            if (isAppRendered && this.lifecycles.beforeAppRender)
                 return handleError(new Error(`Plugin "${this.id}" requires running before app is initialized`))
 
-            prepareStorageAndPatcher()
+            this.lifecycles.prepare()
+            this.lifecycles.subscribeModules?.()
 
-            try {
-                instance.context.beforeAppRender = await this.beforeAppRender?.(instance)
-            } catch (e) {
-                return handleError(
-                    new Error(`Plugin "${this.id}" encountered an error when running "beforeAppRender": ${e}`, {
-                        cause: e,
-                    }),
-                )
+            if (this.lifecycles.beforeAppRender) {
+                try {
+                    ctx.context.beforeAppRender = await this.lifecycles.beforeAppRender(ctx)
+                } catch (e) {
+                    return handleError(
+                        new Error(
+                            `Plugin "${this.id}" encountered an error when running lifecycle "beforeAppRender": ${e}`,
+                            {
+                                cause: e,
+                            },
+                        ),
+                    )
+                }
             }
 
-            if (this.afterAppRender) {
-                const cb = async () => {
-                    try {
-                        await awaitStorage(instance.storage)
-                        instance.context.afterAppRender = await this.afterAppRender!(instance)
-                        this.status = PluginStatus.Started
-                    } catch (e) {
-                        return handleError(
-                            new Error(`Plugin "${this.id}" encountered an error when running "afterAppRender": ${e}`, {
-                                cause: e,
-                            }),
-                        )
-                    }
-                }
+            if (!this.lifecycles.afterAppRender) return void (this.status = PluginStatus.Started)
 
-                if (isAppRendered) cb()
-                else appRenderedCallbacks.add(cb)
-            } else this.status = PluginStatus.Started
+            const callback = async () => {
+                try {
+                    await awaitStorage(ctx.storage)
+                    ctx.context.afterAppRender = await this.lifecycles.afterAppRender!(ctx)
+                    this.status = PluginStatus.Started
+                } catch (e) {
+                    return handleError(
+                        new Error(
+                            `Plugin "${this.id}" encountered an error when running lifecycle "afterAppRender": ${e}`,
+                            {
+                                cause: e,
+                            },
+                        ),
+                    )
+                }
+            }
+
+            if (isAppRendered) callback()
+            else afterAppRender(callback)
         },
         stop() {
-            if (this.stopped) return DefaultStopConfig
+            if (this.stopped) return DefaultPluginStopConfig
 
             logger.log(`Stopping plugin: ${this.id}`)
 
-            let data: Required<PluginStopConfig> | undefined
+            let stopConfig: Required<PluginStopConfig> = DefaultPluginStopConfig
 
             try {
-                const val = this.beforeStop?.(instance)
-                data ??= val ? Object.assign(DefaultStopConfig, val) : DefaultStopConfig
+                const val = this.lifecycles.beforeStop?.(ctx)
+                stopConfig = Object.assign(DefaultPluginStopConfig, val)
             } catch (e) {
                 this.errors.push(
-                    new Error(`Plugin "${this.id}" encountered an error when stopping: ${e}`, { cause: e }),
+                    new Error(`Plugin "${this.id}" encountered an error when running lifecycle "beforeStop": ${e}`, {
+                        cause: e,
+                    }),
                 )
             }
 
@@ -192,16 +199,47 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             }
 
             for (const cleanup of cleanups) cleanup()
-            if (!instance.patcher.destroyed) instance.patcher.destroy()
+            if (!ctx.patcher.destroyed) ctx.patcher.destroy()
 
             this.status = PluginStatus.Stopped
 
-            return data ?? DefaultStopConfig
+            return stopConfig
         },
-    } satisfies PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> &
-        Omit<InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>, keyof PluginDefinition>)
+    }
 
-    const proxy = new Proxy(internalPlugin, {
+    objectFreeze(def)
+    objectSeal(def)
+
+    const ctx: PluginContext = {
+        patcher: null!,
+        storage: null!,
+        context: {
+            beforeAppRender: null,
+            afterAppRender: null,
+        },
+        revenge: lazyValue(() => revenge),
+        cleanup(...funcs) {
+            for (const cleanup of funcs) cleanups.add(cleanup)
+        },
+        plugin: makePluginDefinitionProxy(def),
+    }
+
+    registeredPlugins[manifest.id] = def
+
+    return def
+}
+
+export function unregisterPlugin(id: string, opts: { persistState?: boolean } = {}) {
+    const plugin = registeredPlugins[id]
+    if (!plugin) throw new Error(`Plugin "${id}" is not registered`)
+
+    plugin.disable()
+    delete registeredPlugins[id]
+    if (!opts.persistState) delete pluginsStates[id]
+}
+
+function makePluginDefinitionProxy<T extends InternalPluginDefinition>(def: T): T {
+    return new Proxy(def, {
         get(target, prop) {
             // @ts-expect-error: No
             if (WhitelistedPluginObjectKeys.includes(prop)) return target[prop as keyof InternalPluginDefinition]
@@ -212,116 +250,85 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             return WhitelistedPluginObjectKeys.includes(p) && p in target
         },
         defineProperty() {
-            throw new Error('Cannot define plugin instance properties')
+            throw new Error('Cannot define internal plugin definition properties')
         },
         ownKeys(target) {
             // @ts-expect-error: Nein
             return Object.keys(target).filter(key => WhitelistedPluginObjectKeys.includes(key))
         },
         set() {
-            throw new Error('Cannot set plugin instance properties')
+            throw new Error('Cannot set internal plugin definition properties')
         },
     })
-
-    // biome-ignore lint/suspicious/noExplicitAny: Defaulting types to something else doesn't end very well
-    const instance: PluginContext<any, any, any, any> = {
-        context: {
-            beforeAppRender: null,
-            afterAppRender: null,
-        },
-        plugin: proxy,
-        patcher: null as unknown as Patcher,
-        storage: null,
-        revenge: lazyValue(() => revenge),
-        cleanup: (...funcs) => {
-            for (const cleanup of funcs) cleanups.add(cleanup)
-        },
-    }
-
-    if (internalPlugin.core) corePluginIds.add(internalPlugin.id)
-    plugins[internalPlugin.id] = internalPlugin
-    if (internalPlugin.beforeAppRender) highPriorityPluginIds.add(internalPlugin.id)
-
-    return proxy as PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>
 }
 
-export type InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> = Omit<
-    PluginDefinition<PluginStorage, AppLaunchedReturn, AppInitializedReturn>,
-    'settings'
-> &
-    PluginManifest & {
-        state: PluginStates[PluginManifest['id']]
-        /**
-         * Runs when a Metro module loads, useful for patching modules very early on.
-         * @internal
-         */
-        onMetroModuleLoad?: (
-            context: PluginModuleSubscriptionContext<Storage>,
-            id: Metro.ModuleID,
-            exports: Metro.ModuleExports,
-            unsubscribe: () => void,
-        ) => void
-        /**
-         * Disables the plugin
-         * @returns A full plugin stop config object
-         * @see {@link PluginStopConfig}
-         */
-        disable(): Required<PluginStopConfig>
-        /**
-         * Enables the plugin
-         * @internal
-         * @returns Whether a reload should be required
-         */
-        enable(): boolean
-        /**
-         * Starts the plugin's Metro module subscriptions (if it exists)
-         * @internal
-         */
-        startMetroModuleSubscriptions: () => void
-        /**
-         * Starts the plugin normal lifecycles
-         * @internal
-         */
-        start(): Promise<void>
-        /**
-         * Stops the plugin
-         * @internal
-         * @returns A full plugin stop config object
-         */
-        stop(): Required<PluginStopConfig>
-        /**
-         * Whether the plugin is stopped
-         * @internal
-         */
-        stopped: boolean
-        /**
-         * Whether the plugin is enabled. This will be set to `false` in the `beforeStop` lifecycle if the user disables the plugin.
-         */
-        enabled: boolean
-        /**
-         * The plugin's status
-         * @internal
-         */
-        status: (typeof PluginStatus)[keyof typeof PluginStatus]
-        /**
-         * The plugin's settings component
-         * @internal
-         **/
-        SettingsComponent?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
-        /**
-         * Whether the plugin is a core plugin
-         * @internal
-         */
-        core: boolean
-        /**
-         * Whether the plugin is manageable (can be disabled/enabled)
-         * @internal
-         */
-        manageable: boolean
-        /**
-         * The plugin's errors
-         * @internal
-         **/
-        // biome-ignore lint/suspicious/noExplicitAny: Anything can be thrown
-        errors: any[]
+export type InternalPluginDefinition<
+    Storage = any,
+    AppLaunchedReturn = any,
+    AppInitializedReturn = any,
+> = PluginManifest & {
+    state: PluginStates[PluginManifest['id']]
+    lifecycles: Pick<
+        PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>,
+        'beforeAppRender' | 'afterAppRender' | 'beforeStop'
+    > & {
+        prepare(): void
+        subscribeModules?: () => void
     }
+    /**
+     * Disables the plugin
+     * @returns A full plugin stop config object
+     * @see {@link PluginStopConfig}
+     */
+    disable(): Required<PluginStopConfig>
+    /**
+     * Enables the plugin
+     * @internal
+     */
+    enable(): void
+    /**
+     * Starts the plugin normal lifecycles
+     * @internal
+     */
+    start(): Promise<void>
+    /**
+     * Stops the plugin
+     * @internal
+     * @returns A full plugin stop config object
+     */
+    stop(): Required<PluginStopConfig>
+    /**
+     * Whether the plugin is stopped
+     * @internal
+     */
+    stopped: boolean
+    /**
+     * Whether the plugin is enabled. This will be set to `false` in the `beforeStop` lifecycle if the user disables the plugin.
+     */
+    enabled: boolean
+    /**
+     * The plugin's status
+     * @internal
+     */
+    status: (typeof PluginStatus)[keyof typeof PluginStatus]
+    /**
+     * The plugin's settings component
+     * @internal
+     **/
+    SettingsComponent?: FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
+    /**
+     * Whether the plugin is a core plugin
+     * @internal
+     */
+    core: boolean
+    /**
+     * Whether the plugin is manageable (can be disabled/enabled)
+     * @internal
+     */
+    manageable: boolean
+    /**
+     * The plugin's errors
+     * @internal
+     **/
+    errors: any[]
+}

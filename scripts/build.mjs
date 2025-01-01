@@ -48,6 +48,7 @@ const config = {
     alias: {
         '!deps-shim!': './shims/deps.ts',
         'react/jsx-runtime': './shims/react~jsx-runtime.ts',
+        // uzip: './shims/uzip.js',
         events: './shims/events.ts',
     },
     plugins: [

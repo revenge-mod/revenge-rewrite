@@ -97,7 +97,6 @@ export function lazyValue<T, I extends ExemptedEntries>(factory: () => T, opts: 
         object: {},
         // biome-ignore lint/complexity/useArrowFunction: When hint is a function, we need to hint it as a function WHICH CAN HAVE A CONSTRUCTOR
         function: function () {},
-        // biome-ignore lint/suspicious/noExplicitAny: It's just types
     } as Record<NonNullable<LazyOptions<any>['hint']>, any>
 
     const dummy = HintMap[opts.hint ?? 'function']

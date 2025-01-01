@@ -1,0 +1,156 @@
+diff --git a/node_modules/valibot/.bun-tag-5c327b17af03dbe6 b/.bun-tag-5c327b17af03dbe6
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 31a520444c4767ef7ba1bd0bd336fd8c458d722a..6d00eca97b2ccd526df75d1d8ad25d19aa9d23ef 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -8595,71 +8595,6 @@ declare function email<TInput extends string>(): EmailAction<TInput, undefined>;
+  */
+ declare function email<TInput extends string, const TMessage extends ErrorMessage<EmailIssue<TInput>> | undefined>(message: TMessage): EmailAction<TInput, TMessage>;
+ 
+-/**
+- * Emoji issue type.
+- */
+-interface EmojiIssue<TInput extends string> extends BaseIssue<TInput> {
+-    /**
+-     * The issue kind.
+-     */
+-    readonly kind: 'validation';
+-    /**
+-     * The issue type.
+-     */
+-    readonly type: 'emoji';
+-    /**
+-     * The expected property.
+-     */
+-    readonly expected: null;
+-    /**
+-     * The received property.
+-     */
+-    readonly received: `"${string}"`;
+-    /**
+-     * The emoji regex.
+-     */
+-    readonly requirement: RegExp;
+-}
+-/**
+- * Emoji action type.
+- */
+-interface EmojiAction<TInput extends string, TMessage extends ErrorMessage<EmojiIssue<TInput>> | undefined> extends BaseValidation<TInput, TInput, EmojiIssue<TInput>> {
+-    /**
+-     * The action type.
+-     */
+-    readonly type: 'emoji';
+-    /**
+-     * The action reference.
+-     */
+-    readonly reference: typeof emoji;
+-    /**
+-     * The expected property.
+-     */
+-    readonly expects: null;
+-    /**
+-     * The emoji regex.
+-     */
+-    readonly requirement: RegExp;
+-    /**
+-     * The error message.
+-     */
+-    readonly message: TMessage;
+-}
+-/**
+- * Creates an [emoji](https://en.wikipedia.org/wiki/Emoji) validation action.
+- *
+- * @returns An emoji action.
+- */
+-declare function emoji<TInput extends string>(): EmojiAction<TInput, undefined>;
+-/**
+- * Creates an [emoji](https://en.wikipedia.org/wiki/Emoji) validation action.
+- *
+- * @param message The error message.
+- *
+- * @returns An emoji action.
+- */
+-declare function emoji<TInput extends string, const TMessage extends ErrorMessage<EmojiIssue<TInput>> | undefined>(message: TMessage): EmojiAction<TInput, TMessage>;
+-
+ /**
+  * Empty issue type.
+  */
+@@ -13457,13 +13392,6 @@ declare const DIGITS_REGEX: RegExp;
+  * Email regex.
+  */
+ declare const EMAIL_REGEX: RegExp;
+-/**
+- * Emoji regex from [emoji-regex-xs](https://github.com/slevithan/emoji-regex-xs) v1.0.0 (MIT license).
+- *
+- * Hint: We decided against the newer `/^\p{RGI_Emoji}+$/v` regex because it is
+- * not supported in older runtimes and does not match all emoji.
+- */
+-declare const EMOJI_REGEX: RegExp;
+ /**
+  * [Hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) regex.
+  */
+@@ -13841,4 +13769,4 @@ declare class ValiError<TSchema extends BaseSchema<unknown, unknown, BaseIssue<u
+     constructor(issues: [InferIssue<TSchema>, ...InferIssue<TSchema>[]]);
+ }
+ 
+-export { type AnySchema, type ArgsAction, type ArgsActionAsync, type ArrayInput, type ArrayIssue, type ArrayPathItem, type ArrayRequirement$1 as ArrayRequirement, type ArrayRequirementAsync, type ArraySchema, type ArraySchemaAsync, type AwaitActionAsync, BASE64_REGEX, BIC_REGEX, type Base64Action, type Base64Issue, type BaseIssue, type BaseMetadata, type BaseSchema, type BaseSchemaAsync, type BaseTransformation, type BaseTransformationAsync, type BaseValidation, type BaseValidationAsync, type BicAction, type BicIssue, type BigintIssue, type BigintSchema, type BlobIssue, type BlobSchema, type BooleanIssue, type BooleanSchema, type Brand, type BrandAction, type BrandName, BrandSymbol, type BytesAction, type BytesIssue, CUID2_REGEX, type CheckAction, type CheckActionAsync, type CheckIssue, type CheckItemsAction, type CheckItemsActionAsync, type CheckItemsIssue, type Class, type Config, type ContentInput, type ContentRequirement, type CreditCardAction, type CreditCardIssue, type Cuid2Action, type Cuid2Issue, type CustomIssue, type CustomSchema, type CustomSchemaAsync, DECIMAL_REGEX, DIGITS_REGEX, type DateIssue, type DateSchema, type DecimalAction, type DecimalIssue, type DeepPickN, type Default, type DefaultAsync, type DefaultValue, type DescriptionAction, type DigitsAction, type DigitsIssue, EMAIL_REGEX, EMOJI_REGEX, type EmailAction, type EmailIssue, type EmojiAction, type EmojiIssue, type EmptyAction, type EmptyIssue, type EndsWithAction, type EndsWithIssue, type Enum, type EnumIssue, type EnumSchema, type ErrorMessage, type EveryItemAction, type EveryItemIssue, type ExcludesAction, type ExcludesIssue, type FailureDataset, type Fallback, type FallbackAsync, type FileIssue, type FileSchema, type FilterItemsAction, type FindItemAction, type FiniteAction, type FiniteIssue, type FirstTupleItem, type FlatErrors, type FunctionIssue, type FunctionSchema, type GenericIssue, type GenericMetadata, type GenericSchema, type GenericSchemaAsync, type GenericTransformation, type GenericTransformationAsync, type GenericValidation, type GenericValidationAsync, type GlobalConfig, type GraphemesAction, type GraphemesIssue, HEXADECIMAL_REGEX, HEX_COLOR_REGEX, type HashAction, type HashIssue, type HashType, type HexColorAction, type HexColorIssue, type HexadecimalAction, type HexadecimalIssue, IMEI_REGEX, IPV4_REGEX, IPV6_REGEX, IP_REGEX, ISO_DATE_REGEX, ISO_DATE_TIME_REGEX, ISO_TIMESTAMP_REGEX, ISO_TIME_REGEX, ISO_TIME_SECOND_REGEX, ISO_WEEK_REGEX, type ImeiAction, type ImeiIssue, type IncludesAction, type IncludesIssue, type InferDefault, type InferDefaults, type InferFallback, type InferFallbacks, type InferInput, type InferIntersectInput, type InferIntersectOutput, type InferIssue, type InferMapInput, type InferMapOutput, type InferNonNullableInput, type InferNonNullableIssue, type InferNonNullableOutput, type InferNonNullishInput, type InferNonNullishIssue, type InferNonNullishOutput, type InferNonOptionalInput, type InferNonOptionalIssue, type InferNonOptionalOutput, type InferNullableOutput, type InferNullishOutput, type InferObjectInput, type InferObjectIssue, type InferObjectOutput, type InferOptionalOutput, type InferOutput, type InferRecordInput, type InferRecordOutput, type InferSetInput, type InferSetOutput, type InferTupleInput, type InferTupleIssue, type InferTupleOutput, type InferUndefinedableOutput, type InferVariantIssue, type InstanceIssue, type InstanceSchema, type IntegerAction, type IntegerIssue, type IntersectIssue, type IntersectOptions, type IntersectOptionsAsync, type IntersectSchema, type IntersectSchemaAsync, type IpAction, type IpIssue, type Ipv4Action, type Ipv4Issue, type Ipv6Action, type Ipv6Issue, type IsoDateAction, type IsoDateIssue, type IsoDateTimeAction, type IsoDateTimeIssue, type IsoTimeAction, type IsoTimeIssue, type IsoTimeSecondAction, type IsoTimeSecondIssue, type IsoTimestampAction, type IsoTimestampIssue, type IsoWeekAction, type IsoWeekIssue, type IssueDotPath, type IssuePathItem, type LastTupleItem, type LazySchema, type LazySchemaAsync, type LengthAction, type LengthInput, type LengthIssue, type Literal, type LiteralIssue, type LiteralSchema, type LooseObjectIssue, type LooseObjectSchema, type LooseObjectSchemaAsync, type LooseTupleIssue, type LooseTupleSchema, type LooseTupleSchemaAsync, MAC48_REGEX, MAC64_REGEX, MAC_REGEX, type Mac48Action, type Mac48Issue, type Mac64Action, type Mac64Issue, type MacAction, type MacIssue, type MapIssue, type MapItemsAction, type MapPathItem, type MapSchema, type MapSchemaAsync, type MarkOptional, type MaxBytesAction, type MaxBytesIssue, type MaxGraphemesAction, type MaxGraphemesIssue, type MaxLengthAction, type MaxLengthIssue, type MaxSizeAction, type MaxSizeIssue, type MaxValueAction, type MaxValueIssue, type MaxWordsAction, type MaxWordsIssue, type MaybePromise, type MaybeReadonly, type MetadataAction, type MimeTypeAction, type MimeTypeIssue, type MinBytesAction, type MinBytesIssue, type MinGraphemesAction, type MinGraphemesIssue, type MinLengthAction, type MinLengthIssue, type MinSizeAction, type MinSizeIssue, type MinValueAction, type MinValueIssue, type MinWordsAction, type MinWordsIssue, type MultipleOfAction, type MultipleOfIssue, NANO_ID_REGEX, type NanIssue, type NanSchema, type NanoIDAction, type NanoIDIssue, type NeverIssue, type NeverSchema, type NonEmptyAction, type NonEmptyIssue, type NonNullable$1 as NonNullable, type NonNullableIssue, type NonNullableSchema, type NonNullableSchemaAsync, type NonNullish, type NonNullishIssue, type NonNullishSchema, type NonNullishSchemaAsync, type NonOptional, type NonOptionalIssue, type NonOptionalSchema, type NonOptionalSchemaAsync, type NormalizeAction, type NormalizeForm, type NotBytesAction, type NotBytesIssue, type NotGraphemesAction, type NotGraphemesIssue, type NotLengthAction, type NotLengthIssue, type NotSizeAction, type NotSizeIssue, type NotValueAction, type NotValueIssue, type NotWordsAction, type NotWordsIssue, type NullIssue, type NullSchema, type NullableSchema, type NullableSchemaAsync, type NullishSchema, type NullishSchemaAsync, type NumberIssue, type NumberSchema, OCTAL_REGEX, type ObjectEntries, type ObjectEntriesAsync, type ObjectIssue, type ObjectKeys, type ObjectPathItem, type ObjectSchema, type ObjectSchemaAsync, type ObjectWithRestIssue, type ObjectWithRestSchema, type ObjectWithRestSchemaAsync, type OctalAction, type OctalIssue, type OptionalSchema, type OptionalSchemaAsync, type OutputDataset, type Parser, type ParserAsync, type PartialCheckAction, type PartialCheckActionAsync, type PartialCheckIssue, type PartialDataset, type PathKeys, type PicklistIssue, type PicklistOptions, type PicklistSchema, type PipeAction, type PipeActionAsync, type PipeItem, type PipeItemAsync, type Prettify, type PromiseIssue, type PromiseSchema, type RawCheckAction, type RawCheckActionAsync, type RawCheckIssue, type RawTransformAction, type RawTransformActionAsync, type RawTransformIssue, type ReadonlyAction, type RecordIssue, type RecordSchema, type RecordSchemaAsync, type ReduceItemsAction, type RegexAction, type RegexIssue, type ReturnsAction, type ReturnsActionAsync, type SafeIntegerAction, type SafeIntegerIssue, type SafeParseResult, type SafeParser, type SafeParserAsync, type SchemaWithFallback, type SchemaWithFallbackAsync, type SchemaWithOmit, type SchemaWithPartial, type SchemaWithPartialAsync, type SchemaWithPick, type SchemaWithPipe, type SchemaWithPipeAsync, type SchemaWithRequired, type SchemaWithRequiredAsync, type SchemaWithoutPipe, type SetIssue, type SetPathItem, type SetSchema, type SetSchemaAsync, type SizeAction, type SizeInput, type SizeIssue, type SomeItemAction, type SomeItemIssue, type SortItemsAction, type StandardFailureResult, type StandardResult, type StandardSchemaProps, type StandardSuccessResult, type StartsWithAction, type StartsWithIssue, type StrictObjectIssue, type StrictObjectSchema, type StrictObjectSchemaAsync, type StrictTupleIssue, type StrictTupleSchema, type StrictTupleSchemaAsync, type StringIssue, type StringSchema, type SuccessDataset, type SymbolIssue, type SymbolSchema, type TitleAction, type ToLowerCaseAction, type ToMaxValueAction, type ToMinValueAction, type ToUpperCaseAction, type TransformAction, type TransformActionAsync, type TrimAction, type TrimEndAction, type TrimStartAction, type TupleIssue, type TupleItems, type TupleItemsAsync, type TupleSchema, type TupleSchemaAsync, type TupleWithRestIssue, type TupleWithRestSchema, type TupleWithRestSchemaAsync, ULID_REGEX, UUID_REGEX, type UlidAction, type UlidIssue, type UndefinedIssue, type UndefinedSchema, type UndefinedableSchema, type UndefinedableSchemaAsync, type UnionIssue, type UnionOptions, type UnionOptionsAsync, type UnionSchema, type UnionSchemaAsync, type UnionToIntersect, type UnionToTuple, type UnknownDataset, type UnknownPathItem, type UnknownSchema, type UrlAction, type UrlIssue, type UuidAction, type UuidIssue, ValiError, type ValueAction, type ValueInput, type ValueIssue, type VariantIssue, type VariantOptionSchema, type VariantOptionSchemaAsync, type VariantOptions, type VariantOptionsAsync, type VariantSchema, type VariantSchemaAsync, type VoidIssue, type VoidSchema, type WordsAction, type WordsIssue, _addIssue, _getByteCount, _getGraphemeCount, _getStandardProps, _getWordCount, _isLuhnAlgo, _isValidObjectKey, _joinExpects, _stringify, any, args, argsAsync, array, arrayAsync, assert, awaitAsync, base64, bic, bigint, blob, boolean, brand, bytes, check, checkAsync, checkItems, checkItemsAsync, config, creditCard, cuid2, custom, customAsync, date, decimal, deleteGlobalConfig, deleteGlobalMessage, deleteSchemaMessage, deleteSpecificMessage, description, digits, email, emoji, empty, endsWith, entriesFromList, enum_ as enum, enum_, everyItem, excludes, fallback, fallbackAsync, file, filterItems, findItem, finite, flatten, forward, forwardAsync, function_ as function, function_, getDefault, getDefaults, getDefaultsAsync, getDotPath, getFallback, getFallbacks, getFallbacksAsync, getGlobalConfig, getGlobalMessage, getSchemaMessage, getSpecificMessage, graphemes, hash, hexColor, hexadecimal, imei, includes, instance, integer, intersect, intersectAsync, ip, ipv4, ipv6, is, isOfKind, isOfType, isValiError, isoDate, isoDateTime, isoTime, isoTimeSecond, isoTimestamp, isoWeek, keyof, lazy, lazyAsync, length, literal, looseObject, looseObjectAsync, looseTuple, looseTupleAsync, mac, mac48, mac64, map, mapAsync, mapItems, maxBytes, maxGraphemes, maxLength, maxSize, maxValue, maxWords, metadata, mimeType, minBytes, minGraphemes, minLength, minSize, minValue, minWords, multipleOf, nan, nanoid, never, nonEmpty, nonNullable, nonNullableAsync, nonNullish, nonNullishAsync, nonOptional, nonOptionalAsync, normalize, notBytes, notGraphemes, notLength, notSize, notValue, notWords, null_ as null, null_, nullable, nullableAsync, nullish, nullishAsync, number, object, objectAsync, objectWithRest, objectWithRestAsync, octal, omit, optional, optionalAsync, parse, parseAsync, parser, parserAsync, partial, partialAsync, partialCheck, partialCheckAsync, pick, picklist, pipe, pipeAsync, promise, rawCheck, rawCheckAsync, rawTransform, rawTransformAsync, readonly, record, recordAsync, reduceItems, regex, required, requiredAsync, returns, returnsAsync, safeInteger, safeParse, safeParseAsync, safeParser, safeParserAsync, set, setAsync, setGlobalConfig, setGlobalMessage, setSchemaMessage, setSpecificMessage, size, someItem, sortItems, startsWith, strictObject, strictObjectAsync, strictTuple, strictTupleAsync, string, symbol, title, toLowerCase, toMaxValue, toMinValue, toUpperCase, transform, transformAsync, trim, trimEnd, trimStart, tuple, tupleAsync, tupleWithRest, tupleWithRestAsync, ulid, undefined_ as undefined, undefined_, undefinedable, undefinedableAsync, union, unionAsync, unknown, unwrap, url, uuid, value, variant, variantAsync, void_ as void, void_, words };
++export { type AnySchema, type ArgsAction, type ArgsActionAsync, type ArrayInput, type ArrayIssue, type ArrayPathItem, type ArrayRequirement$1 as ArrayRequirement, type ArrayRequirementAsync, type ArraySchema, type ArraySchemaAsync, type AwaitActionAsync, BASE64_REGEX, BIC_REGEX, type Base64Action, type Base64Issue, type BaseIssue, type BaseMetadata, type BaseSchema, type BaseSchemaAsync, type BaseTransformation, type BaseTransformationAsync, type BaseValidation, type BaseValidationAsync, type BicAction, type BicIssue, type BigintIssue, type BigintSchema, type BlobIssue, type BlobSchema, type BooleanIssue, type BooleanSchema, type Brand, type BrandAction, type BrandName, BrandSymbol, type BytesAction, type BytesIssue, CUID2_REGEX, type CheckAction, type CheckActionAsync, type CheckIssue, type CheckItemsAction, type CheckItemsActionAsync, type CheckItemsIssue, type Class, type Config, type ContentInput, type ContentRequirement, type CreditCardAction, type CreditCardIssue, type Cuid2Action, type Cuid2Issue, type CustomIssue, type CustomSchema, type CustomSchemaAsync, DECIMAL_REGEX, DIGITS_REGEX, type DateIssue, type DateSchema, type DecimalAction, type DecimalIssue, type DeepPickN, type Default, type DefaultAsync, type DefaultValue, type DescriptionAction, type DigitsAction, type DigitsIssue, EMAIL_REGEX, type EmailAction, type EmailIssue, type EmptyAction, type EmptyIssue, type EndsWithAction, type EndsWithIssue, type Enum, type EnumIssue, type EnumSchema, type ErrorMessage, type EveryItemAction, type EveryItemIssue, type ExcludesAction, type ExcludesIssue, type FailureDataset, type Fallback, type FallbackAsync, type FileIssue, type FileSchema, type FilterItemsAction, type FindItemAction, type FiniteAction, type FiniteIssue, type FirstTupleItem, type FlatErrors, type FunctionIssue, type FunctionSchema, type GenericIssue, type GenericMetadata, type GenericSchema, type GenericSchemaAsync, type GenericTransformation, type GenericTransformationAsync, type GenericValidation, type GenericValidationAsync, type GlobalConfig, type GraphemesAction, type GraphemesIssue, HEXADECIMAL_REGEX, HEX_COLOR_REGEX, type HashAction, type HashIssue, type HashType, type HexColorAction, type HexColorIssue, type HexadecimalAction, type HexadecimalIssue, IMEI_REGEX, IPV4_REGEX, IPV6_REGEX, IP_REGEX, ISO_DATE_REGEX, ISO_DATE_TIME_REGEX, ISO_TIMESTAMP_REGEX, ISO_TIME_REGEX, ISO_TIME_SECOND_REGEX, ISO_WEEK_REGEX, type ImeiAction, type ImeiIssue, type IncludesAction, type IncludesIssue, type InferDefault, type InferDefaults, type InferFallback, type InferFallbacks, type InferInput, type InferIntersectInput, type InferIntersectOutput, type InferIssue, type InferMapInput, type InferMapOutput, type InferNonNullableInput, type InferNonNullableIssue, type InferNonNullableOutput, type InferNonNullishInput, type InferNonNullishIssue, type InferNonNullishOutput, type InferNonOptionalInput, type InferNonOptionalIssue, type InferNonOptionalOutput, type InferNullableOutput, type InferNullishOutput, type InferObjectInput, type InferObjectIssue, type InferObjectOutput, type InferOptionalOutput, type InferOutput, type InferRecordInput, type InferRecordOutput, type InferSetInput, type InferSetOutput, type InferTupleInput, type InferTupleIssue, type InferTupleOutput, type InferUndefinedableOutput, type InferVariantIssue, type InstanceIssue, type InstanceSchema, type IntegerAction, type IntegerIssue, type IntersectIssue, type IntersectOptions, type IntersectOptionsAsync, type IntersectSchema, type IntersectSchemaAsync, type IpAction, type IpIssue, type Ipv4Action, type Ipv4Issue, type Ipv6Action, type Ipv6Issue, type IsoDateAction, type IsoDateIssue, type IsoDateTimeAction, type IsoDateTimeIssue, type IsoTimeAction, type IsoTimeIssue, type IsoTimeSecondAction, type IsoTimeSecondIssue, type IsoTimestampAction, type IsoTimestampIssue, type IsoWeekAction, type IsoWeekIssue, type IssueDotPath, type IssuePathItem, type LastTupleItem, type LazySchema, type LazySchemaAsync, type LengthAction, type LengthInput, type LengthIssue, type Literal, type LiteralIssue, type LiteralSchema, type LooseObjectIssue, type LooseObjectSchema, type LooseObjectSchemaAsync, type LooseTupleIssue, type LooseTupleSchema, type LooseTupleSchemaAsync, MAC48_REGEX, MAC64_REGEX, MAC_REGEX, type Mac48Action, type Mac48Issue, type Mac64Action, type Mac64Issue, type MacAction, type MacIssue, type MapIssue, type MapItemsAction, type MapPathItem, type MapSchema, type MapSchemaAsync, type MarkOptional, type MaxBytesAction, type MaxBytesIssue, type MaxGraphemesAction, type MaxGraphemesIssue, type MaxLengthAction, type MaxLengthIssue, type MaxSizeAction, type MaxSizeIssue, type MaxValueAction, type MaxValueIssue, type MaxWordsAction, type MaxWordsIssue, type MaybePromise, type MaybeReadonly, type MetadataAction, type MimeTypeAction, type MimeTypeIssue, type MinBytesAction, type MinBytesIssue, type MinGraphemesAction, type MinGraphemesIssue, type MinLengthAction, type MinLengthIssue, type MinSizeAction, type MinSizeIssue, type MinValueAction, type MinValueIssue, type MinWordsAction, type MinWordsIssue, type MultipleOfAction, type MultipleOfIssue, NANO_ID_REGEX, type NanIssue, type NanSchema, type NanoIDAction, type NanoIDIssue, type NeverIssue, type NeverSchema, type NonEmptyAction, type NonEmptyIssue, type NonNullable$1 as NonNullable, type NonNullableIssue, type NonNullableSchema, type NonNullableSchemaAsync, type NonNullish, type NonNullishIssue, type NonNullishSchema, type NonNullishSchemaAsync, type NonOptional, type NonOptionalIssue, type NonOptionalSchema, type NonOptionalSchemaAsync, type NormalizeAction, type NormalizeForm, type NotBytesAction, type NotBytesIssue, type NotGraphemesAction, type NotGraphemesIssue, type NotLengthAction, type NotLengthIssue, type NotSizeAction, type NotSizeIssue, type NotValueAction, type NotValueIssue, type NotWordsAction, type NotWordsIssue, type NullIssue, type NullSchema, type NullableSchema, type NullableSchemaAsync, type NullishSchema, type NullishSchemaAsync, type NumberIssue, type NumberSchema, OCTAL_REGEX, type ObjectEntries, type ObjectEntriesAsync, type ObjectIssue, type ObjectKeys, type ObjectPathItem, type ObjectSchema, type ObjectSchemaAsync, type ObjectWithRestIssue, type ObjectWithRestSchema, type ObjectWithRestSchemaAsync, type OctalAction, type OctalIssue, type OptionalSchema, type OptionalSchemaAsync, type OutputDataset, type Parser, type ParserAsync, type PartialCheckAction, type PartialCheckActionAsync, type PartialCheckIssue, type PartialDataset, type PathKeys, type PicklistIssue, type PicklistOptions, type PicklistSchema, type PipeAction, type PipeActionAsync, type PipeItem, type PipeItemAsync, type Prettify, type PromiseIssue, type PromiseSchema, type RawCheckAction, type RawCheckActionAsync, type RawCheckIssue, type RawTransformAction, type RawTransformActionAsync, type RawTransformIssue, type ReadonlyAction, type RecordIssue, type RecordSchema, type RecordSchemaAsync, type ReduceItemsAction, type RegexAction, type RegexIssue, type ReturnsAction, type ReturnsActionAsync, type SafeIntegerAction, type SafeIntegerIssue, type SafeParseResult, type SafeParser, type SafeParserAsync, type SchemaWithFallback, type SchemaWithFallbackAsync, type SchemaWithOmit, type SchemaWithPartial, type SchemaWithPartialAsync, type SchemaWithPick, type SchemaWithPipe, type SchemaWithPipeAsync, type SchemaWithRequired, type SchemaWithRequiredAsync, type SchemaWithoutPipe, type SetIssue, type SetPathItem, type SetSchema, type SetSchemaAsync, type SizeAction, type SizeInput, type SizeIssue, type SomeItemAction, type SomeItemIssue, type SortItemsAction, type StandardFailureResult, type StandardResult, type StandardSchemaProps, type StandardSuccessResult, type StartsWithAction, type StartsWithIssue, type StrictObjectIssue, type StrictObjectSchema, type StrictObjectSchemaAsync, type StrictTupleIssue, type StrictTupleSchema, type StrictTupleSchemaAsync, type StringIssue, type StringSchema, type SuccessDataset, type SymbolIssue, type SymbolSchema, type TitleAction, type ToLowerCaseAction, type ToMaxValueAction, type ToMinValueAction, type ToUpperCaseAction, type TransformAction, type TransformActionAsync, type TrimAction, type TrimEndAction, type TrimStartAction, type TupleIssue, type TupleItems, type TupleItemsAsync, type TupleSchema, type TupleSchemaAsync, type TupleWithRestIssue, type TupleWithRestSchema, type TupleWithRestSchemaAsync, ULID_REGEX, UUID_REGEX, type UlidAction, type UlidIssue, type UndefinedIssue, type UndefinedSchema, type UndefinedableSchema, type UndefinedableSchemaAsync, type UnionIssue, type UnionOptions, type UnionOptionsAsync, type UnionSchema, type UnionSchemaAsync, type UnionToIntersect, type UnionToTuple, type UnknownDataset, type UnknownPathItem, type UnknownSchema, type UrlAction, type UrlIssue, type UuidAction, type UuidIssue, ValiError, type ValueAction, type ValueInput, type ValueIssue, type VariantIssue, type VariantOptionSchema, type VariantOptionSchemaAsync, type VariantOptions, type VariantOptionsAsync, type VariantSchema, type VariantSchemaAsync, type VoidIssue, type VoidSchema, type WordsAction, type WordsIssue, _addIssue, _getByteCount, _getGraphemeCount, _getStandardProps, _getWordCount, _isLuhnAlgo, _isValidObjectKey, _joinExpects, _stringify, any, args, argsAsync, array, arrayAsync, assert, awaitAsync, base64, bic, bigint, blob, boolean, brand, bytes, check, checkAsync, checkItems, checkItemsAsync, config, creditCard, cuid2, custom, customAsync, date, decimal, deleteGlobalConfig, deleteGlobalMessage, deleteSchemaMessage, deleteSpecificMessage, description, digits, email, empty, endsWith, entriesFromList, enum_ as enum, enum_, everyItem, excludes, fallback, fallbackAsync, file, filterItems, findItem, finite, flatten, forward, forwardAsync, function_ as function, function_, getDefault, getDefaults, getDefaultsAsync, getDotPath, getFallback, getFallbacks, getFallbacksAsync, getGlobalConfig, getGlobalMessage, getSchemaMessage, getSpecificMessage, graphemes, hash, hexColor, hexadecimal, imei, includes, instance, integer, intersect, intersectAsync, ip, ipv4, ipv6, is, isOfKind, isOfType, isValiError, isoDate, isoDateTime, isoTime, isoTimeSecond, isoTimestamp, isoWeek, keyof, lazy, lazyAsync, length, literal, looseObject, looseObjectAsync, looseTuple, looseTupleAsync, mac, mac48, mac64, map, mapAsync, mapItems, maxBytes, maxGraphemes, maxLength, maxSize, maxValue, maxWords, metadata, mimeType, minBytes, minGraphemes, minLength, minSize, minValue, minWords, multipleOf, nan, nanoid, never, nonEmpty, nonNullable, nonNullableAsync, nonNullish, nonNullishAsync, nonOptional, nonOptionalAsync, normalize, notBytes, notGraphemes, notLength, notSize, notValue, notWords, null_ as null, null_, nullable, nullableAsync, nullish, nullishAsync, number, object, objectAsync, objectWithRest, objectWithRestAsync, octal, omit, optional, optionalAsync, parse, parseAsync, parser, parserAsync, partial, partialAsync, partialCheck, partialCheckAsync, pick, picklist, pipe, pipeAsync, promise, rawCheck, rawCheckAsync, rawTransform, rawTransformAsync, readonly, record, recordAsync, reduceItems, regex, required, requiredAsync, returns, returnsAsync, safeInteger, safeParse, safeParseAsync, safeParser, safeParserAsync, set, setAsync, setGlobalConfig, setGlobalMessage, setSchemaMessage, setSpecificMessage, size, someItem, sortItems, startsWith, strictObject, strictObjectAsync, strictTuple, strictTupleAsync, string, symbol, title, toLowerCase, toMaxValue, toMinValue, toUpperCase, transform, transformAsync, trim, trimEnd, trimStart, tuple, tupleAsync, tupleWithRest, tupleWithRestAsync, ulid, undefined_ as undefined, undefined_, undefinedable, undefinedableAsync, union, unionAsync, unknown, unwrap, url, uuid, value, variant, variantAsync, void_ as void, void_, words };
+diff --git a/dist/index.js b/dist/index.js
+index 79d6061331c1ab04dd025fc3e3ffda55c6829758..766c4fdf6add3f48d7c116c242524e037ef7fe3d 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -316,10 +316,6 @@ var CUID2_REGEX = /^[a-z][\da-z]*$/u;
+ var DECIMAL_REGEX = /^[+-]?\d+(?:\.\d+)?$/u;
+ var DIGITS_REGEX = /^\d+$/u;
+ var EMAIL_REGEX = /^[\w+-]+(?:\.[\w+-]+)*@[\da-z]+(?:[.-][\da-z]+)*\.[a-z]{2,}$/iu;
+-var EMOJI_REGEX = (
+-  // eslint-disable-next-line redos-detector/no-unsafe-regex, regexp/no-dupe-disjunctions -- false positives
+-  /^(?:[\u{1F1E6}-\u{1F1FF}]{2}|\u{1F3F4}[\u{E0061}-\u{E007A}]{2}[\u{E0030}-\u{E0039}\u{E0061}-\u{E007A}]{1,3}\u{E007F}|(?:\p{Emoji}\uFE0F\u20E3?|\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation})(?:\u200D(?:\p{Emoji}\uFE0F\u20E3?|\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}))*)+$/u
+-);
+ var HEXADECIMAL_REGEX = /^(?:0[hx])?[\da-f]+$/iu;
+ var HEX_COLOR_REGEX = /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/iu;
+ var IMEI_REGEX = /^\d{15}$|^\d{2}-\d{6}-\d{6}-\d$/u;
+@@ -659,25 +655,6 @@ function email(message) {
+   };
+ }
+ 
+-// src/actions/emoji/emoji.ts
+-function emoji(message) {
+-  return {
+-    kind: "validation",
+-    type: "emoji",
+-    reference: emoji,
+-    async: false,
+-    expects: null,
+-    requirement: EMOJI_REGEX,
+-    message,
+-    "~run"(dataset, config2) {
+-      if (dataset.typed && !this.requirement.test(dataset.value)) {
+-        _addIssue(this, "emoji", dataset, config2);
+-      }
+-      return dataset;
+-    }
+-  };
+-}
+-
+ // src/actions/empty/empty.ts
+ function empty(message) {
+   return {
+@@ -6162,7 +6139,6 @@ export {
+   DECIMAL_REGEX,
+   DIGITS_REGEX,
+   EMAIL_REGEX,
+-  EMOJI_REGEX,
+   HEXADECIMAL_REGEX,
+   HEX_COLOR_REGEX,
+   IMEI_REGEX,
+@@ -6224,7 +6200,6 @@ export {
+   description,
+   digits,
+   email,
+-  emoji,
+   empty,
+   endsWith,
+   entriesFromList,

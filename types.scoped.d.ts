@@ -3,7 +3,7 @@
 declare const __brand: unique symbol
 
 declare global {
-    declare type Brand<B> = { [__brand]: B }
+    declare type Brand<B> = { [__brand]?: B }
     declare type Branded<T, B> = T & Brand<B>
 
     var __REVENGE_DEV__: boolean

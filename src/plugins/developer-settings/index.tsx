@@ -8,12 +8,12 @@ import AssetBrowserSettingsPage from './pages/AssetBrowser'
 import DebugPerformanceTimesSettingsPage from './pages/DebugPerformanceTimes'
 import DeveloperSettingsPage from './pages/Developer'
 
-import { connectToDebugger, DebuggerContext } from './debugger'
+import { DebuggerContext, connectToDebugger } from './debugger'
 import { DevToolsEvents, connectToDevTools } from './devtools'
 
+import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import type { PluginContextFor } from '@revenge-mod/plugins'
 import type { FunctionComponent } from 'react'
-import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 
 const plugin = registerPlugin<{
     reactDevTools: {
@@ -32,6 +32,8 @@ const plugin = registerPlugin<{
         id: 'revenge.developer-settings',
         version: '1.0.0',
         icon: 'WrenchIcon',
+    },
+    {
         async afterAppRender(context) {
             const {
                 cleanup,
@@ -109,8 +111,11 @@ const plugin = registerPlugin<{
             },
         }),
     },
-    true,
-    true,
+    {
+        core: true,
+        manageable: true,
+        enabled: false,
+    },
 )
 
 function setupDebugger({ patcher, cleanup }: PluginContextFor<typeof plugin, 'AfterAppRender'>) {
@@ -131,30 +136,34 @@ function setupDebugger({ patcher, cleanup }: PluginContextFor<typeof plugin, 'Af
         'loggerPatch',
     )
 
-    globalThis.dbgr = {
-        reload: () => BundleUpdaterManager.reload(),
-        patcher: {
-            snipe: (object, key, callback) =>
-                debuggerCleanups.add(
-                    patcher.after(
-                        object,
-                        key,
-                        callback ?? ((args, ret) => console.log('[SNIPER]', args, ret)),
-                        'revenge.plugins.developer-settings.debugger.patcher.snipe',
-                    ),
+    globalThis.reload = () => BundleUpdaterManager.reload()
+    globalThis.patcher = {
+        snipe: (object, key, callback) =>
+            debuggerCleanups.add(
+                patcher.after(
+                    object,
+                    key,
+                    callback ?? ((args, ret) => console.log('[SNIPER]', args, ret)),
+                    'revenge.plugins.developer-settings.debugger.patcher.snipe',
                 ),
-            noop: (object, key) =>
-                debuggerCleanups.add(patcher.instead(object, key, () => void 0, 'revenge.plugins.developer-settings.debugger.patcher.noop')),
-            wipe: () => {
-                for (const c of debuggerCleanups) c()
-                debuggerCleanups.clear()
-            },
+            ),
+        noop: (object, key) =>
+            debuggerCleanups.add(
+                patcher.instead(object, key, () => void 0, 'revenge.plugins.developer-settings.debugger.patcher.noop'),
+            ),
+        wipe: () => {
+            for (const c of debuggerCleanups) c()
+            debuggerCleanups.clear()
         },
     }
 
     cleanup(
-        // biome-ignore lint/performance/noDelete: This happens once
-        () => delete globalThis.dbgr,
+        () => {
+            // biome-ignore lint/performance/noDelete: This happens once
+            delete globalThis.reload
+            // biome-ignore lint/performance/noDelete: This happens once
+            delete globalThis.patcher
+        },
         () => {
             for (const c of debuggerCleanups) c()
         },

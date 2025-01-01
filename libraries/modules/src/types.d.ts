@@ -44,7 +44,6 @@ export namespace Metro {
         /** Set to undefined once module is initialized */
         dependencyMap: If<Initialized, undefined, DependencyMap>
         /** Error value thrown by the factory */
-        // biome-ignore lint/suspicious/noExplicitAny: This is okay
         error?: any
         /** Set to undefined once module is initialized */
         factory: If<Initialized, undefined, FactoryFn>
@@ -108,7 +107,6 @@ export namespace Metro {
         }) => ModuleID
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: This is okay
     export type ModuleExports = any
 }
 
@@ -190,7 +188,7 @@ export namespace DiscordModules {
     }
 
     export interface FilePickerUtils {
-        handleDocumentSelection(options?: { pickMultiple?: boolean }): Promise<FilePickerFile[]>
+        handleDocumentSelection(options?: { pickMultiple?: boolean }): Promise<FilePickerFile[] | undefined>
     }
 
     export interface ToastActionCreators {
@@ -240,9 +238,7 @@ export namespace DiscordModules {
     }
 
     export namespace Flux {
-        // biome-ignore lint/suspicious/noExplicitAny: shuddhup
         export type DispatcherPayload = any
-        // biome-ignore lint/suspicious/noExplicitAny: shuddhup again
         export type DispatcherDependency = any
 
         export interface Dispatcher {
@@ -584,7 +580,7 @@ export namespace DiscordModules {
 
         // Menus
         export type ContextMenu = FC<{
-            title: string
+            title: ReactNode
             triggerOnLongPress?: boolean
             items: Array<ContextMenuItem | ContextMenuItem[]>
             align?: 'left' | 'right' | 'above' | 'below'
@@ -610,7 +606,7 @@ export namespace DiscordModules {
             startIcon?: ReactNode
             endIcon?: ReactNode
         }>
-        export type FlashList = FC
+
         export type Text = FC<
             TextProps & {
                 variant?: DiscordModules.Styles.TextVariant
@@ -622,5 +618,10 @@ export namespace DiscordModules {
                 children?: ReactNode
             }
         >
+
+        export type IntlLink = FC<{
+            target: string
+            children?: ReactNode
+        }>
     }
 }
