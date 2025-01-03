@@ -26,7 +26,7 @@ import { type FC, createContext } from 'react'
 export type Storage = {
     plugins: {
         sortMode: 'asc' | 'dsc'
-        showCorePlugins: boolean
+        showInternalPlugins: boolean
     }
 }
 
@@ -175,11 +175,11 @@ const plugin = registerPlugin<Storage>(
         initializeStorage: () => ({
             plugins: {
                 sortMode: 'asc',
-                showCorePlugins: false,
+                showInternalPlugins: false,
             },
         }),
     },
-    { core: true, manageable: false },
+    { external: false, manageable: false },
 )
 
 export const PluginContext = createContext<PluginContextFor<typeof plugin, 'AfterAppRender'>>(null!)

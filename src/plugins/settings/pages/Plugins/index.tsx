@@ -26,7 +26,7 @@ import BrowsePluginsButton from './components/BrowsePluginsButton'
 import { NoPlugins, NoResults } from './components/Illustrations'
 import InstalledPluginCard from './components/InstalledPluginCard'
 import MasonaryFlashPluginList from './components/MasonaryFlashPluginList'
-import PluginListSearchInput from './components/PluginListSearchInput'
+import PluginListSearchAndFilters from './components/PluginListSearchInput'
 import { PluginSettingsPageContext, styles } from './components/shared'
 
 import { useFilteredPlugins } from './hooks'
@@ -41,8 +41,8 @@ export default function PluginsSettingsPage() {
     useObservable([pluginsStates, storage, externalPluginsMetadata])
 
     const [query, setQuery] = useState('')
-    const { showCorePlugins, sortMode } = storage.plugins
-    const { externalPlugins, corePlugins, empty, noSearchResults } = useFilteredPlugins(
+    const { showCorePlugins: showInternalPlugins, sortMode } = storage.plugins
+    const { externalPlugins, internalPlugins, empty, noSearchResults } = useFilteredPlugins(
         Object.values(registeredPlugins),
         query,
         storage.plugins,
@@ -71,10 +71,10 @@ export default function PluginsSettingsPage() {
                           ]),
                     [
                         {
-                            label: 'Show core plugins',
-                            IconComponent: showCorePlugins ? CheckmarkLargeIcon : undefined,
+                            label: 'Show internal plugins',
+                            IconComponent: showInternalPlugins ? CheckmarkLargeIcon : undefined,
                             variant: 'destructive',
-                            action: () => (storage.plugins.showCorePlugins = !showCorePlugins),
+                            action: () => (storage.plugins.showCorePlugins = !showInternalPlugins),
                         },
                     ],
                 ]}
@@ -86,10 +86,12 @@ export default function PluginsSettingsPage() {
 
     return (
         <PageWrapper withTopControls>
-            <PluginSettingsPageContext.Provider value={{ setQuery, showCorePlugins, sortMode, ContextMenuComponent }}>
+            <PluginSettingsPageContext.Provider
+                value={{ setQuery, showInternalPlugins, sortMode, ContextMenuComponent }}
+            >
                 <Stack spacing={16} style={styles.grow}>
                     <Show when={!empty || noSearchResults} fallback={<NoPlugins />}>
-                        <PluginListSearchInput />
+                        <PluginListSearchAndFilters />
                         <Show when={!noSearchResults} fallback={<NoResults />}>
                             <ScrollView
                                 fadingEdgeLength={32}
@@ -100,13 +102,13 @@ export default function PluginsSettingsPage() {
                                     data={externalPlugins}
                                     ListItemComponent={InstalledPluginCard}
                                 />
-                                <Show when={showCorePlugins}>
+                                <Show when={showInternalPlugins}>
                                     <MasonaryFlashPluginList
-                                        data={corePlugins}
+                                        data={internalPlugins}
                                         header={
                                             // TableRowGroupTitle probably has some margin, setting it to flex-end causes it to be in the center, lucky.
                                             <View style={styles.headerContainer}>
-                                                <TableRowGroupTitle title="Core Plugins" />
+                                                <TableRowGroupTitle title="Internal Plugins" />
                                                 <IconButton
                                                     icon={getAssetIndexByName('CircleQuestionIcon-primary')!}
                                                     size="sm"
@@ -139,10 +141,10 @@ function PluginBrowserCTA() {
 
 function showCorePluginsInformationAlert() {
     return openAlert(
-        'revenge.plugins.settings.plugins.core-plugins.description',
+        'revenge.plugins.settings.plugins.internal-plugins.description',
         <AlertModal
-            title="What are core plugins?"
-            content="Core plugins are an essential part of Revenge. They provide core functionalities like allowing you to access this settings menu. Disabling core plugins may cause unexpected behavior."
+            title="What are internal plugins?"
+            content="Internal plugins are integrated into Revenge and provide core functionalities, such as this settings menu. Some internal plugins cannot be disabled, as they provide resources required by other plugins."
             actions={<AlertActionButton text="OK" />}
         />,
     )

@@ -51,6 +51,6 @@ registerPlugin(
         },
     },
     {
-        core: true,
+        external: false,
     },
 )

@@ -2,16 +2,20 @@ import { afterAppRender, isAppRendered } from '@revenge-mod/app'
 import { subscribeModule } from '@revenge-mod/modules/metro'
 import { createPatcherInstance } from '@revenge-mod/patcher'
 import { DefaultPluginStopConfig, PluginStatus, WhitelistedPluginObjectKeys } from '@revenge-mod/plugins/constants'
-import type { PluginManifest } from '@revenge-mod/plugins/schemas'
 import { type PluginStates, pluginsStates } from '@revenge-mod/preferences'
 import { ExternalPluginsMetadataFilePath, PluginStoragePath } from '@revenge-mod/shared/paths'
 import { awaitStorage, createStorage } from '@revenge-mod/storage'
+
 import { getErrorStack } from '@revenge-mod/utils/errors'
 import { objectFreeze, objectSeal } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
-import type { FC } from 'react'
+
 import { logger } from './shared'
-import type { PluginContext, PluginDefinition, PluginStopConfig, PluginStorage } from './types'
+
+import type { FC } from 'react'
+
+import type { PluginManifest, PluginDefinition } from './schemas'
+import type { PluginContext, PluginStopConfig, PluginStorage } from './types'
 
 export const registeredPlugins: Record<PluginManifest['id'], InternalPluginDefinition> = {}
 export const externalPluginsMetadata = createStorage<Record<PluginManifest['id'], ExternalPluginMetadata>>(
@@ -29,7 +33,7 @@ export type ExternalPluginMetadata =
       }
 
 interface RegisterPluginOptions {
-    core?: boolean
+    external?: boolean
     manageable?: boolean
     enabled?: boolean
 }
@@ -42,9 +46,9 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
     if (manifest.id in registeredPlugins) throw new Error(`Plugin "${manifest.id}" is already registered`)
 
     const options: Required<RegisterPluginOptions> = {
-        core: opts.core ?? false,
-        manageable: opts.manageable ?? !opts.core,
-        enabled: opts.enabled ?? !!opts.core,
+        external: opts.external ?? true,
+        manageable: opts.manageable ?? opts.external ?? true,
+        enabled: opts.enabled ?? !opts.external,
     }
 
     let status: PluginStatus = PluginStatus.Stopped
@@ -52,7 +56,8 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
 
     const def: InternalPluginDefinition = {
         ...manifest,
-        core: options.core,
+        context: lazyValue(() => ctx, { hint: 'object' }),
+        external: options.external,
         manageable: options.manageable,
         lifecycles: {
             prepare() {
@@ -79,11 +84,12 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         state: lazyValue(
             () =>
                 (pluginsStates[manifest.id] ??= {
-                    // Core plugins are enabled by default
+                    // Internal plugins are enabled by default
                     // While external plugins are disabled by default
                     enabled: options.enabled,
                     errors: [],
                 }),
+            { hint: 'object' },
         ),
         get status() {
             return status
@@ -102,7 +108,6 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         get stopped() {
             return this.status === PluginStatus.Stopped
         },
-        SettingsComponent: definition.settings,
         disable() {
             if (!this.manageable) throw new Error(`Cannot disable unmanageable plugin: ${this.id}`)
 
@@ -217,7 +222,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             beforeAppRender: null,
             afterAppRender: null,
         },
-        revenge: lazyValue(() => revenge),
+        revenge: lazyValue(() => revenge, { hint: 'object' }),
         cleanup(...funcs) {
             for (const cleanup of funcs) cleanups.add(cleanup)
         },
@@ -267,6 +272,7 @@ export type InternalPluginDefinition<
     AppLaunchedReturn = any,
     AppInitializedReturn = any,
 > = PluginManifest & {
+    context: PluginContext<any, Storage, AppLaunchedReturn, AppInitializedReturn>
     state: PluginStates[PluginManifest['id']]
     lifecycles: Pick<
         PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>,
@@ -317,10 +323,10 @@ export type InternalPluginDefinition<
      **/
     SettingsComponent?: FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
     /**
-     * Whether the plugin is a core plugin
+     * Whether the plugin is an external plugin
      * @internal
      */
-    core: boolean
+    external: boolean
     /**
      * Whether the plugin is manageable (can be disabled/enabled)
      * @internal

@@ -1,56 +1,73 @@
+import { getAssetIndexByName } from '@revenge-mod/assets'
 import { FormSwitch } from '@revenge-mod/ui/components'
 
 import { openAlert } from '@revenge-mod/modules/common'
-import { AlertActionButton, AlertModal } from '@revenge-mod/modules/common/components'
+import { AlertActionButton, AlertModal, IconButton } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 
 import { registeredPlugins } from '@revenge-mod/plugins/internals'
 
-import { useState } from 'react'
+import { Show } from '@revenge-mod/shared/components'
+import { useRerenderer } from '@revenge-mod/shared/hooks'
+
+import { useContext } from 'react'
 
 import PluginCard, { type PluginCardProps } from './PluginCard'
+import PluginCardContext from '../contexts/PluginCardContext'
 
-// TODO: Settings components
-export default function InstalledPluginCard({ enabled: _enabled, manageable, id, ...props }: InstalledPluginCardProps) {
-    const [enabled, setEnabled] = useState(_enabled)
+export default function InstalledPluginCard(props: PluginCardProps) {
+    const { plugin, navigation } = useContext(PluginCardContext)
+    const { SettingsComponent, enabled, id, manageable, context } = plugin!
+
+    const rerender = useRerenderer()
 
     return (
         <PluginCard
             {...props}
             trailing={
-                <FormSwitch
-                    value={enabled}
-                    disabled={!manageable}
-                    onValueChange={async enabled => {
-                        const plugin = registeredPlugins[id]!
+                <>
+                    <Show when={SettingsComponent}>
+                        <IconButton
+                            disabled={!enabled}
+                            icon={getAssetIndexByName('SettingsIcon')}
+                            variant="tertiary"
+                            onPress={() => {
+                                navigation.navigate('RevengeCustomPage', {
+                                    // @ts-expect-error: I love TypeScript
+                                    render: () => <SettingsComponent {...context} />,
+                                })
+                            }}
+                        />
+                    </Show>
+                    <IconButton size="sm" icon={getAssetIndexByName('MoreHorizontalIcon')} variant="tertiary" />
+                    <FormSwitch
+                        value={enabled}
+                        disabled={!manageable}
+                        onValueChange={async enabled => {
+                            const plugin = registeredPlugins[id]!
 
-                        if (enabled) {
-                            plugin.enable()
-                            if (plugin.lifecycles.beforeAppRender || plugin.lifecycles.subscribeModules)
-                                showReloadRequiredAlert(enabled)
-                            else await plugin.start()
-                        } else {
-                            const { reloadRequired } = plugin.disable()
-                            if (reloadRequired) showReloadRequiredAlert(enabled)
-                        }
+                            if (enabled) {
+                                plugin.enable()
+                                if (plugin.lifecycles.beforeAppRender || plugin.lifecycles.subscribeModules)
+                                    showReloadRequiredAlert(enabled)
+                                else await plugin.start()
+                            } else {
+                                const { reloadRequired } = plugin.disable()
+                                if (reloadRequired) showReloadRequiredAlert(enabled)
+                            }
 
-                        setEnabled(enabled)
-                    }}
-                />
+                            rerender()
+                        }}
+                    />
+                </>
             }
         />
     )
 }
 
-interface InstalledPluginCardProps extends PluginCardProps {
-    id: string
-    enabled: boolean
-    manageable: boolean
-}
-
 function showReloadRequiredAlert(enabling: boolean) {
     openAlert(
-        'revenge.plugins.reload-required',
+        'revenge.plugins.settings.plugins.reload-required',
         <AlertModal
             title="Reload required"
             content={

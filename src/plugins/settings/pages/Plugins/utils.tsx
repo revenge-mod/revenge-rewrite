@@ -7,7 +7,7 @@ import { InstallPluginResult } from '@revenge-mod/plugins/constants'
 
 const onPluginInstalled = () =>
     toasts.open({
-        key: 'revenge.plugins.install.success',
+        key: 'revenge.plugins.settings.plugins.install.success',
         content: 'Plugin installed!',
         IconComponent: DownloadIcon,
     })
@@ -24,7 +24,7 @@ export async function installPluginFromStorage() {
     switch (res) {
         case InstallPluginResult.UnsignedUserConfirmationNeeded:
             return openAlert(
-                'revenge.plugins.installation.unsigned',
+                'revenge.plugins.settings.plugins.install.unsigned',
                 <AlertModal
                     title="Install unsigned plugin?"
                     content={
@@ -48,7 +48,7 @@ export async function installPluginFromStorage() {
             )
         default:
             return openAlert(
-                'revenge.plugins.installation.failed',
+                'revenge.plugins.settings.plugin.install.failed',
                 <AlertModal
                     title="Plugin installation failed"
                     content={InstallPluginResultMessage[res]}

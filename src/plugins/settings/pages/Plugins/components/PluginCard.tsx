@@ -6,7 +6,8 @@ import { SemanticColor } from '@revenge-mod/ui/colors'
 import { Image } from 'react-native'
 import { styles } from './shared'
 
-import type { ReactNode } from 'react'
+import { useContext, type ReactNode } from 'react'
+import PluginCardContext from '../contexts/PluginCardContext'
 
 const usePluginCardStyles = createStyles({
     icon: {
@@ -32,25 +33,16 @@ const usePluginCardStyles = createStyles({
     },
 })
 
-export interface PluginCardProps {
-    name: string
-    description: string
-    author: string
-    version: string
-    icon?: string
+export type PluginCardProps = {
     trailing?: ReactNode
     horizontalGaps: boolean
 }
 
-export default function PluginCard({
-    name,
-    description,
-    author,
-    version,
-    icon,
-    trailing,
-    horizontalGaps,
-}: PluginCardProps) {
+export default function PluginCard({ trailing, horizontalGaps }: PluginCardProps) {
+    const {
+        manifest: { icon, name, version, author, description },
+    } = useContext(PluginCardContext)
+
     const cardStyles = usePluginCardStyles()
 
     return (

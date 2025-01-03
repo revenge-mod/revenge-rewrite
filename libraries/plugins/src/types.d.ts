@@ -1,50 +1,10 @@
 import type { Patcher } from '@revenge-mod/patcher'
 import type { RevengeLibrary } from '@revenge-mod/revenge'
 import type { ExtendedObservable } from '@revenge-mod/storage'
-import type React from 'react'
-
 import type { Metro } from '@revenge-mod/modules'
+
 import type { WhitelistedPluginObjectKeys } from './constants'
 import type { InternalPluginDefinition } from './internals'
-
-export type PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> = {
-    /**
-     * Runs before the app gets rendered AND even before the plugin is refetched and updated.
-     * If your plugin receives a new update, your old version will continue to run until the user decides to reload the app.
-     * @param context The context for this lifecycle
-     * @returns An additional context to give to the next lifecycles
-     */
-    beforeAppRender?: (
-        context: PluginContext<'BeforeAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>,
-    ) => Promise<AppInitializedReturn> | AppInitializedReturn
-    /**
-     * Runs after the app gets rendered.
-     * @param context The context for this lifecycle
-     * @returns An additional context to give to the next lifecyles
-     */
-    afterAppRender?: (
-        context: PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>,
-    ) => Promise<AppLaunchedReturn> | AppLaunchedReturn
-    /**
-     * Runs before your plugin is stopped
-     * @param context The context for this lifecycle
-     */
-    beforeStop?: (context: PluginContext<'BeforeStop', Storage, AppLaunchedReturn, AppInitializedReturn>) =>
-        | {
-              reloadRequired?: boolean
-          }
-        | undefined
-        | void
-    onMetroModuleLoad?: (
-        context: PluginContext<'BeforeAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>,
-        moduleId: Metro.ModuleID,
-        moduleExports: Metro.ModuleExports,
-        unsubscribeAll: () => boolean,
-    ) => void
-} & {
-    settings?: React.FC<PluginContext<'AfterAppRender', Storage, AppLaunchedReturn, AppInitializedReturn>>
-    initializeStorage?: () => Storage
-}
 
 export type PluginStopConfig = {
     /**

@@ -1,12 +1,12 @@
 import type { PluginManifest } from '@revenge-mod/plugins/schemas'
 import { useMemo } from 'react'
 
-export function useFilteredPlugins<const P extends PluginManifest & { core?: boolean }>(
+export function useFilteredPlugins<const P extends PluginManifest & { external?: boolean }>(
     plugins: P[],
     query: string,
-    options: { showCorePlugins: boolean; sortMode: 'asc' | 'dsc' },
+    options: { showInternalPlugins: boolean; sortMode: 'asc' | 'dsc' },
 ) {
-    const { showCorePlugins, sortMode } = options
+    const { showInternalPlugins, sortMode } = options
 
     const _plugins = useMemo(
         () =>
@@ -20,12 +20,12 @@ export function useFilteredPlugins<const P extends PluginManifest & { core?: boo
         [plugins, query, sortMode],
     )
 
-    const externalPlugins = useMemo(() => _plugins.filter(plugin => !plugin.core), [_plugins])
-    const corePlugins = useMemo(() => _plugins.filter(plugin => plugin.core), [_plugins])
-    const empty = !(showCorePlugins ? corePlugins.length + externalPlugins.length : externalPlugins.length)
+    const externalPlugins = useMemo(() => _plugins.filter(plugin => plugin.external ?? true), [_plugins])
+    const internalPlugins = useMemo(() => _plugins.filter(plugin => !(plugin.external ?? true)), [_plugins])
+    const empty = !(showInternalPlugins ? internalPlugins.length + externalPlugins.length : externalPlugins.length)
 
     // TODO: Maybe create 2 separate data lists for non-filtered and filtered plugins
     const noSearchResults = empty && !!query
 
-    return { plugins: _plugins, externalPlugins, corePlugins, empty, noSearchResults }
+    return { plugins: _plugins, externalPlugins, internalPlugins, empty, noSearchResults }
 }

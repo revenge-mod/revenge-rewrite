@@ -7,7 +7,7 @@ import { View } from 'react-native'
 
 import { PluginSettingsPageContext, styles } from './shared'
 
-export default function PluginListSearchInput() {
+export default function PluginListSearchAndFilters() {
     const { setQuery, ContextMenuComponent } = useContext(PluginSettingsPageContext)
 
     return (
@@ -22,7 +22,7 @@ export default function PluginListSearchInput() {
             </View>
             <ContextMenuComponent>
                 {props => (
-                    <IconButton {...props} icon={getAssetIndexByName('FiltersHorizontalIcon')!} variant="tertiary" />
+                    <IconButton {...props} icon={getAssetIndexByName('FiltersHorizontalIcon')!} variant="secondary-overlay" />
                 )}
             </ContextMenuComponent>
         </View>

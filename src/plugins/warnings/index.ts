@@ -44,5 +44,5 @@ registerPlugin<{
             }
         },
     },
-    { core: true, manageable: false },
+    { external: false, manageable: false },
 )
