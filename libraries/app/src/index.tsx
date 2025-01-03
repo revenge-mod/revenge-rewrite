@@ -80,8 +80,8 @@ afterErrorBoundaryPatchable(async function patchErrorBoundary() {
     setImmediate(() => {
         patcher.after.await(
             findByName
-                .async<{ new (): ErrorBoundaryComponentPrototype }, true>('ErrorBoundary')
-                .then(it => it!.prototype),
+                .async('ErrorBoundary')
+                .then(it => (it as { name: string; prototype: ErrorBoundaryComponentPrototype }).prototype),
             'render',
             function () {
                 if (this.state.error)
