@@ -39,7 +39,7 @@ export const intl = findByProps<{
 }>('intl')!
 export const intlModule = findByProps<typeof import('@discord/intl')>('runtimeHashMessageKey')!
 
-export const Logger = findByName('Logger') as unknown as typeof DiscordModules.Logger
+export const Logger = findByName<typeof DiscordModules.Logger, true>('Logger')!
 
 export const alerts = findByProps<DiscordModules.Alerts>('openAlert', 'dismissAlert')!
 export const channels = findByProps('getVoiceChannelId')!
