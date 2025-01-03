@@ -6,10 +6,10 @@ import { createLogger } from '@revenge-mod/utils/library'
 import { recordTimestamp } from '@revenge-mod/debug'
 import { IndexMetroModuleId } from '@revenge-mod/modules/constants'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
+import { createPatcherInstance } from '@revenge-mod/patcher'
 import { getErrorStack } from '@revenge-mod/utils/errors'
 
 import type { Metro } from '@revenge-mod/modules'
-import { createPatcherInstance } from '@revenge-mod/patcher'
 
 Object.freeze = Object.seal = o => o
 
@@ -18,19 +18,17 @@ async function initialize() {
     recordTimestamp('Init_Initialize')
 
     try {
-        const [{ createModulesLibrary }, { SettingsUILibrary }] = await Promise.all([
-            import('@revenge-mod/modules'),
-            import('@revenge-mod/ui/settings'),
-        ])
-
+        const { createModulesLibrary } = await import('@revenge-mod/modules')
         const ModulesLibraryPromise = createModulesLibrary()
 
-        const [{ AppLibrary }, { AssetsLibrary }, UIColorsLibrary, { ReactJSXLibrary }] = await Promise.all([
-            import('@revenge-mod/app'),
-            import('@revenge-mod/assets'),
-            import('@revenge-mod/ui/colors'),
-            import('@revenge-mod/react/jsx'),
-        ])
+        const [{ AppLibrary }, { AssetsLibrary }, UIColorsLibrary, { SettingsUILibrary }, { ReactJSXLibrary }] =
+            await Promise.all([
+                import('@revenge-mod/app'),
+                import('@revenge-mod/assets'),
+                import('@revenge-mod/ui/colors'),
+                import('@revenge-mod/ui/settings'),
+                import('@revenge-mod/react/jsx'),
+            ])
 
         const ModulesLibrary = await ModulesLibraryPromise
 
