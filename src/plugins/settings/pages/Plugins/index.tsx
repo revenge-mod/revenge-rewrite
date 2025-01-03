@@ -133,7 +133,7 @@ function showInternalPluginsInformationAlert() {
         'revenge.plugins.settings.plugins.internal-plugins.description',
         <AlertModal
             title="What are internal plugins?"
-            content="Internal plugins are directly integrated into Revenge, and provide core functionalities such as this settings menu. Some internal plugins provide necessary resources required by other plugins."
+            content="Internal plugins are directly integrated into Revenge, and provide core functionalities such as this settings menu. Some internal plugins are essential to provide necessary resources required by other plugins."
             actions={<AlertActionButton text="OK" />}
         />,
     )
