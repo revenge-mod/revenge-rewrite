@@ -93,7 +93,7 @@ export default function DeveloperSettingsPage() {
                                     storage.reactDevTools.address = refDevToolsAddr.current
 
                                     toasts.open({
-                                        key: 'revenge.plugins.settings.react-devtools.saved',
+                                        key: 'revenge.plugins.developer-settings.react-devtools.saved',
                                         content: 'Saved DevTools address!',
                                     })
                                 }}
@@ -179,7 +179,7 @@ export default function DeveloperSettingsPage() {
                         icon={<TableRowIcon source={assets.getIndexByName('PaperIcon')!} />}
                         onPress={() => {
                             alerts.openAlert(
-                                'revenge.plugins.storage.evaluate',
+                                'revenge.plugins.developer-settings.evaluate',
                                 <PluginContext.Provider value={context}>
                                     <DeveloperSettingsPageEvaluateJavaScriptAlert />
                                 </PluginContext.Provider>,
