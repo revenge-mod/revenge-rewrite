@@ -12,21 +12,27 @@ import type { DiscordNativeModules } from './types'
 
 const nmp = nativeModuleProxy
 
-export const CacheModule = lazyValue(() => nmp.NativeCacheModule ?? nmp.MMKVManager) as DiscordNativeModules.CacheModule
-export const FileModule = lazyValue(
-    () => nmp.NativeFileModule ?? nmp.RTNFileManager ?? nmp.DCDFileManager,
-) as DiscordNativeModules.FileModule
+export const CacheModule = lazyValue(() => nmp.NativeCacheModule ?? nmp.MMKVManager, {
+    hint: 'object',
+}) as DiscordNativeModules.CacheModule
+
+export const FileModule = lazyValue(() => nmp.NativeFileModule ?? nmp.RTNFileManager ?? nmp.DCDFileManager, {
+    hint: 'object',
+}) as DiscordNativeModules.FileModule
+
 export const ClientInfoModule = lazyValue(
     () => nmp.NativeClientInfoModule ?? nmp.RTNClientInfoManager ?? nmp.InfoDictionaryManager,
+    { hint: 'object' },
 ) as DiscordNativeModules.ClientInfoModule
-export const DeviceModule = lazyValue(
-    () => nmp.NativeDeviceModule ?? nmp.RTNDeviceManager ?? nmp.DCDDeviceManager,
-) as DiscordNativeModules.DeviceModule
 
-export const BundleUpdaterManager = lazyValue(
-    () => nmp.BundleUpdaterManager,
-) as DiscordNativeModules.BundleUpdaterManager
+export const DeviceModule = lazyValue(() => nmp.NativeDeviceModule ?? nmp.RTNDeviceManager ?? nmp.DCDDeviceManager, {
+    hint: 'object',
+}) as DiscordNativeModules.DeviceModule
 
-export const ThemeModule = lazyValue(
-    () => nmp.NativeThemeModule ?? nmp.RTNThemeManager ?? nmp.DCDThemeManager,
-) as DiscordNativeModules.ThemeModule
+export const BundleUpdaterManager = lazyValue(() => nmp.BundleUpdaterManager, {
+    hint: 'object',
+}) as DiscordNativeModules.BundleUpdaterManager
+
+export const ThemeModule = lazyValue(() => nmp.NativeThemeModule ?? nmp.RTNThemeManager ?? nmp.DCDThemeManager, {
+    hint: 'object',
+}) as DiscordNativeModules.ThemeModule
