@@ -1,7 +1,7 @@
 /// <reference path="./debugger.d.ts" />
 
 import { toasts } from '@revenge-mod/modules/common'
-import { externalPluginsMetadata, registerPlugin } from '@revenge-mod/plugins/internals'
+import { registerPlugin } from '@revenge-mod/plugins/internals'
 import { sleep } from '@revenge-mod/utils/functions'
 
 import AssetBrowserSettingsPage from './pages/AssetBrowser'
@@ -11,10 +11,9 @@ import DeveloperSettingsPage from './pages/Developer'
 import { DebuggerContext, connectToDebugger } from './debugger'
 import { DevToolsEvents, connectToDevTools } from './devtools'
 
-import { BundleUpdaterManager, FileModule } from '@revenge-mod/modules/native'
+import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import type { PluginContextFor } from '@revenge-mod/plugins'
 import type { FunctionComponent } from 'react'
-import { PluginsDirectoryPath } from '@revenge-mod/shared/paths'
 
 const plugin = registerPlugin<{
     reactDevTools: {
@@ -138,15 +137,6 @@ function setupDebugger({ patcher, cleanup }: PluginContextFor<typeof plugin, 'Af
     )
 
     globalThis.reload = () => BundleUpdaterManager.reload()
-    globalThis.getRidOfPlugin = id => {
-        try {
-            FileModule.removeFile('documents', `${PluginsDirectoryPath}/${id}`)
-            delete externalPluginsMetadata[id]
-            return true
-        } catch {
-            return false
-        }
-    }
     globalThis.patcher = {
         snipe: (object, key, callback) =>
             debuggerCleanups.add(
@@ -173,8 +163,6 @@ function setupDebugger({ patcher, cleanup }: PluginContextFor<typeof plugin, 'Af
             delete globalThis.reload
             // biome-ignore lint/performance/noDelete: This happens once
             delete globalThis.patcher
-            // biome-ignore lint/performance/noDelete: This happens once
-            delete globalThis.getRidOfPlugin
         },
         () => {
             for (const c of debuggerCleanups) c()
