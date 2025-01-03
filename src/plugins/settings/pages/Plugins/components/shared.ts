@@ -36,7 +36,7 @@ export const styles = StyleSheet.create({
 
 export type PluginSettingsPageContextValue = Storage['plugins'] & {
     setQuery: (query: string) => void
-    ContextMenuComponent: MemoExoticComponent<
+    ContextMenuComponent?: MemoExoticComponent<
         FC<Pick<ComponentProps<DiscordModules.Components.ContextMenu>, 'children'>>
     >
 }

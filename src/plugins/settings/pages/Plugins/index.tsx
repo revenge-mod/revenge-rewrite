@@ -26,7 +26,7 @@ import BrowsePluginsButton from './components/BrowsePluginsButton'
 import { NoPlugins, NoResults } from './components/Illustrations'
 import InstalledPluginCard from './components/InstalledPluginCard'
 import MasonaryFlashPluginList from './components/MasonaryFlashPluginList'
-import PluginListSearchAndFilters from './components/PluginListSearchInput'
+import PluginListSearchAndFilters from './components/PluginListSearchInputAndFilters'
 import { PluginSettingsPageContext, styles } from './components/shared'
 
 import { useFilteredPlugins } from './hooks'
@@ -41,7 +41,7 @@ export default function PluginsSettingsPage() {
     useObservable([pluginsStates, storage, externalPluginsMetadata])
 
     const [query, setQuery] = useState('')
-    const { showCorePlugins: showInternalPlugins, sortMode } = storage.plugins
+    const { showInternal, showUnmanageable } = storage.plugins
     const { externalPlugins, internalPlugins, empty, noSearchResults } = useFilteredPlugins(
         Object.values(registeredPlugins),
         query,
@@ -51,30 +51,13 @@ export default function PluginsSettingsPage() {
     const ContextMenuComponent = memo(
         ({ children }: Pick<ComponentProps<DiscordModules.Components.ContextMenu>, 'children'>) => (
             <ContextMenu
-                title="Sort & Filter"
+                title="Filters"
                 items={[
-                    ...(empty
-                        ? []
-                        : [
-                              [
-                                  {
-                                      label: 'Sort by name (A-Z)',
-                                      IconComponent: sortMode === 'asc' ? CheckmarkLargeIcon : undefined,
-                                      action: () => (storage.plugins.sortMode = 'asc'),
-                                  },
-                                  {
-                                      label: 'Sort by name (Z-A)',
-                                      IconComponent: sortMode === 'dsc' ? CheckmarkLargeIcon : undefined,
-                                      action: () => (storage.plugins.sortMode = 'dsc'),
-                                  },
-                              ],
-                          ]),
                     [
                         {
                             label: 'Show internal plugins',
-                            IconComponent: showInternalPlugins ? CheckmarkLargeIcon : undefined,
-                            variant: 'destructive',
-                            action: () => (storage.plugins.showCorePlugins = !showInternalPlugins),
+                            IconComponent: showInternal ? CheckmarkLargeIcon : undefined,
+                            action: () => (storage.plugins.showInternal = !showInternal),
                         },
                     ],
                 ]}
@@ -86,9 +69,7 @@ export default function PluginsSettingsPage() {
 
     return (
         <PageWrapper withTopControls>
-            <PluginSettingsPageContext.Provider
-                value={{ setQuery, showInternalPlugins, sortMode, ContextMenuComponent }}
-            >
+            <PluginSettingsPageContext.Provider value={{ setQuery, showInternal, showUnmanageable, ContextMenuComponent }}>
                 <Stack spacing={16} style={styles.grow}>
                     <Show when={!empty || noSearchResults} fallback={<NoPlugins />}>
                         <PluginListSearchAndFilters />
@@ -101,8 +82,9 @@ export default function PluginsSettingsPage() {
                                 <MasonaryFlashPluginList
                                     data={externalPlugins}
                                     ListItemComponent={InstalledPluginCard}
+                                    ListFooterComponent={!showInternal && PluginBrowserCTA}
                                 />
-                                <Show when={showInternalPlugins}>
+                                <Show when={showInternal}>
                                     <MasonaryFlashPluginList
                                         data={internalPlugins}
                                         header={
@@ -118,9 +100,9 @@ export default function PluginsSettingsPage() {
                                             </View>
                                         }
                                         ListItemComponent={InstalledPluginCard}
+                                        ListFooterComponent={showInternal && PluginBrowserCTA}
                                     />
                                 </Show>
-                                <PluginBrowserCTA />
                             </ScrollView>
                         </Show>
                     </Show>

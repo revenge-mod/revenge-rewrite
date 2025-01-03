@@ -11,7 +11,7 @@ import { memo, useEffect, useState, type ComponentProps } from 'react'
 
 import InstallablePluginCard from './components/InstallablePluginCard'
 import MasonaryFlashPluginList from './components/MasonaryFlashPluginList'
-import PluginListSearchAndFilters from './components/PluginListSearchInput'
+import PluginListSearchAndFilters from './components/PluginListSearchInputAndFilters'
 import { PluginSettingsPageContext, styles } from './components/shared'
 
 import PageWrapper from '../(Wrapper)'
@@ -80,7 +80,7 @@ export default function PluginBrowserPage() {
             },
         ],
         query,
-        { showInternalPlugins: false, sortMode: 'asc' },
+        { showInternal: false, showUnmanageable: false },
     )
 
     return (
@@ -88,8 +88,8 @@ export default function PluginBrowserPage() {
             <PluginSettingsPageContext.Provider
                 value={{
                     setQuery,
-                    showInternalPlugins: false,
-                    sortMode: 'asc',
+                    showInternal: false,
+                    showUnmanageable: false,
                     ContextMenuComponent: memo(() => null),
                 }}
             >

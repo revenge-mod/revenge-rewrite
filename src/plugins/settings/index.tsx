@@ -26,8 +26,8 @@ import type { PluginContextFor } from '@revenge-mod/plugins'
 
 export type Storage = {
     plugins: {
-        sortMode: 'asc' | 'dsc'
-        showInternalPlugins: boolean
+        showInternal: boolean
+        showUnmanageable: boolean
     }
 }
 
@@ -175,8 +175,8 @@ const plugin = registerPlugin<Storage>(
         },
         initializeStorage: () => ({
             plugins: {
-                sortMode: 'asc',
-                showInternalPlugins: false,
+                showInternal: false,
+                showUnmanageable: false,
             },
         }),
     },

@@ -16,8 +16,9 @@ export function NoPlugins() {
             <Text variant="heading-lg/semibold">No plugins yet!</Text>
             <View style={[styles.centerChildren, { gap: 8 }]}>
                 <BrowsePluginsButton />
-                <ContextMenuComponent>
-                    {props => (
+                {React.createElement(ContextMenuComponent!, {
+                    // biome-ignore lint/correctness/noChildrenProp: This is a valid use case
+                    children: props => (
                         <Button
                             {...props}
                             size="lg"
@@ -25,8 +26,8 @@ export function NoPlugins() {
                             variant="secondary"
                             text="Change filters"
                         />
-                    )}
-                </ContextMenuComponent>
+                    ),
+                })}
             </View>
         </Stack>
     )

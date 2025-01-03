@@ -5,7 +5,7 @@ import { PixelRatio, useWindowDimensions } from 'react-native'
 
 import PluginCardContext, { type StackNavigationProp } from '../contexts/PluginCardContext'
 
-import type { FC, ReactElement } from 'react'
+import type { ComponentType, FC, ReactElement } from 'react'
 
 import type { InternalPluginDefinition } from '@revenge-mod/plugins/internals'
 import type { PluginManifest } from '@revenge-mod/plugins/schemas'
@@ -21,11 +21,13 @@ export default function MasonaryFlashPluginList<T, U>({
     header,
     ListItemComponentProps,
     ListItemComponent,
+    ListFooterComponent,
 }: {
     header?: ReactElement
     data: MasonaryFlashPluginListData<T>
     ListItemComponentProps?: (item: MasonaryFlashPluginListData<T>[number]) => Omit<U, 'horizontalGaps'>
     ListItemComponent: FC<U>
+    ListFooterComponent?: ComponentType | false
 }) {
     const navigation = NavigationNative.useNavigation<StackNavigationProp>()
     const dimensions = useWindowDimensions()
@@ -52,6 +54,7 @@ export default function MasonaryFlashPluginList<T, U>({
             numColumns={numColumns}
             estimatedItemSize={estimatedItemSize}
             keyboardShouldPersistTaps="handled"
+            ListFooterComponent={ListFooterComponent ? ListFooterComponent : undefined}
         />
     )
 }

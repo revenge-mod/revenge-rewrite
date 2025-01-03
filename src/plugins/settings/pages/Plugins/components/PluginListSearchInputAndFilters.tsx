@@ -6,6 +6,7 @@ import { useContext } from 'react'
 import { View } from 'react-native'
 
 import { PluginSettingsPageContext, styles } from './shared'
+import { Show } from '@revenge-mod/shared/components'
 
 export default function PluginListSearchAndFilters() {
     const { setQuery, ContextMenuComponent } = useContext(PluginSettingsPageContext)
@@ -20,11 +21,18 @@ export default function PluginListSearchAndFilters() {
                     onChange={query => setQuery(query.replaceAll(/\s/g, '').toLowerCase())}
                 />
             </View>
-            <ContextMenuComponent>
-                {props => (
-                    <IconButton {...props} icon={getAssetIndexByName('FiltersHorizontalIcon')!} variant="secondary-overlay" />
-                )}
-            </ContextMenuComponent>
+            <Show when={ContextMenuComponent}>
+                {React.createElement(ContextMenuComponent!, {
+                    // biome-ignore lint/correctness/noChildrenProp: This is a valid use case
+                    children: props => (
+                        <IconButton
+                            {...props}
+                            icon={getAssetIndexByName('FiltersHorizontalIcon')!}
+                            variant="secondary-overlay"
+                        />
+                    ),
+                })}
+            </Show>
         </View>
     )
 }

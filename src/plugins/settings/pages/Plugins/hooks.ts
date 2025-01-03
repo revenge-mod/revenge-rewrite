@@ -1,28 +1,41 @@
 import type { PluginManifest } from '@revenge-mod/plugins/schemas'
 import { useMemo } from 'react'
 
-export function useFilteredPlugins<const P extends PluginManifest & { external?: boolean }>(
+export function useFilteredPlugins<const P extends PluginManifest & { external?: boolean; manageable?: boolean }>(
     plugins: P[],
     query: string,
-    options: { showInternalPlugins: boolean; sortMode: 'asc' | 'dsc' },
+    options: { showInternal: boolean; showUnmanageable: boolean },
 ) {
-    const { showInternalPlugins, sortMode } = options
+    const { showInternal } = options
 
     const _plugins = useMemo(
         () =>
-            plugins
-                .filter(
-                    plugin =>
-                        plugin.name.toLowerCase().replaceAll(/\s/g, '').includes(query) ||
-                        plugin.id.toLowerCase().includes(query),
-                )
-                .sort((a, b) => (sortMode === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name))),
-        [plugins, query, sortMode],
+            plugins.filter(
+                plugin =>
+                    plugin.name.toLowerCase().replaceAll(/\s/g, '').includes(query) ||
+                    plugin.id.toLowerCase().includes(query),
+            ),
+        [plugins, query],
     )
 
-    const externalPlugins = useMemo(() => _plugins.filter(plugin => plugin.external ?? true), [_plugins])
-    const internalPlugins = useMemo(() => _plugins.filter(plugin => !(plugin.external ?? true)), [_plugins])
-    const empty = !(showInternalPlugins ? internalPlugins.length + externalPlugins.length : externalPlugins.length)
+    const externalPlugins = useMemo(
+        () =>
+            _plugins.filter(
+                plugin => (plugin.external ?? true) && (!options.showUnmanageable ? (plugin.manageable ?? true) : true),
+            ),
+        [_plugins, options.showUnmanageable],
+    )
+
+    const internalPlugins = useMemo(
+        () =>
+            _plugins.filter(
+                plugin =>
+                    !(plugin.external ?? true) && (!options.showUnmanageable ? (plugin.manageable ?? true) : true),
+            ),
+        [_plugins, options.showUnmanageable],
+    )
+
+    const empty = !(showInternal ? internalPlugins.length + externalPlugins.length : externalPlugins.length)
 
     // TODO: Maybe create 2 separate data lists for non-filtered and filtered plugins
     const noSearchResults = empty && !!query
