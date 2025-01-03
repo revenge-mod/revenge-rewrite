@@ -16,6 +16,6 @@ export function Show({
      * The fallback to show if the condition is not met.
      */
     fallback,
-}: { when: boolean; fallback?: ReactNode; children: ReactNode }) {
+}: { when: unknown; fallback?: ReactNode; children: ReactNode }) {
     return when ? <>{children}</> : (fallback ?? null)
 }
