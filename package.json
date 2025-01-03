@@ -12,7 +12,7 @@
     "@revenge-mod/app": "workspace:*",
     "@revenge-mod/assets": "workspace:*",
     "@revenge-mod/debug": "workspace:*",
-    "@revenge-mod/keyutil": "https://github.com/revenge-mod/revenge-keyutil#673ce34",
+    "@revenge-mod/keyutil": "https://github.com/revenge-mod/revenge-keyutil#2f5db07",
     "@revenge-mod/modules": "workspace:*",
     "@revenge-mod/plugins": "workspace:*",
     "@revenge-mod/preferences": "workspace:*",
