@@ -17,7 +17,7 @@ import type {
 } from 'react-native'
 
 import type { Message } from 'discord-types/general'
-import type { Command } from './commands'
+import type { Command } from './common/commands'
 import type { MetroModuleFilePathKey } from './constants'
 import type { lazyContextSymbol } from './utils/lazy'
 

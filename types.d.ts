@@ -23,11 +23,6 @@ declare global {
     var React: typeof import('react')
     var ReactNative: typeof import('react-native')
 
-    var __PYON_LOADER__: {
-        loaderName: string
-        loaderVersion: string
-    }
-
     var __REACT_DEVTOOLS_GLOBAL_HOOK__: unknown | undefined
     var __reactDevTools:
         | {
