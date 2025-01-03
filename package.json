@@ -18,7 +18,6 @@
     "@revenge-mod/preferences": "workspace:*",
     "@revenge-mod/react": "workspace:*",
     "@revenge-mod/shared": "workspace:*",
-    "@revenge-mod/trust": "workspace:*",
     "@revenge-mod/ui": "workspace:*",
     "@revenge-mod/utils": "workspace:*",
     "fflate": "^0.8.2",
