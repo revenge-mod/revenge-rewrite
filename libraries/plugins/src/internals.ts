@@ -9,10 +9,9 @@ import { awaitStorage, createStorage } from '@revenge-mod/storage'
 import { getErrorStack } from '@revenge-mod/utils/errors'
 import { objectFreeze, objectSeal } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
-
 import { logger } from './shared'
 
-import type { FC } from 'react'
+import { type FC, createElement } from 'react'
 
 import type { PluginManifest, PluginDefinition } from './schemas'
 import type { PluginContext, PluginStopConfig, PluginStorage } from './types'
@@ -112,6 +111,9 @@ export function registerPlugin<
         get stopped() {
             return this.status === PluginStatus.Stopped
         },
+        SettingsComponent: definition.SettingsComponent
+            ? () => createElement(definition.SettingsComponent!, ctx!)
+            : undefined,
         disable() {
             if (!this.manageable) throw new Error(`Cannot disable unmanageable plugin: ${this.id}`)
 

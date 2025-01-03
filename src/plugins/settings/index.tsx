@@ -51,9 +51,11 @@ const plugin = registerPlugin<Storage>(
                 },
             } = context
 
-            for (const member of Contributors.team.concat(Contributors.contributors)) {
-                if (!member.icon) continue
+            const contributors = new Set<string>()
+            for (const member of Object.values(Contributors).flat()) {
+                if (!member.icon || contributors.has(member.name)) continue
 
+                contributors.add(member.name)
                 assets.registerCustom(
                     {
                         name: `Revenge.Contributors.${member.name}`,
