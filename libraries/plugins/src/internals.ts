@@ -38,7 +38,11 @@ interface RegisterPluginOptions {
     enabled?: boolean
 }
 
-export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void, AppInitializedReturn = void>(
+export function registerPlugin<
+    Storage extends PluginStorage = PluginStorage,
+    AppLaunchedReturn = void,
+    AppInitializedReturn = void,
+>(
     manifest: PluginManifest,
     definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>,
     opts: RegisterPluginOptions = {},
@@ -54,7 +58,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
     let status: PluginStatus = PluginStatus.Stopped
     const cleanups = new Set<() => unknown>()
 
-    const def: InternalPluginDefinition = {
+    const def: InternalPluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn> = {
         ...manifest,
         context: lazyValue(() => ctx, { hint: 'object' }),
         external: options.external,
@@ -62,8 +66,8 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
         lifecycles: {
             prepare() {
                 ctx.patcher ||= createPatcherInstance(`revenge.plugins.plugin(${manifest.id})`)
-                ctx.storage ||= createStorage(PluginStoragePath(manifest.id), {
-                    initial: definition.initializeStorage?.() ?? {},
+                ctx.storage ||= createStorage<Storage>(PluginStoragePath(manifest.id), {
+                    initial: definition.initializeStorage?.() ?? ({} as Storage),
                 })
             },
             subscribeModules: definition.onMetroModuleLoad
@@ -142,7 +146,8 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
 
             if (this.lifecycles.beforeAppRender) {
                 try {
-                    ctx.context.beforeAppRender = await this.lifecycles.beforeAppRender(ctx)
+                    ctx.context.beforeAppRender = ((await this.lifecycles.beforeAppRender(ctx)) ??
+                        null) as Awaited<AppLaunchedReturn> | null
                 } catch (e) {
                     return handleError(
                         new Error(
@@ -160,7 +165,8 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
             const callback = async () => {
                 try {
                     await awaitStorage(ctx.storage)
-                    ctx.context.afterAppRender = await this.lifecycles.afterAppRender!(ctx)
+                    ctx.context.afterAppRender = ((await this.lifecycles.afterAppRender!(ctx)) ??
+                        null) as Awaited<AppInitializedReturn> | null
                     this.status = PluginStatus.Started
                 } catch (e) {
                     return handleError(
@@ -215,7 +221,7 @@ export function registerPlugin<Storage = PluginStorage, AppLaunchedReturn = void
     objectFreeze(def)
     objectSeal(def)
 
-    const ctx: PluginContext = {
+    const ctx: PluginContext<any, Storage, AppLaunchedReturn, AppInitializedReturn> = {
         patcher: null!,
         storage: null!,
         context: {

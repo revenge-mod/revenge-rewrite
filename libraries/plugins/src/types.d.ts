@@ -54,8 +54,8 @@ export type PluginContext<
      * Additional data returned from callbacks
      */
     context: {
-        beforeAppRender: Stage extends 'Starting' ? null : AppLaunchedReturn
-        afterAppRender: Stage extends 'BeforeAppRender' ? AppInitializedReturn : null
+        beforeAppRender: Stage extends 'Starting' ? null : Awaited<AppLaunchedReturn>
+        afterAppRender: Stage extends 'BeforeAppRender' ? Awaited<AppInitializedReturn> : null
     }
     /**
      * Schedules callbacks to be run when the plugin is stopped
