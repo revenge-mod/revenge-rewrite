@@ -78,58 +78,58 @@ export default function DeveloperSettingsPage() {
     return (
         <ScrollView>
             <PageWrapper>
-                <Stack spacing={8} direction="vertical">
-                    {typeof __reactDevTools !== 'undefined' && (
-                        <>
-                            <TextInput
-                                editable={!rdtConnected}
-                                isDisabled={rdtConnected}
-                                leadingText="ws://"
-                                defaultValue={refDevToolsAddr.current}
-                                label="React DevTools"
-                                onChange={text => (refDevToolsAddr.current = text)}
-                                onBlur={() => {
-                                    if (refDevToolsAddr.current === storage.reactDevTools.address) return
-                                    storage.reactDevTools.address = refDevToolsAddr.current
+                {typeof __reactDevTools !== 'undefined' && (
+                    <Stack spacing={8} direction="vertical">
+                        <TextInput
+                            editable={!rdtConnected}
+                            isDisabled={rdtConnected}
+                            leadingText="ws://"
+                            defaultValue={refDevToolsAddr.current}
+                            label="React DevTools"
+                            onChange={text => (refDevToolsAddr.current = text)}
+                            onBlur={() => {
+                                if (refDevToolsAddr.current === storage.reactDevTools.address) return
+                                storage.reactDevTools.address = refDevToolsAddr.current
 
-                                    toasts.open({
-                                        key: 'revenge.plugins.developer-settings.react-devtools.saved',
-                                        content: 'Saved DevTools address!',
-                                    })
-                                }}
-                                returnKeyType="done"
-                            />
-                            {/* Rerender when connected changes */}
-                            <TableRowGroup key={String(rdtConnected)}>
-                                {rdtConnected ? (
-                                    <TableRow
-                                        label="Disconnect from React DevTools"
-                                        variant="danger"
-                                        icon={
-                                            <TableRowIcon
-                                                variant="danger"
-                                                source={assets.getIndexByName('Revenge.ReactIcon')!}
-                                            />
-                                        }
-                                        onPress={() => disconnectFromDevTools()}
-                                    />
-                                ) : (
-                                    <TableRow
-                                        label="Connect to React DevTools"
-                                        icon={<TableRowIcon source={assets.getIndexByName('Revenge.ReactIcon')!} />}
-                                        onPress={() => connectToDevTools(refDevToolsAddr.current)}
-                                    />
-                                )}
-                                <TableSwitchRow
-                                    label="Auto Connect on Startup"
-                                    subLabel="Automatically connect to React DevTools when the app starts."
-                                    icon={<TableRowIcon source={assets.getIndexByName('Revenge.ReactIcon')!} />}
-                                    value={storage.reactDevTools.autoConnect}
-                                    onValueChange={v => (storage.reactDevTools.autoConnect = v)}
+                                toasts.open({
+                                    key: 'revenge.plugins.developer-settings.react-devtools.saved',
+                                    content: 'Saved DevTools address!',
+                                })
+                            }}
+                            returnKeyType="done"
+                        />
+                        {/* Rerender when connected changes */}
+                        <TableRowGroup key={String(rdtConnected)}>
+                            {rdtConnected ? (
+                                <TableRow
+                                    label="Disconnect from React DevTools"
+                                    variant="danger"
+                                    icon={
+                                        <TableRowIcon
+                                            variant="danger"
+                                            source={assets.getIndexByName('Revenge.ReactIcon')!}
+                                        />
+                                    }
+                                    onPress={() => disconnectFromDevTools()}
                                 />
-                            </TableRowGroup>
-                        </>
-                    )}
+                            ) : (
+                                <TableRow
+                                    label="Connect to React DevTools"
+                                    icon={<TableRowIcon source={assets.getIndexByName('Revenge.ReactIcon')!} />}
+                                    onPress={() => connectToDevTools(refDevToolsAddr.current)}
+                                />
+                            )}
+                            <TableSwitchRow
+                                label="Auto Connect on Startup"
+                                subLabel="Automatically connect to React DevTools when the app starts."
+                                icon={<TableRowIcon source={assets.getIndexByName('Revenge.ReactIcon')!} />}
+                                value={storage.reactDevTools.autoConnect}
+                                onValueChange={v => (storage.reactDevTools.autoConnect = v)}
+                            />
+                        </TableRowGroup>
+                    </Stack>
+                )}
+                <Stack spacing={8} direction="vertical">
                     <TextInput
                         editable={!dbgConnected}
                         isDisabled={dbgConnected}
