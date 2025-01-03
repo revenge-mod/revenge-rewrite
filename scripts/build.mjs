@@ -5,6 +5,7 @@ import chalk from 'chalk'
 import { build } from 'esbuild'
 import pluginGlobals from 'esbuild-plugin-globals'
 import yargs from 'yargs-parser'
+import shimmedDeps from '../shims/deps'
 
 const args = yargs(process.argv.slice(2))
 const { release, minify, dev } = args
@@ -48,14 +49,13 @@ const config = {
     alias: {
         '!deps-shim!': './shims/deps.ts',
         'react/jsx-runtime': './shims/react~jsx-runtime.ts',
-        // uzip: './shims/uzip.js',
         events: './shims/events.ts',
     },
     plugins: [
         pluginGlobals({
-            ...['react', 'react-native', 'util', 'moment', 'chroma-js', 'lodash', '@shopify/react-native-skia'].reduce(
+            ...Object.keys(shimmedDeps).reduce(
                 (deps, name) => {
-                    deps[name] = `require("!deps-shim!").default[${JSON.stringify(name)}]`
+                    deps[name] = `require('!deps-shim!').default[${JSON.stringify(name)}]()`
                     return deps
                 },
                 {},
