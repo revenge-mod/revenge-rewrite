@@ -3,7 +3,7 @@ import { NavigationNative } from '@revenge-mod/modules/common'
 import { MasonryFlashList } from '@shopify/flash-list'
 import { PixelRatio, useWindowDimensions } from 'react-native'
 
-import PluginCardContext from '../contexts/PluginCardContext'
+import PluginCardContext, { type StackNavigationProp } from '../contexts/PluginCardContext'
 
 import type { FC, ReactElement } from 'react'
 
@@ -27,7 +27,7 @@ export default function MasonaryFlashPluginList<T, U>({
     ListItemComponentProps?: (item: MasonaryFlashPluginListData<T>[number]) => Omit<U, 'horizontalGaps'>
     ListItemComponent: FC<U>
 }) {
-    const navigation = NavigationNative.useNavigation()
+    const navigation = NavigationNative.useNavigation<StackNavigationProp>()
     const dimensions = useWindowDimensions()
     const numColumns = Math.floor((dimensions.width - 16) / 448)
     // Don't ask... I don't know either

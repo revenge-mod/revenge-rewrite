@@ -23,7 +23,7 @@ export default function RevengeSettingsPage() {
                         label="About"
                         icon={<TableRowIcon source={getAssetIndexByName('CircleInformationIcon-primary')!} />}
                         arrow
-                        onPress={() => navigation.push('RevengeAbout')}
+                        onPress={() => navigation.navigate('RevengeAbout')}
                     />
                 </TableRowGroup>
                 <TableRowGroup title="Revenge">
@@ -43,7 +43,7 @@ export default function RevengeSettingsPage() {
                         label="Contributors"
                         icon={<TableRowIcon source={getAssetIndexByName('FriendsIcon')!} />}
                         arrow
-                        onPress={() => navigation.push('RevengeContributors')}
+                        onPress={() => navigation.navigate('RevengeContributors')}
                     />
                 </TableRowGroup>
                 <TableRowGroup title="Actions">

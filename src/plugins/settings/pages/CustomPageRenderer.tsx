@@ -1,10 +1,10 @@
+import { NavigationNative, type NavigationNativeStackNavigationParamList } from '@revenge-mod/modules/common'
 import type { StackScreenProps } from '@react-navigation/stack'
-import { NavigationNative, type NavigationNativeStackParamList } from '@revenge-mod/modules/common'
 
 export default function CustomPageRenderer() {
     const navigation = NavigationNative.useNavigation()
     const route =
-        NavigationNative.useRoute<StackScreenProps<NavigationNativeStackParamList, 'RevengeCustomPage'>['route']>()
+        NavigationNative.useRoute<StackScreenProps<NavigationNativeStackNavigationParamList, 'RevengeCustomPage'>['route']>()
 
     const { render: PageComponent, ...args } = route.params
 

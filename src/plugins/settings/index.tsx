@@ -11,6 +11,8 @@ import {
     customData,
 } from '@revenge-mod/ui/settings'
 
+import { type FC, createContext } from 'react'
+
 import AboutSettingsPage from './pages/About'
 import ContributorsSettingsPage from './pages/Contributors'
 import CustomPageRenderer from './pages/CustomPageRenderer'
@@ -21,7 +23,6 @@ import RevengeSettingsPage from './pages/Revenge'
 import Contributors from './contributors'
 
 import type { PluginContextFor } from '@revenge-mod/plugins'
-import { type FC, createContext } from 'react'
 
 export type Storage = {
     plugins: {
