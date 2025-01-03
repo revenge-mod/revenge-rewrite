@@ -21,9 +21,9 @@ import {
 import { logger } from './shared'
 
 import { InstallPluginResult, type PluginInstallResult, PluginZipFileSizeLimit } from './constants'
-import { type PluginManifest, PluginManifestSchema } from './schemas'
+import { type PluginManifest, type PluginDefinition, PluginManifestSchema } from './schemas'
 
-import type { PluginContext, PluginDefinition, PluginStage } from './types'
+import type { PluginContext, PluginStage } from './types'
 export type * from './types'
 
 async function parseZipFromUri(uri: string): Promise<[local: boolean, zip: Unzipped]> {
@@ -86,11 +86,12 @@ export async function installPlugin(uri: string, trustUnsigned = false) {
             if (manifest.id in registeredPlugins) return InstallPluginResult.AlreadyInstalled
 
             if (!sourceZipSig || !publicKey) {
-                if (!trustUnsigned) return InstallPluginResult.UnsignedUserConfirmationNeeded
+                if (!trustUnsigned) return InstallPluginResult.PluginUnsigned
             } else {
                 try {
                     const key = readRevengeKey(publicKey)
                     if (key.isPrivate()) return InstallPluginResult.InvalidKeyFileFormat
+                    if (!key.isValid()) return InstallPluginResult.InvalidKeyFileFormat
                     if (!key.verify(readRevengeSignature(sourceZipSig).signature, sourceZipHash))
                         return InstallPluginResult.SignatureVerificationFailed
                 } catch (e) {
@@ -127,14 +128,18 @@ export async function installPlugin(uri: string, trustUnsigned = false) {
 }
 
 export const InstallPluginResultMessage: Record<PluginInstallResult, string> = {
-    [InstallPluginResult.Success]: 'Successfully installed plugin',
-    [InstallPluginResult.InvalidFileFormat]: 'Invalid plugin file format',
+    [InstallPluginResult.Success]: 'Plugin installed',
+    [InstallPluginResult.InvalidFileFormat]: 'Invalid plugin file',
     [InstallPluginResult.InvalidManifest]: 'Invalid plugin manifest',
     [InstallPluginResult.AlreadyInstalled]: 'Plugin is already installed',
-    [InstallPluginResult.InvalidSignatureFileFormat]: 'Invalid signature file format',
-    [InstallPluginResult.InvalidKeyFileFormat]: 'Invalid key file format',
-    [InstallPluginResult.SignatureVerificationFailed]: 'Signature verification failed',
-    [InstallPluginResult.UnsignedUserConfirmationNeeded]: 'Unsigned plugin requires user confirmation',
+    [InstallPluginResult.InvalidSignatureFileFormat]: 'Invalid signature file',
+    [InstallPluginResult.InvalidKeyFileFormat]: 'Invalid key file',
+    [InstallPluginResult.KeyNoValidity]: 'Key has no validity. It may be expired or have been tampered.',
+    [InstallPluginResult.KeyRevoked]: "Key has been revoked. This key may've been compromised.",
+    [InstallPluginResult.SignatureVerificationFailed]:
+        "Signature verification failed. The plugin may've been tampered.",
+    [InstallPluginResult.PluginUnsigned]:
+        'Unsigned plugin requires user confirmation. If you see this message, this is a bug.',
 }
 
 /**

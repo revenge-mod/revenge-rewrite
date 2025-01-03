@@ -39,7 +39,9 @@ export const InstallPluginResult = {
     InvalidKeyFileFormat: 11,
     InvalidSignatureFileFormat: 12,
     SignatureVerificationFailed: 20,
-    UnsignedUserConfirmationNeeded: 21,
+    KeyNoValidity: 21,
+    KeyRevoked: 22,
+    PluginUnsigned: 23,
 } as const
 
 export type PluginInstallResult = (typeof InstallPluginResult)[keyof typeof InstallPluginResult]
