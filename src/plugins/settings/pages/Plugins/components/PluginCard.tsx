@@ -27,6 +27,7 @@ const usePluginCardStyles = createStyles({
     },
     topContainer: {
         alignItems: 'center',
+        flexShrink: 1,
     },
     alignedContainer: {
         paddingLeft: 28,

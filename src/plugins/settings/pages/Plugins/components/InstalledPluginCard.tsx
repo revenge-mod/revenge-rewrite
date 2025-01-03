@@ -16,7 +16,11 @@ import PluginCard, { type PluginCardProps } from './PluginCard'
 import PluginCardContext from '../contexts/PluginCardContext'
 
 export default function InstalledPluginCard(props: PluginCardProps) {
-    const { plugin, navigation } = useContext(PluginCardContext)
+    const {
+        plugin,
+        manifest: { name },
+        navigation,
+    } = useContext(PluginCardContext)
     const { SettingsComponent, enabled, id, manageable, context } = plugin!
 
     const rerender = useRerenderer()
@@ -29,17 +33,25 @@ export default function InstalledPluginCard(props: PluginCardProps) {
                     <Show when={SettingsComponent}>
                         <IconButton
                             disabled={!enabled}
+                            size="sm"
                             icon={getAssetIndexByName('SettingsIcon')}
                             variant="tertiary"
                             onPress={() => {
                                 navigation.navigate('RevengeCustomPage', {
+                                    title: name,
                                     // @ts-expect-error: I love TypeScript
                                     render: () => <SettingsComponent {...context} />,
                                 })
                             }}
+                            style={{ marginBottom: 'auto' }}
                         />
                     </Show>
-                    <IconButton size="sm" icon={getAssetIndexByName('MoreHorizontalIcon')} variant="tertiary" />
+                    <IconButton
+                        size="sm"
+                        icon={getAssetIndexByName('MoreHorizontalIcon')}
+                        variant="tertiary"
+                        style={{ marginBottom: 'auto' }}
+                    />
                     <FormSwitch
                         value={enabled}
                         disabled={!manageable}
