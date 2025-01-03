@@ -22,7 +22,7 @@ export async function installPluginFromStorage() {
     if (!res) return onPluginInstalled()
 
     switch (res) {
-        case InstallPluginResult.UnsignedUserConfirmationNeeded:
+        case InstallPluginResult.PluginUnsigned:
             return openAlert(
                 'revenge.plugins.settings.plugins.install.unsigned',
                 <AlertModal

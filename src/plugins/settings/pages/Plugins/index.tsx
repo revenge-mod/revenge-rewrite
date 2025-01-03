@@ -59,6 +59,11 @@ export default function PluginsSettingsPage() {
                             IconComponent: showInternal ? CheckmarkLargeIcon : undefined,
                             action: () => (storage.plugins.showInternal = !showInternal),
                         },
+                        {
+                            label: 'Show essential plugins',
+                            IconComponent: showUnmanageable ? CheckmarkLargeIcon : undefined,
+                            action: () => (storage.plugins.showUnmanageable = !showUnmanageable),
+                        },
                     ],
                 ]}
             >
@@ -69,7 +74,9 @@ export default function PluginsSettingsPage() {
 
     return (
         <PageWrapper withTopControls>
-            <PluginSettingsPageContext.Provider value={{ setQuery, showInternal, showUnmanageable, ContextMenuComponent }}>
+            <PluginSettingsPageContext.Provider
+                value={{ setQuery, showInternal, showUnmanageable, ContextMenuComponent }}
+            >
                 <Stack spacing={16} style={styles.grow}>
                     <Show when={!empty || noSearchResults} fallback={<NoPlugins />}>
                         <PluginListSearchAndFilters />
@@ -95,7 +102,7 @@ export default function PluginsSettingsPage() {
                                                     icon={getAssetIndexByName('CircleQuestionIcon-primary')!}
                                                     size="sm"
                                                     variant="tertiary"
-                                                    onPress={showCorePluginsInformationAlert}
+                                                    onPress={showInternalPluginsInformationAlert}
                                                 />
                                             </View>
                                         }
@@ -121,12 +128,12 @@ function PluginBrowserCTA() {
     )
 }
 
-function showCorePluginsInformationAlert() {
+function showInternalPluginsInformationAlert() {
     return openAlert(
         'revenge.plugins.settings.plugins.internal-plugins.description',
         <AlertModal
             title="What are internal plugins?"
-            content="Internal plugins are integrated into Revenge and provide core functionalities, such as this settings menu. Some internal plugins cannot be disabled, as they provide resources required by other plugins."
+            content="Internal plugins are directly integrated into Revenge, and provide core functionalities such as this settings menu. Some internal plugins provide necessary resources required by other plugins."
             actions={<AlertActionButton text="OK" />}
         />,
     )
