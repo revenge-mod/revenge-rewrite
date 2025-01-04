@@ -7,8 +7,10 @@
     "./errors": "./src/errors.ts",
     "./react": "./src/react.ts",
     "./library": "./src/library.ts",
+    "./observables": "./src/observables.ts",
     "./functions": "./src/functions.ts",
     "./lazy": "./src/lazy.ts",
-    "./trees": "./src/trees.ts"
+    "./trees": "./src/trees.ts",
+    "./zip": "./src/zip.ts"
   }
 }
