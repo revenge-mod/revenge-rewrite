@@ -3,7 +3,7 @@
 import type { NavigationNativeStackNavigationParamList } from '@revenge-mod/modules/common'
 import type { If, Nullish } from '@revenge-mod/shared/types'
 
-import type { ComponentProps, ComponentType, FC, ReactNode } from 'react'
+import type { ComponentProps, ComponentType, FC, ReactNode, JSX } from 'react'
 import type {
     ImageProps,
     ImageSourcePropType,
@@ -212,6 +212,31 @@ export namespace DiscordModules {
     export interface Alerts {
         openAlert(key: string, alert: JSX.Element): void
         dismissAlerts(): void
+    }
+
+    export interface ActionSheets {
+        openLazy<T extends ComponentType>(sheet: Promise<{ default: T }>, key: string, props: ComponentProps<T>): void
+        hideActionSheet(key?: string): void
+    }
+
+    export namespace ActionSheets {
+        interface SimpleActionSheetOption {
+            icon?: number
+            label: string
+            isDestructive?: boolean
+            disabled?: boolean
+            onPress?(): void
+        }
+
+        function showSimpleActionSheet(options: {
+            key: string
+            header: {
+                title: string
+                icon?: ReactNode
+                onClose?(): void
+            }
+            options: SimpleActionSheetOption[]
+        }): void
     }
 
     export interface LinkingUtils {
@@ -471,13 +496,18 @@ export namespace DiscordModules {
         }
 
         // Sheets
-        export type ActionSheet = FC
-        export type ActionSheetCloseButton = FC
-        export type ActionSheetRow = FC
-        export type ActionSheetSwitchRow = FC
-        export type ActionSheetIconHeader = FC
-        export type ActionSheetHeaderBar = FC
-        export type BottomSheetTitleHeader = FC
+        export type ActionSheet = FC<{ children: ReactNode }>
+        export type ActionSheetCloseButton = FC<Pick<ComponentProps<IconButton>, 'variant' | 'onPress'>>
+        export type ActionSheetRow = FC & {
+            Icon: ActionSheetRowIcon
+            Group: ActionSheetRowGroup
+        }
+        export type ActionSheetRowIcon = TableRowIcon
+        export type ActionSheetRowGroup = TableRowGroup
+        export type ActionSheetSwitchRow = TableSwitchRow
+        // export type ActionSheetIconHeader = FC
+        // export type ActionSheetHeaderBar = FC
+        // export type BottomSheetTitleHeader = FC
 
         export type IconSize =
             | 'extraSmall10'
