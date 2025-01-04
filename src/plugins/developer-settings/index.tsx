@@ -8,8 +8,8 @@ import AssetBrowserSettingsPage from './pages/AssetBrowser'
 import DebugPerformanceTimesSettingsPage from './pages/DebugPerformanceTimes'
 import DeveloperSettingsPage from './pages/Developer'
 
-import { DebuggerContext, connectToDebugger } from './debugger'
-import { DevToolsEvents, connectToDevTools } from './devtools'
+import { DebuggerContext, connectToDebugger, disconnectFromDebugger } from './debugger'
+import { DevToolsEvents, connectToDevTools, disconnectFromDevTools } from './devtools'
 
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import type { PluginContextFor } from '@revenge-mod/plugins'
@@ -98,6 +98,8 @@ const plugin = registerPlugin<{
                     component: AssetBrowserSettingsPage,
                     icon: assets.getIndexByName('ImageIcon'),
                 }),
+                disconnectFromDebugger,
+                disconnectFromDevTools,
             )
         },
         initializeStorage: () => ({
