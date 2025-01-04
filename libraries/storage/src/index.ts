@@ -1,6 +1,11 @@
-import { Observable, type ObserverOptions } from '@gullerya/object-observer'
+import { Observable, type Observer, type ObserverOptions } from '@gullerya/object-observer'
+
 import { EventEmitter } from '@revenge-mod/modules/common'
 import { FileModule } from '@revenge-mod/modules/native'
+
+import { getErrorStack } from '@revenge-mod/utils/errors'
+import { useObserve, useObserveFiltered } from '@revenge-mod/utils/observables'
+
 import type { AnyObject } from '@revenge-mod/shared/types'
 
 export const storageContextSymbol = Symbol.for('revenge.storage.context')
@@ -46,26 +51,26 @@ function createJSONFile<T extends object>(path: string) {
 }
 
 // TODO: Document this
-export function useObservable(observables: ExtendedObservable[], opts?: ObserverOptions) {
-    if (observables.some(o => o?.[storageContextSymbol]?.error))
-        throw new Error('An error occured while initializing the storage')
-
-    if (observables.some(o => !Observable.isObservable(o))) {
-        throw new Error("Argument passed isn't an Observable")
+export function useObserveStorage(observables: ExtendedObservable[], opts?: ObserverOptions) {
+    for (const o of observables) {
+        const err = o[storageContextSymbol].error
+        if (err)
+            throw new Error(`An error occured while initializing the storage: ${getErrorStack(err)}`, {
+                cause: err,
+            })
     }
 
-    const [, forceUpdate] = React.useReducer(n => ~n, 0)
+    return useObserve(observables, opts)
+}
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: We manually re-render when needed
-    React.useEffect(() => {
-        const listener = () => forceUpdate()
-
-        for (const o of observables) Observable.observe(o, listener, opts)
-
-        return () => {
-            for (const o of observables) Observable.unobserve(o, listener)
-        }
-    }, [])
+export function useObserveStorageFiltered(
+    observable: ExtendedObservable,
+    filter: (...args: Parameters<Observer>) => boolean,
+    opts?: ObserverOptions,
+) {
+    const err = observable[storageContextSymbol].error
+    if (err) throw new Error(`An error occured while initializing the storage: ${getErrorStack(err)}`, { cause: err })
+    return useObserveFiltered(observable, filter, opts)
 }
 
 /**

@@ -11,7 +11,7 @@ import {
     TextInput,
 } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager, FileModule } from '@revenge-mod/modules/native'
-import { storageContextSymbol, useObservable } from '@revenge-mod/storage'
+import { storageContextSymbol, useObserveStorage } from '@revenge-mod/storage'
 
 import PageWrapper from '../../../plugins/settings/pages/(Wrapper)'
 
@@ -43,7 +43,7 @@ export default function DeveloperSettingsPage() {
         revenge: { assets, modules },
     } = context
 
-    useObservable([storage])
+    useObserveStorage([storage])
 
     const navigation = NavigationNative.useNavigation()
 
