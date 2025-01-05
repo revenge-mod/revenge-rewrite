@@ -1,12 +1,12 @@
 import { getAssetIndexByName } from '@revenge-mod/assets'
 import { IconButton } from '@revenge-mod/modules/common/components'
 import { SearchInput } from '@revenge-mod/ui/components'
+import { Show } from '@revenge-mod/utils/components'
 
 import { useContext } from 'react'
 import { View } from 'react-native'
 
 import { PluginSettingsPageContext, styles } from './shared'
-import { Show } from '@revenge-mod/shared/components'
 
 export default function PluginListSearchAndFilters() {
     const { setQuery, ContextMenuComponent } = useContext(PluginSettingsPageContext)

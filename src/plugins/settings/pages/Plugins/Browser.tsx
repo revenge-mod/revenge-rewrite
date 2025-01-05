@@ -5,7 +5,7 @@ import { NavigationNative } from '@revenge-mod/modules/common'
 import { ContextMenu, IconButton, Stack } from '@revenge-mod/modules/common/components'
 import { FolderIcon } from '@revenge-mod/modules/common/components/icons'
 
-import { Show } from '@revenge-mod/shared/components'
+import { Show } from '@revenge-mod/utils/components'
 
 import { memo, useEffect, useState, type ComponentProps } from 'react'
 

@@ -1,5 +1,5 @@
 import { Observable, type Observer, type ObserverOptions } from '@gullerya/object-observer'
-import { useRerenderer } from '@revenge-mod/shared/hooks'
+import { useRerenderer } from '@revenge-mod/utils/hooks'
 
 export function useObserve(observables: Observable[], opts?: ObserverOptions) {
     const rerender = useRerenderer()

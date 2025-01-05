@@ -16,11 +16,10 @@ import { type ComponentProps, memo, useContext, useState } from 'react'
 import { ScrollView, View } from 'react-native'
 
 import { useObserveStorage } from '@revenge-mod/storage'
-import { useObservable } from '@revenge-mod/storage'
 
 import { externalPluginsMetadata, registeredPlugins } from '@revenge-mod/plugins/internals'
 
-import { Show } from '@revenge-mod/shared/components'
+import { Show } from '@revenge-mod/utils/components'
 
 import BrowsePluginsButton from './components/BrowsePluginsButton'
 import { NoPlugins, NoResults } from './components/Illustrations'
