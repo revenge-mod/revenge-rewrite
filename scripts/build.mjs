@@ -6,6 +6,7 @@ import { build } from 'esbuild'
 import pluginGlobals from 'esbuild-plugin-globals'
 import yargs from 'yargs-parser'
 import shimmedDeps from '../shims/deps'
+import { spawnSync } from 'child_process'
 
 const args = yargs(process.argv.slice(2))
 const { release, minify, dev } = args
@@ -24,7 +25,7 @@ const context = {
 const config = {
     entryPoints: ['src/index.ts'],
     bundle: true,
-    outfile: 'dist/revenge.js',
+    outfile: 'dist/js/revenge.js',
     format: 'iife',
     splitting: false,
     external: ['react', 'react-native', 'react/jsx-runtime', '@shopify/flash-list'],
@@ -53,13 +54,10 @@ const config = {
     },
     plugins: [
         pluginGlobals({
-            ...Object.keys(shimmedDeps).reduce(
-                (deps, name) => {
-                    deps[name] = `require('!deps-shim!').default[${JSON.stringify(name)}]()`
-                    return deps
-                },
-                {},
-            ),
+            ...Object.keys(shimmedDeps).reduce((deps, name) => {
+                deps[name] = `require('!deps-shim!').default[${JSON.stringify(name)}]()`
+                return deps
+            }, {}),
         }),
         {
             name: 'swc',
@@ -110,15 +108,14 @@ export async function buildBundle(overrideConfig = {}) {
         .quiet()
         .text()
         .then(res => res.trim())
+
     config.define.__REVENGE_HASH__ = `"${context.hash}"`
 
-    const initialStartTime = performance.now()
     await build({ ...config, ...overrideConfig })
 
     return {
         config,
         context,
-        timeTook: performance.now() - initialStartTime,
     }
 }
 
@@ -127,19 +124,32 @@ const pathPassedToNode = resolvePath(process.argv[1])
 const isThisFileBeingRunViaCLI = pathToThisFile.includes(pathPassedToNode)
 
 if (isThisFileBeingRunViaCLI) {
-    const { timeTook } = await buildBundle()
+    const initialStartTime = performance.now()
 
-    printBuildSuccess(context.hash, release, timeTook)
-
-    if (minify) {
-        const { timeTook } = await buildBundle({
+    if (minify)
+        await buildBundle({
             minifyWhitespace: true,
             minifySyntax: true,
-            outfile: config.outfile.replace(/\.js$/, '.min.js'),
         })
+    else await buildBundle()
 
-        printBuildSuccess(context.hash, release, timeTook, true)
-    }
+    compileToBytecode(config.outfile)
+    printBuildSuccess(context.hash, release, performance.now() - initialStartTime, minify)
+}
+
+export function compileToBytecode(path) {
+    const hermesCBin = {
+        win32: 'hermesc.exe',
+        darwin: 'darwin/hermesc',
+        linux: 'linux/hermesc',
+    }[process.platform]
+
+    spawnSync(`./node_modules/@unbound-mod/hermesc/${process.platform}/${hermesCBin}`, [
+        path,
+        '-emit-binary',
+        '-out',
+        './dist/revenge.bundle',
+    ])
 }
 
 export function printBuildSuccess(hash, release, timeTook, minified = false) {

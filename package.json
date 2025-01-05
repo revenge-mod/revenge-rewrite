@@ -20,6 +20,7 @@
     "@revenge-mod/shared": "workspace:*",
     "@revenge-mod/ui": "workspace:*",
     "@revenge-mod/utils": "workspace:*",
+    "@unbound-mod/hermesc": "1.0.3",
     "fflate": "^0.8.2",
     "valibot": "^1.0.0-beta.9"
   },
