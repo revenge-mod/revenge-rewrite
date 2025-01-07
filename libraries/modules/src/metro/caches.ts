@@ -118,8 +118,8 @@ export function requireAssetModules() {
 
     let assetsRegistryExporterModuleId = 0
     for (const id of dependencies) {
-        const module = modules[id]
-        if (!module?.dependencyMap) continue
+        const module = modules[id]!
+        if (!module.dependencyMap) continue
         if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryModuleId) {
             assetsRegistryExporterModuleId = id
             break
@@ -134,36 +134,39 @@ export function requireAssetModules() {
     logger.log('Importing all assets modules...')
 
     for (const id of dependencies) {
-        const module = modules[id]
-        if (!module?.dependencyMap) continue
+        const module = modules[id]!
+        if (!module.dependencyMap) continue
         if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryExporterModuleId)
             requireModule(id)
     }
 }
 
-let saveCacheDebounceTimeoutId: number
+let savePending = false
 
 /** @internal */
-export function saveCache() {
-    if (saveCacheDebounceTimeoutId) clearTimeout(saveCacheDebounceTimeoutId)
-    saveCacheDebounceTimeoutId = setTimeout(() => {
-        FileModule.writeFile(
-            'cache',
-            MetroCacheRelativeFilePath,
-            JSON.stringify({
-                v: MetroCacheVersion,
-                b: ClientInfoModule.Build,
-                t: cache.totalModules,
-                e: cache.exportsFlags,
-                l: cache.lookupFlags,
-                a: cache.assetModules,
-                p: cache.patchableModules,
-            } satisfies MetroCacheObject),
-            'utf8',
-        )
+export async function saveCache() {
+    if (savePending) return
 
-        logger.log(`Cache saved (${cache.totalModules} modules)`)
-    }, 1000)
+    savePending = true
+
+    await FileModule.writeFile(
+        'cache',
+        MetroCacheRelativeFilePath,
+        JSON.stringify({
+            v: MetroCacheVersion,
+            b: ClientInfoModule.Build,
+            t: cache.totalModules,
+            e: cache.exportsFlags,
+            l: cache.lookupFlags,
+            a: cache.assetModules,
+            p: cache.patchableModules,
+        } satisfies MetroCacheObject),
+        'utf8',
+    )
+
+    logger.log(`Cache saved (${cache.totalModules} modules)`)
+
+    savePending = false
 }
 
 /** @internal */
@@ -182,7 +185,7 @@ export function cacherFor(key: string) {
     let invalidated = false
 
     return {
-        cache: (id: Metro.ModuleIDKey, exports: Metro.ModuleExports) => {
+        cache: (id: Metro.ModuleID, exports: Metro.ModuleExports) => {
             // biome-ignore lint/style/noCommaOperator: Sets invalidated to true if this is a new module
             registry[id] ??= ((invalidated = true), 0)
 

@@ -86,51 +86,42 @@ function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
     // Allow patching already initialized modules
     // These are critical modules like React, React Native, some polyfills, and native modules
     if (metroModule.isInitialized) {
-        logger.warn(`Hooking already initialized module: ${id}`)
+        if (isModuleExportsBad(metroModule.publicModule.exports)) return blacklistModule(id)
 
-        if (isModuleExportsBad(metroModule.publicModule.exports)) {
-            blacklistModule(id)
-            return false
-        }
+        logger.warn(`Hooking already initialized module: ${id}`)
 
         const subs = subscriptions[id]
         if (subs) for (const sub of subs) sub(id, metroModule.publicModule.exports)
         for (const sub of subscriptions.all) sub(id, metroModule.publicModule.exports)
 
-        return false
+        return
     }
 
-    const unpatch = patcher.instead(
+    patcher.instead(
         metroModule as Metro.ModuleDefinition<false>,
         'factory',
-        (args, origFunc) => {
-            unpatch()
-
+        (args: Parameters<Metro.FactoryFn>, origFunc: Metro.FactoryFn) => {
             const originalImportingId = importingModuleId
+            const moduleObject = args[4]
 
-            const { 4: moduleObject } = args
+            importingModuleId = id
 
             try {
-                importingModuleId = id
-                origFunc(...args)
-            } catch (error) {
-                logger.log(`Blacklisted module ${id} because it could not be initialized: ${error}`)
-                blacklistModule(id)
-            }
+                origFunc.apply(undefined, args)
+                if (isModuleExportsBad(moduleObject.exports)) return blacklistModule(id)
 
-            importingModuleId = originalImportingId
-
-            if (isModuleExportsBad(moduleObject.exports)) blacklistModule(id)
-            else {
                 const subs = subscriptions[id]
                 if (subs) for (const sub of subs) sub(id, moduleObject.exports)
                 for (const sub of subscriptions.all) sub(id, moduleObject.exports)
+            } catch (error) {
+                logger.log(`Blacklisted module ${id} because it could not be initialized: ${error}`)
+                blacklistModule(id)
+            } finally {
+                importingModuleId = originalImportingId
             }
         },
         'moduleFactory',
     )
-
-    return true
 }
 
 /**
@@ -138,7 +129,6 @@ function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
  */
 export async function initializeModules() {
     const metroModules = getMetroModules()
-    if (metroModules[IndexMetroModuleId]?.isInitialized) throw new Error('Metro modules has already been initialized')
 
     const cacheRestored = await restoreCache()
     recordTimestamp('Modules_TriedRestoreCache')
@@ -152,11 +142,10 @@ export async function initializeModules() {
 
     let hookCountLeft = Math.min(metroDependencies.size, SafeModuleHookAmountBeforeDefer)
     // I've tested values, and I've found the best value for not missing any modules and being the fastest
-    while (hookCountLeft > -1) {
+    while (hookCountLeft-- > 0) {
         const id = moduleIds.next().value!
         if (moduleShouldNotBeHooked(id)) continue
         hookModule(id, metroModules[id]!)
-        --hookCountLeft
     }
 
     logger.log('Importing index module...')
@@ -164,13 +153,10 @@ export async function initializeModules() {
     __r(IndexMetroModuleId)
     recordTimestamp('Modules_IndexRequired')
 
-    let id = moduleIds.next().value
-    if (!id) return
-
-    do {
-        if (moduleShouldNotBeHooked(id)) continue
-        hookModule(id, metroModules[id]!)
-    } while ((id = moduleIds.next().value))
+    for (let next = moduleIds.next(); !next.done; next = moduleIds.next()) {
+        const id = next.value
+        if (!moduleShouldNotBeHooked(id)) hookModule(id, metroModules[id]!)
+    }
 
     recordTimestamp('Modules_HookedFactories')
 
@@ -188,10 +174,17 @@ export async function initializeModules() {
  * Blacklists a module from being required
  * @param id
  */
-export function blacklistModule(id: Metro.ModuleIDKey) {
+export function blacklistModule(id: Metro.ModuleID) {
     cacheModuleAsBlacklisted(id)
     saveCache()
 }
+
+ErrorUtils.setGlobalHandler(function RevengeGlobalErrorHandler(err, isFatal) {
+    logger.error(
+        `Blacklisting module ${importingModuleId} because it could not be imported (fatal = ${isFatal}): ${err} `,
+    )
+    blacklistModule(importingModuleId)
+})
 
 /**
  * Requires a module
@@ -201,31 +194,23 @@ export function blacklistModule(id: Metro.ModuleIDKey) {
 export function requireModule(id: Metro.ModuleID) {
     const metroModules = getMetroModules()
 
+    if (!(id in metroModules)) return
     if (isModuleBlacklisted(id)) return
 
-    const metroModule = metroModules[id]
-    if (metroModule?.isInitialized && !metroModule.hasError) return __r(id)
-
-    const ogHandler = ErrorUtils.getGlobalHandler()
-    ErrorUtils.setGlobalHandler((err, isFatal) => {
-        logger.error(`Blacklisting module ${id} because it could not be imported (fatal = ${isFatal}): ${err} `)
-        blacklistModule(id)
-    })
+    const metroModule = metroModules[id]!
+    if (metroModule.isInitialized && !metroModule.hasError) return metroModule.publicModule.exports
 
     const originalImportingId = id
-    let moduleExports: unknown
+    importingModuleId = id
+
     try {
-        importingModuleId = id
-        moduleExports = __r(id)
+        return __r(id)
     } catch (error) {
         logger.error(`Blacklisting module ${id} because it could not be imported: ${error}`)
         blacklistModule(id)
     } finally {
         importingModuleId = originalImportingId
-        ErrorUtils.setGlobalHandler(ogHandler)
     }
-
-    return moduleExports
 }
 
 /**
@@ -317,13 +302,12 @@ export function* modulesForFinder(key: string, fullLookup = false) {
         }
     else {
         for (const id of metroDependencies) {
-            const mid = Number(id)
-            if (isModuleBlacklisted(mid)) continue
+            if (isModuleBlacklisted(id)) continue
 
-            const exports = requireModule(mid)
+            const exports = requireModule(id)
             if (!exports) continue
 
-            yield [mid, exports]
+            yield [id, exports]
         }
     }
 }
