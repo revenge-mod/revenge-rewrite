@@ -16,9 +16,8 @@ import type { Metro } from '../types'
  * Schedules patches for Metro modules
  * @param patcher A patcher instance
  * @param logger A logger instance
- * @param metroModules Metro modules list
  */
-export function initializeModulePatches(patcher: Patcher, logger: LibraryLogger, metroModules: typeof modules) {
+export function initializeModulePatches(patcher: Patcher, logger: LibraryLogger) {
     // Tracks file path so findByFilePath works
     subscribePatchableModule(
         'f',
@@ -30,7 +29,7 @@ export function initializeModulePatches(patcher: Patcher, logger: LibraryLogger,
                 ([filePath]) => {
                     const importingModuleId = getImportingModuleId()
                     if (importingModuleId === -1 || !filePath) return
-                    metroModules[importingModuleId]![MetroModuleFilePathKey] = filePath as string
+                    modules.get(importingModuleId)![MetroModuleFilePathKey] = filePath as string
                 },
                 'trackFilePath',
             )
@@ -62,7 +61,7 @@ export function initializeModulePatches(patcher: Patcher, logger: LibraryLogger,
             // The module before cannot get initialized without causing a freeze
             // [NativeStartupFlagsModule, (Problematic), (OtherModule)]
             // We are gonna patch: NativeStartupFlagsModule
-            return exports.default?.reactProfilingEnabled && !metroModules[id + 1]?.publicModule.exports.default
+            return exports.default?.reactProfilingEnabled && !modules.get(id + 1)?.publicModule.exports.default
         },
         (_, id) => {
             // So we just blacklist it here

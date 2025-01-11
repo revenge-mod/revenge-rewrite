@@ -77,7 +77,7 @@ export namespace Metro {
         [MetroModuleFilePathKey]?: string
     }
 
-    export type ModuleList = Record<ModuleID, ModuleDefinition | Nullish>
+    export type ModuleList = Map<ModuleID, ModuleDefinition | Nullish>
 
     export type RequireFn = (id: ModuleID) => ModuleExports
 

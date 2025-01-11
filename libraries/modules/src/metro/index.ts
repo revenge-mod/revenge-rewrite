@@ -29,14 +29,6 @@ export {
     cache,
 } from './caches'
 
-/**
- * Gets the Metro modules. Such a function is needed because for some reason, accessing `globalThis.modules` directly is incredibly slow... but a function call to it is faster..?
- * @internal
- */
-export function getMetroModules() {
-    return globalThis.modules
-}
-
 let importingModuleId = -1
 
 /**
@@ -68,8 +60,8 @@ const resolvedModules = new Set<Metro.ModuleID>()
  * @param id The ID of the module to resolve
  * @internal
  */
-export function resolveModuleDependencies(modules: Metro.ModuleList, id: Metro.ModuleID) {
-    const metroModule = modules[id]
+export function resolveModuleDependencies(id: Metro.ModuleID) {
+    const metroModule = modules.get(id)
     // If somehow, the module does not exist
     if (!metroModule) return void metroDependencies.delete(id)
     if (!metroModule.dependencyMap || resolvedModules.has(id)) return
@@ -78,7 +70,7 @@ export function resolveModuleDependencies(modules: Metro.ModuleList, id: Metro.M
 
     for (const depId of metroModule.dependencyMap) {
         metroDependencies.add(depId)
-        resolveModuleDependencies(modules, depId)
+        resolveModuleDependencies(depId)
     }
 }
 
@@ -128,13 +120,11 @@ function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
  * Initializes the Metro modules patches and caches
  */
 export async function initializeModules() {
-    const metroModules = getMetroModules()
-
     const cacheRestored = await restoreCache()
     recordTimestamp('Modules_TriedRestoreCache')
 
     // Patches modules on load
-    initializeModulePatches(patcher, logger, metroModules)
+    initializeModulePatches(patcher, logger)
 
     // To be reliable in finding modules, we need to hook module factories before requiring index
     // Hooking all modules before requiring index slows down startup up to 1s, so we defer some of the later modules to be hooked later
@@ -145,7 +135,7 @@ export async function initializeModules() {
     while (hookCountLeft-- > 0) {
         const id = moduleIds.next().value!
         if (moduleShouldNotBeHooked(id)) continue
-        hookModule(id, metroModules[id]!)
+        hookModule(id, modules.get(id)!)
     }
 
     logger.log('Importing index module...')
@@ -155,7 +145,7 @@ export async function initializeModules() {
 
     for (let next = moduleIds.next(); !next.done; next = moduleIds.next()) {
         const id = next.value
-        if (!moduleShouldNotBeHooked(id)) hookModule(id, metroModules[id]!)
+        if (!moduleShouldNotBeHooked(id)) hookModule(id, modules.get(id)!)
     }
 
     recordTimestamp('Modules_HookedFactories')
@@ -192,12 +182,10 @@ ErrorUtils.setGlobalHandler(function RevengeGlobalErrorHandler(err, isFatal) {
  * @returns The exports of the module
  */
 export function requireModule(id: Metro.ModuleID) {
-    const metroModules = getMetroModules()
-
-    if (!(id in metroModules)) return
+    if (!modules.has(id)) return
     if (isModuleBlacklisted(id)) return
 
-    const metroModule = metroModules[id]!
+    const metroModule = modules.get(id)!
     if (metroModule.isInitialized && !metroModule.hasError) return metroModule.publicModule.exports
 
     const originalImportingId = id

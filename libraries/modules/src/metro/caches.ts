@@ -14,7 +14,6 @@ import { logger } from '../shared'
 import {
     blacklistModule,
     dependencies,
-    getMetroModules,
     isModuleExportsBad,
     requireModule,
     resolveModuleDependencies,
@@ -72,7 +71,7 @@ export const cache = {
 export async function restoreCache() {
     logger.log('Attempting to restore cache...')
 
-    resolveModuleDependencies(getMetroModules(), IndexMetroModuleId)
+    resolveModuleDependencies(IndexMetroModuleId)
     // For testing:
     // invalidateCache()
 
@@ -118,7 +117,7 @@ export function requireAssetModules() {
 
     let assetsRegistryExporterModuleId = 0
     for (const id of dependencies) {
-        const module = modules[id]!
+        const module = modules.get(id)!
         if (!module.dependencyMap) continue
         if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryModuleId) {
             assetsRegistryExporterModuleId = id
@@ -134,7 +133,7 @@ export function requireAssetModules() {
     logger.log('Importing all assets modules...')
 
     for (const id of dependencies) {
-        const module = modules[id]!
+        const module = modules.get(id)!
         if (!module.dependencyMap) continue
         if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryExporterModuleId)
             requireModule(id)

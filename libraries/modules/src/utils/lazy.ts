@@ -2,7 +2,7 @@ import { patcherLazyModuleSymbol } from '@revenge-mod/patcher'
 import { noop } from '@revenge-mod/utils/functions'
 import { lazyValue } from '@revenge-mod/utils/lazy'
 import { find } from '../finders'
-import { getMetroModules, subscribeModule } from '../metro'
+import { subscribeModule } from '../metro'
 import { cache, indexedModuleIdsForLookup } from '../metro/caches'
 
 import type { FilterFn, LazyModuleContext, Metro } from '../types'
@@ -40,7 +40,7 @@ export function createLazyModule<A extends unknown[]>(filter: FilterFn<A>) {
                 moduleId = id
 
                 // If the module hasn't been indexed, or it has already been initialized (indexed is inferred)
-                if (getMetroModules()[moduleId]?.isInitialized) {
+                if (modules.get(moduleId)?.isInitialized) {
                     if (!cachedValue && !this.forceLoad()) {
                         // This module apparently doesn't exist, so we remove it from the cache
                         delete cache.lookupFlags[filter.key]?.[moduleId]
