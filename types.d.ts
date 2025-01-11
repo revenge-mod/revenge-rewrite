@@ -140,12 +140,6 @@ declare module '@revenge-mod/assets' {
     export default assets
 }
 
-declare module '@revenge-mod/debug' {
-    const debug: typeof import('./libraries/debug')
-    export * from './libraries/debug'
-    export default debug
-}
-
 declare module '@revenge-mod/modules' {
     const modules: typeof import('./libraries/modules')
     export * from './libraries/modules'

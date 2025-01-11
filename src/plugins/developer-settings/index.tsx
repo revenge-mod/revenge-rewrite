@@ -5,7 +5,6 @@ import { registerPlugin } from '@revenge-mod/plugins/internals'
 import { sleep } from '@revenge-mod/utils/functions'
 
 import AssetBrowserSettingsPage from './pages/AssetBrowser'
-import DebugPerformanceTimesSettingsPage from './pages/DebugPerformanceTimes'
 import DeveloperSettingsPage from './pages/Developer'
 
 import { DebuggerContext, connectToDebugger, disconnectFromDebugger } from './debugger'
@@ -85,19 +84,13 @@ const plugin = registerPlugin<{
                     },
                 }),
 
-                sui.createRoute('RevengeDebugPerformanceTimes', {
-                    type: 'route',
-                    label: 'Debug Performance Times',
-                    component: DebugPerformanceTimesSettingsPage,
-                    icon: assets.getIndexByName('TimerIcon'),
-                }),
-
                 sui.createRoute('RevengeAssetBrowser', {
                     type: 'route',
                     label: 'Asset Browser',
                     component: AssetBrowserSettingsPage,
                     icon: assets.getIndexByName('ImageIcon'),
                 }),
+
                 disconnectFromDebugger,
                 disconnectFromDevTools,
             )

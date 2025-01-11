@@ -1,5 +1,3 @@
-import { recordTimestamp } from '@revenge-mod/debug'
-
 import {
     IndexMetroModuleId,
     MetroModuleFlags,
@@ -121,7 +119,6 @@ function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
  */
 export async function initializeModules() {
     const cacheRestored = await restoreCache()
-    recordTimestamp('Modules_TriedRestoreCache')
 
     // Patches modules on load
     initializeModulePatches(patcher, logger)
@@ -141,20 +138,14 @@ export async function initializeModules() {
     logger.log('Importing index module...')
     // ! Do NOT use requireModule for this
     __r(IndexMetroModuleId)
-    recordTimestamp('Modules_IndexRequired')
 
     for (let next = moduleIds.next(); !next.done; next = moduleIds.next()) {
         const id = next.value
         if (!moduleShouldNotBeHooked(id)) hookModule(id, modules.get(id)!)
     }
 
-    recordTimestamp('Modules_HookedFactories')
-
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
-    if (!cacheRestored) {
-        requireAssetModules()
-        recordTimestamp('Modules_RequiredAssets')
-    }
+    if (!cacheRestored) requireAssetModules()
 
     cache.totalModules = metroDependencies.size
     saveCache()

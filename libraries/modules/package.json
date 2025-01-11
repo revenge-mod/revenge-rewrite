@@ -15,7 +15,6 @@
     "./native": "./src/native/index.ts"
   },
   "dependencies": {
-    "@revenge-mod/debug": "workspace:*",
     "@revenge-mod/utils": "workspace:*"
   },
   "devDependencies": {

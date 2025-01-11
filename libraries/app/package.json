@@ -8,7 +8,6 @@
     ".": "./src/index.tsx"
   },
   "dependencies": {
-    "@revenge-mod/debug": "workspace:*",
     "@revenge-mod/modules": "workspace:*",
     "@revenge-mod/patcher": "workspace:*",
     "@revenge-mod/utils": "workspace:*"

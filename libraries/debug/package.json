@@ -1,8 +1,0 @@
-{
-  "name": "@revenge-mod/debug",
-  "type": "module",
-  "main": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  }
-}
