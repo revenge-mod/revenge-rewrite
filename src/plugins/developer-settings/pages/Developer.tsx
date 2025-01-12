@@ -39,13 +39,14 @@ import { PluginContext } from '..'
 
 import { useContext, useEffect, useRef, useState } from 'react'
 import { ScrollView } from 'react-native'
+import { invalidateCache } from '@revenge-mod/modules/metro/caches'
 
 
 export default function DeveloperSettingsPage() {
     const context = useContext(PluginContext)
     const {
         storage,
-        revenge: { assets, modules },
+        revenge: { assets },
     } = context
 
     useObserveStorage([storage])
@@ -251,7 +252,7 @@ export default function DeveloperSettingsPage() {
                         subLabel="Module blacklists, lookup flags, asset index maps, asset module ID maps. This will reload the app."
                         icon={<TableRowIcon variant="danger" source={assets.getIndexByName('TrashIcon')!} />}
                         onPress={() => {
-                            modules.metro.invalidateCache()
+                            invalidateCache()
                             BundleUpdaterManager.reload()
                         }}
                     />

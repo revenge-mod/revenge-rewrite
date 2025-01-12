@@ -1,15 +1,15 @@
-import { MetroModuleFilePathKey } from '@revenge-mod/modules/constants'
+import { noop, noopPromise } from '@revenge-mod/utils/functions'
+
 import {
     blacklistModule,
-    cache,
     getImportingModuleId,
     isModuleBlacklisted,
     subscribeModule,
-} from '@revenge-mod/modules/metro'
-import { noop, noopPromise } from '@revenge-mod/utils/functions'
+} from '.'
+import { cache } from './caches'
 
-import type { Patcher } from '@revenge-mod/patcher'
-import type { LibraryLogger } from '@revenge-mod/utils/library'
+import { patcher, logger } from '../shared'
+
 import type { Metro } from '../types'
 
 /**
@@ -17,7 +17,7 @@ import type { Metro } from '../types'
  * @param patcher A patcher instance
  * @param logger A logger instance
  */
-export function initializeModulePatches(patcher: Patcher, logger: LibraryLogger) {
+export function initializeModulePatches() {
     // Tracks file path so findByFilePath works
     subscribePatchableModule(
         'f',
@@ -29,7 +29,7 @@ export function initializeModulePatches(patcher: Patcher, logger: LibraryLogger)
                 ([filePath]) => {
                     const importingModuleId = getImportingModuleId()
                     if (importingModuleId === -1 || !filePath) return
-                    modules.get(importingModuleId)![MetroModuleFilePathKey] = filePath as string
+                    cache.moduleFilePaths.set(importingModuleId, filePath)
                 },
                 'trackFilePath',
             )
@@ -86,6 +86,7 @@ export function initializeModulePatches(patcher: Patcher, logger: LibraryLogger)
         m => (m.default.track = () => noopPromise),
     )
 
+    // Moment locale fix
     subscribePatchableModule(
         'm',
         m => m.isMoment,

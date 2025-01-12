@@ -1,12 +1,4 @@
 import {
-    IndexMetroModuleId,
-    MetroModuleFlags,
-    MetroModuleLookupFlags,
-    SafeModuleHookAmountBeforeDefer,
-} from '../constants'
-import { logger, patcher } from '../shared'
-
-import {
     cache,
     cacheModuleAsBlacklisted,
     indexedModuleIdsForLookup,
@@ -14,18 +6,18 @@ import {
     restoreCache,
     saveCache,
 } from './caches'
+
+import {
+    IndexMetroModuleId,
+    MetroModuleFlags,
+    MetroModuleLookupFlags,
+    SafeModuleHookAmountBeforeDefer,
+} from '../constants'
+
 import { initializeModulePatches } from './patches'
+import { logger, patcher } from '../shared'
 
 import type { Metro } from '../types'
-
-export {
-    cacheAsset,
-    cacheModuleAsBlacklisted,
-    cacherFor,
-    indexedModuleIdsForLookup,
-    invalidateCache,
-    cache,
-} from './caches'
 
 let importingModuleId = -1
 
@@ -38,39 +30,9 @@ export function getImportingModuleId() {
 
 export type MetroModuleSubscriptionCallback = (id: Metro.ModuleID, exports: Metro.ModuleExports) => unknown
 
-const subscriptions: Record<Metro.ModuleID | 'all', Set<MetroModuleSubscriptionCallback>> = {
-    all: new Set<MetroModuleSubscriptionCallback>(),
-}
-
-const metroDependencies = new Set<Metro.ModuleID>()
-
-/**
- * Metro dependencies to require, if no cache is available
- * @internal
- */
-export const dependencies = metroDependencies
-
-const resolvedModules = new Set<Metro.ModuleID>()
-
-/**
- * Recursively resolves dependencies and subdependencies of a module
- * @param modules Metro modules object
- * @param id The ID of the module to resolve
- * @internal
- */
-export function resolveModuleDependencies(id: Metro.ModuleID) {
-    const metroModule = modules.get(id)
-    // If somehow, the module does not exist
-    if (!metroModule) return void metroDependencies.delete(id)
-    if (!metroModule.dependencyMap || resolvedModules.has(id)) return
-
-    resolvedModules.add(id)
-
-    for (const depId of metroModule.dependencyMap) {
-        metroDependencies.add(depId)
-        resolveModuleDependencies(depId)
-    }
-}
+const subscriptions: Map<Metro.ModuleID | 'all', Set<MetroModuleSubscriptionCallback>> = new Map([
+    ['all', new Set<MetroModuleSubscriptionCallback>()],
+])
 
 function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
     // Allow patching already initialized modules
@@ -80,9 +42,9 @@ function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
 
         logger.warn(`Hooking already initialized module: ${id}`)
 
-        const subs = subscriptions[id]
+        const subs = subscriptions.get(id)
         if (subs) for (const sub of subs) sub(id, metroModule.publicModule.exports)
-        for (const sub of subscriptions.all) sub(id, metroModule.publicModule.exports)
+        for (const sub of subscriptions.get('all')!) sub(id, metroModule.publicModule.exports)
 
         return
     }
@@ -97,12 +59,12 @@ function hookModule(id: Metro.ModuleID, metroModule: Metro.ModuleDefinition) {
             importingModuleId = id
 
             try {
-                origFunc.apply(undefined, args)
+                origFunc(...args)
                 if (isModuleExportsBad(moduleObject.exports)) return blacklistModule(id)
 
-                const subs = subscriptions[id]
+                const subs = subscriptions.get(id)
                 if (subs) for (const sub of subs) sub(id, moduleObject.exports)
-                for (const sub of subscriptions.all) sub(id, moduleObject.exports)
+                for (const sub of subscriptions.get('all')!) sub(id, moduleObject.exports)
             } catch (error) {
                 logger.log(`Blacklisted module ${id} because it could not be initialized: ${error}`)
                 blacklistModule(id)
@@ -121,18 +83,18 @@ export async function initializeModules() {
     const cacheRestored = await restoreCache()
 
     // Patches modules on load
-    initializeModulePatches(patcher, logger)
+    initializeModulePatches()
 
     // To be reliable in finding modules, we need to hook module factories before requiring index
     // Hooking all modules before requiring index slows down startup up to 1s, so we defer some of the later modules to be hooked later
-    const moduleIds = metroDependencies.values()
+    const moduleIds = modules.entries()
 
-    let hookCountLeft = Math.min(metroDependencies.size, SafeModuleHookAmountBeforeDefer)
+    let hookCountLeft = Math.min(modules.size, SafeModuleHookAmountBeforeDefer)
     // I've tested values, and I've found the best value for not missing any modules and being the fastest
     while (hookCountLeft-- > 0) {
-        const id = moduleIds.next().value!
+        const [id, module] = moduleIds.next().value!
         if (moduleShouldNotBeHooked(id)) continue
-        hookModule(id, modules.get(id)!)
+        hookModule(id, module)
     }
 
     logger.log('Importing index module...')
@@ -140,14 +102,14 @@ export async function initializeModules() {
     __r(IndexMetroModuleId)
 
     for (let next = moduleIds.next(); !next.done; next = moduleIds.next()) {
-        const id = next.value
-        if (!moduleShouldNotBeHooked(id)) hookModule(id, modules.get(id)!)
+        const [id, module] = next.value
+        if (!moduleShouldNotBeHooked(id)) hookModule(id, module)
     }
 
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
     if (!cacheRestored) requireAssetModules()
 
-    cache.totalModules = metroDependencies.size
+    cache.totalModules = modules.size
     saveCache()
 }
 
@@ -176,8 +138,8 @@ export function requireModule(id: Metro.ModuleID) {
     if (!modules.has(id)) return
     if (isModuleBlacklisted(id)) return
 
-    const metroModule = modules.get(id)!
-    if (metroModule.isInitialized && !metroModule.hasError) return metroModule.publicModule.exports
+    const module = modules.get(id)!
+    if (module.isInitialized && !module.hasError) return module.publicModule.exports
 
     const originalImportingId = id
     importingModuleId = id
@@ -200,8 +162,8 @@ export function requireModule(id: Metro.ModuleID) {
  */
 export const subscribeModule = Object.assign(
     function subscribeModule(id: Metro.ModuleID, callback: MetroModuleSubscriptionCallback) {
-        if (!(id in subscriptions)) subscriptions[id] = new Set()
-        const set = subscriptions[id]!
+        if (!(id in subscriptions)) subscriptions.set(id, new Set())
+        const set = subscriptions.get(id)!
         set.add(callback)
         return () => set.delete(callback)
     },
@@ -228,8 +190,8 @@ export const subscribeModule = Object.assign(
          * @returns A function to unsubscribe
          */
         all: function subscribeModuleAll(callback: MetroModuleSubscriptionCallback) {
-            subscriptions.all.add(callback)
-            return () => subscriptions.all.delete(callback)
+            subscriptions.get('all')!.add(callback)
+            return () => subscriptions.get('all')!.delete(callback)
         },
     },
 )
@@ -239,7 +201,7 @@ export const subscribeModule = Object.assign(
  * @param id The module ID
  * @returns Whether the module is blacklisted (`0` means not blacklisted, any other integer means blacklisted)
  */
-export function isModuleBlacklisted(id: Metro.ModuleIDKey) {
+export function isModuleBlacklisted(id: Metro.ModuleID) {
     if (!(id in cache.exportsFlags)) return 0
     return cache.exportsFlags[id]! & MetroModuleFlags.Blacklisted
 }
@@ -249,13 +211,13 @@ export function isModuleBlacklisted(id: Metro.ModuleIDKey) {
  * @param id The module ID
  * @returns Whether the module is an asset registrar
  */
-export function isModuleAssetRegistrar(id: Metro.ModuleIDKey) {
+export function isModuleAssetRegistrar(id: Metro.ModuleID) {
     if (!(id in cache.exportsFlags)) return 0
     return cache.exportsFlags[id]! & MetroModuleFlags.Asset
 }
 
 /** @internal */
-function moduleShouldNotBeHooked(id: Metro.ModuleIDKey) {
+function moduleShouldNotBeHooked(id: Metro.ModuleID) {
     // Blacklisted modules and asset registrars should not be hooked
     // It only slows down the startup and adds no value
     return isModuleBlacklisted(id) || isModuleAssetRegistrar(id)
@@ -275,12 +237,12 @@ export function* modulesForFinder(key: string, fullLookup = false) {
         // Pass immediately if it's not a full lookup, otherwise check if it's a full lookup
         (!fullLookup || lookupCache.flags & MetroModuleLookupFlags.FullLookup)
     )
-        for (const id in indexedModuleIdsForLookup(key)) {
+        for (const id of indexedModuleIdsForLookup(key)) {
             if (isModuleBlacklisted(id)) continue
-            yield [id, requireModule(Number(id))]
+            yield [id, requireModule(id)]
         }
     else {
-        for (const id of metroDependencies) {
+        for (const id of modules.keys()) {
             if (isModuleBlacklisted(id)) continue
 
             const exports = requireModule(id)

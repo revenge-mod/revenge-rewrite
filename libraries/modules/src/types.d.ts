@@ -21,7 +21,7 @@ import type { lazyContextSymbol } from './utils/lazy'
 
 /// METRO
 
-/** @see {@link https://github.com/facebook/metro/blob/c2d7539dfc10aacb2f99fcc2f268a3b53e867a90/packages/metro-runtime/src/polyfills/require.js} */
+/** @see {@link https://github.com/facebook/metro/blob/1361405ffe6f1bdef54295addfef0f30523aaab2/packages/metro-runtime/src/polyfills/require.js} */
 export namespace Metro {
     export type DependencyMap = Array<ModuleID> & {
         readonly paths?: Readonly<Record<ModuleID, string>> | undefined
@@ -40,8 +40,6 @@ export namespace Metro {
     ) => void
 
     export type ModuleID = number
-
-    export type ModuleIDKey = ModuleID | string
 
     export interface ModuleDefinition<Initialized = boolean> {
         /** Set to undefined once module is initialized */
@@ -77,7 +75,7 @@ export namespace Metro {
         [MetroModuleFilePathKey]?: string
     }
 
-    export type ModuleList = Map<ModuleID, ModuleDefinition | Nullish>
+    export type ModuleList = Map<ModuleID, ModuleDefinition>
 
     export type RequireFn = (id: ModuleID) => ModuleExports
 

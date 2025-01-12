@@ -1,6 +1,7 @@
 import { lazyValue } from '@revenge-mod/utils/lazy'
 import { byDisplayName, byFilePath, byName, byProps, byQuery, bySingleProp, byStoreName, byTypeName } from './filters'
-import { cacherFor, modulesForFinder, requireModule } from './metro'
+import { modulesForFinder, requireModule } from './metro'
+import { cacherFor } from './metro/caches'
 import { createLazyModule, lazyContextSymbol } from './utils/lazy'
 
 import type { If, Nullable as Undefinable } from '@revenge-mod/shared/types'

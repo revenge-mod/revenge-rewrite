@@ -37,7 +37,6 @@ async function initialize() {
             ])
 
         // TODO: Don't expose this global, instead pass to plugin contexts, for development, expose it via the developer-settings plugin
-        // TODO: Only expose revenge.plugins.registerPlugin
         globalThis.revenge = {
             app: AppLibrary,
             assets: AssetsLibrary,

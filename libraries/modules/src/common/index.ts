@@ -41,6 +41,7 @@ export const intlModule = findByProps<typeof import('@discord/intl')>('runtimeHa
 
 export const Logger = findByName<typeof DiscordModules.Logger, true>('Logger')!
 
+export const actionSheets = findByProps<DiscordModules.ActionSheets>('hideActionSheet')!
 export const alerts = findByProps<DiscordModules.Alerts>('openAlert', 'dismissAlert')!
 export const channels = findByProps('getVoiceChannelId')!
 export const links = findByProps<DiscordModules.LinkingUtils>('openURL', 'openDeeplink')!
@@ -72,7 +73,6 @@ export const { TextStyleSheet, createStyles, dismissAlerts, openAlert } = lazyDe
 )
 
 export const showSimpleActionSheet = findSingleProp<typeof DiscordModules.ActionSheets.showSimpleActionSheet>('showSimpleActionSheet')!
-export const actionSheets = findByProps<DiscordModules.ActionSheets>('hideActionSheet')!
 
 /// FLUX
 

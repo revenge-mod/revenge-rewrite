@@ -12,6 +12,7 @@
     "./filters": "./src/filters.ts",
     "./constants": "./src/constants.ts",
     "./metro": "./src/metro/index.ts",
+    "./metro/caches": "./src/metro/caches.ts",
     "./native": "./src/native/index.ts"
   },
   "dependencies": {
