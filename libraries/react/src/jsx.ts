@@ -25,7 +25,7 @@ const patchCallback = (
     // Hopefully fixes iOS "invalid element type" issue after patching ErrorBoundary
     // Comp can be undefined for some reason
     // @ts-expect-error
-    if (typeof (Comp?.type ?? Comp) === 'undefined') {
+    if ((Comp?.type ?? Comp) === undefined) {
         args[0] = 'RCTView' as keyof JSX.IntrinsicElements
         args[1] = { style: styles.hidden } satisfies ViewProps
         return orig.apply(ReactJSXRuntime, args)

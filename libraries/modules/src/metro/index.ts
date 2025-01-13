@@ -1,7 +1,7 @@
 import {
     cache,
     cacheModuleAsBlacklisted,
-    indexedModuleIdsForLookup,
+    cachedModuleIdsForFilter,
     requireAssetModules,
     restoreCache,
     saveCache,
@@ -195,10 +195,10 @@ function moduleShouldNotBeHooked(id: Metro.ModuleID) {
 }
 
 /**
- * Yields the modules for a specific finder call
+ * Yields the modules for a specific filter key
  * @param key Filter key
  */
-export function* modulesForFinder(key: string, fullLookup = false) {
+export function* moduleIdsForFilter(key: string, fullLookup = false) {
     const lookupCache = cache.lookupFlags[key]
 
     if (
@@ -208,20 +208,15 @@ export function* modulesForFinder(key: string, fullLookup = false) {
         // Pass immediately if it's not a full lookup, otherwise check if it's a full lookup
         (!fullLookup || lookupCache.flags & MetroModuleLookupFlags.FullLookup)
     )
-        for (const id of indexedModuleIdsForLookup(key)) {
+        for (const id of cachedModuleIdsForFilter(key)) {
             if (isModuleBlacklisted(id)) continue
-            yield [id, requireModule(id)]
+            yield id
         }
-    else {
+    else
         for (const id of modules.keys()) {
             if (isModuleBlacklisted(id)) continue
-
-            const exports = requireModule(id)
-            if (!exports) continue
-
-            yield [id, exports]
+            yield id
         }
-    }
 }
 
 /**
@@ -231,7 +226,7 @@ export function* modulesForFinder(key: string, fullLookup = false) {
  */
 export function isModuleExportsBad(exports: Metro.ModuleExports) {
     return (
-        typeof exports === 'undefined' ||
+        exports === undefined ||
         exports === null ||
         exports === globalThis ||
         exports[''] === null ||

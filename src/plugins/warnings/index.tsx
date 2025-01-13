@@ -3,7 +3,7 @@ import { AlertActionButton, AlertModal } from '@revenge-mod/modules/common/compo
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 import { registerPlugin } from '@revenge-mod/plugins/internals'
 
-const MinimumSupportedBuildNumber = ReactNative.Platform.select({ android: 260000, ios: 69233 })!
+const MinimumSupportedBuildNumber = ReactNative.Platform.select({ android: 263000, ios: 69420 })!
 
 registerPlugin<{
     supportWarningDismissedAt?: number

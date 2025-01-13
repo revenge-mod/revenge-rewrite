@@ -1,6 +1,9 @@
 import { assetsRegistry } from '@revenge-mod/modules/common'
-import { findByName } from '@revenge-mod/modules/finders'
+
+import { byName } from '@revenge-mod/modules/filters'
+import { findAsync } from '@revenge-mod/modules/finders'
 import { getImportingModuleId, requireModule } from '@revenge-mod/modules/metro'
+
 import { createPatcherInstance } from '@revenge-mod/patcher'
 
 import { cache, cacheAsset } from '@revenge-mod/modules/metro/caches'
@@ -42,7 +45,7 @@ type AssetSourceResolver = {
     }
 }
 
-const AssetSourceResolver = findByName.async<AssetSourceResolver, true>('AssetSourceResolver').then(it => it!.prototype)
+const AssetSourceResolver = findAsync(byName<AssetSourceResolver>('AssetSourceResolver')).then(it => it!.prototype)
 
 function maybeResolveCustomAsset(
     this: AssetSourceResolver['prototype'],
@@ -137,7 +140,7 @@ export function getAssetIndexByName(name: string, preferredType: PackagerAsset['
     if (!assetModule) return
 
     const mid = assetModule[preferredType] ?? assetModule[getFirstRegisteredAssetTypeByName(name)!]
-    if (typeof mid === 'undefined') return
+    if (typeof mid !== 'number') return
 
     return requireModule(mid)
 }

@@ -1,5 +1,6 @@
 import { React, ReactNative } from '@revenge-mod/modules/common'
-import { findByName } from '@revenge-mod/modules/finders'
+import { byName } from '@revenge-mod/modules/filters'
+import { findAsync } from '@revenge-mod/modules/finders'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { createPatcherInstance } from '@revenge-mod/patcher'
 import { ReactJSXLibrary } from '@revenge-mod/react/jsx'
@@ -70,9 +71,9 @@ afterErrorBoundaryPatchable(async function patchErrorBoundary() {
 
     setImmediate(() => {
         patcher.after.await(
-            findByName
-                .async('ErrorBoundary')
-                .then(it => (it as { name: string; prototype: ErrorBoundaryComponentPrototype }).prototype),
+            findAsync(byName<{ name: string; prototype: ErrorBoundaryComponentPrototype }>('ErrorBoundary')).then(
+                it => it!.prototype,
+            ),
             'render',
             function () {
                 if (this.state.error)

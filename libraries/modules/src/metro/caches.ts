@@ -7,7 +7,7 @@ import {
     assetCacheIndexSymbol,
 } from '../constants'
 import { byProps } from '../filters'
-import { findId } from '../finders'
+import { findModule } from '../finders'
 import { ClientInfoModule, FileModule } from '../native'
 import { logger } from '../shared'
 import { blacklistModule, isModuleExportsBad, requireModule } from './index'
@@ -106,7 +106,7 @@ export async function restoreCache() {
  * Filters all "asset" modules and requires them, making them cacheable
  */
 export function requireAssetModules() {
-    const [assetsRegistryModuleId] = findId(byProps('registerAsset'))
+    const [assetsRegistryModuleId] = findModule(byProps('registerAsset'))
     if (!assetsRegistryModuleId)
         return void logger.warn(
             'Unable to create asset cache, cannot find assets-registry module ID, some assets may not load',
@@ -174,8 +174,9 @@ export function invalidateCache() {
  * @param key The filter key
  * @returns A cacher object
  */
-export function cacherFor(key: string) {
-    const registry = (cache.lookupFlags[key] ??= {})
+export function cacherFor(key: string, whole: boolean) {
+    // TODO: This may conflict with filters that have the "whole:" prefix as key
+    const registry = (cache.lookupFlags[whole ? `whole:${key}` : key] ??= {})
     let invalidated = false
 
     return {
@@ -187,7 +188,11 @@ export function cacherFor(key: string) {
                 blacklistModule(id)
                 invalidated = true
                 if (id in registry) delete registry[id]
+
+                return false
             }
+
+            return true
         },
         finish: (notFound: boolean, fullLookup = false) => {
             registry.flags ??= 0
@@ -223,7 +228,7 @@ export function cacheAsset(name: Asset['name'], index: number, moduleId: Metro.M
     saveCache()
 }
 
-export function* indexedModuleIdsForLookup(key: string) {
+export function* cachedModuleIdsForFilter(key: string) {
     const modulesMap = cache.lookupFlags[key]
     if (!modulesMap) return undefined
 
