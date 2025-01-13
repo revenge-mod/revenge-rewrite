@@ -62,7 +62,7 @@ export const cache = {
     /**
      * The total modules count
      */
-    totalModules: 0,
+    totalModules: modules.size,
 }
 
 /** @internal */
