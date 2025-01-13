@@ -191,10 +191,26 @@ export function* findAllEager<F extends FilterFunction<any>>(
     for (const [, exports] of findAllModules(filter)) yield exports
 }
 
-export function findProp<T>(prop: string, ...props: string[]) {
-    return lazyValue(() => findEager(byProps(prop, ...props))?.[prop] as T)
+/**
+ * Finds a property and accesses it lazily, where all specified properties are truthy
+ * @param props An array of properties to search for. The first element in the array is the property that will be accessed.
+ * @param options The options for the finder
+ * @param options.extraProps Additional properties to use for filtering
+ * @returns A lazy value of the property with the given property name in exports, where all specified properties are truthy
+ */
+export function findProp<T>(prop: string, options?: LazyFinderOptions & { extraProps?: string[] }) {
+    return lazyValue(
+        () => findEager(byProps(prop, ...(options?.extraProps ?? [])), options)?.[prop] as T,
+        options?.lazyOptions,
+    )
 }
 
-export function findSingleProp<T>(prop: string) {
-    return lazyValue(() => findEager(bySingleProp(prop))?.[prop] as T)
+/**
+ * Finds a property and accesses it lazily, where the specified property is truthy, and the export only has one property
+ * @param prop The property to search for
+ * @param options The options for the finder
+ * @returns A lazy value of the property with the given property name in exports, where the specified property is truthy, and the export only has one property
+ */
+export function findSingleProp<T>(prop: string, options?: LazyFinderOptions) {
+    return lazyValue(() => findEager(bySingleProp(prop), options)?.[prop] as T, options?.lazyOptions)
 }

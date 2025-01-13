@@ -30,19 +30,6 @@ export const byProps = createFilter<ByPropsArgs>(
     props => `revenge.props(${props.join(',')})`,
 ) as ByProps
 
-type ByMutablePropsArgs<T extends Record<string, any> = Record<string, any>> = [prop: keyof T]
-type ByMutableProp = Filter<
-    <T extends Record<string, any>>(...args: ByMutablePropsArgs<T>) => FilterFunction<ByMutablePropsArgs<T>, T>
->
-
-/**
- * Filters for exports which has the given mutable property
- */
-export const byMutableProp = createFilter<ByMutablePropsArgs>(
-    ([prop], m) => m?.[prop] && !Object.getOwnPropertyDescriptor(m, prop)?.get,
-    ([prop]) => `revenge.mutableProp(${prop})`,
-) as ByMutableProp
-
 type ByNameArgs<T extends { name?: string }> = [name: NameOf<T>]
 type NameOf<T extends { name?: string }> = T['name'] extends undefined ? string : T['name']
 type ByName = Filter<
