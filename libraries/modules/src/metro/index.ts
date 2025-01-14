@@ -22,12 +22,11 @@ export function getImportingModuleId() {
     return importingModuleId
 }
 
+export type SpecificMetroModuleSubscriptionCallback = (exports: Metro.ModuleExports) => unknown
 export type MetroModuleSubscriptionCallback = (id: Metro.ModuleID, exports: Metro.ModuleExports) => unknown
 
 const allSubscriptionsSet = new Set<MetroModuleSubscriptionCallback>()
-const subscriptions: Map<Metro.ModuleID | 'all', Set<MetroModuleSubscriptionCallback>> = new Map([
-    ['all', allSubscriptionsSet],
-])
+const subscriptions: Map<Metro.ModuleID, Set<SpecificMetroModuleSubscriptionCallback>> = new Map()
 
 function handleModuleInitializeError(id: Metro.ModuleID, error: unknown) {
     logger.error(`Blacklisting module ${id} because it could not be imported: ${error}`)
@@ -48,7 +47,7 @@ export async function initializeModules() {
         const exports = this.publicModule.exports
 
         const subs = subscriptions.get(id)
-        if (subs) for (const sub of subs) sub(id, exports)
+        if (subs) for (const sub of subs) sub(exports)
         for (const sub of allSubscriptionsSet) sub(id, exports)
     }
 
@@ -128,46 +127,27 @@ export function requireModule(id: Metro.ModuleID) {
 }
 
 /**
- * Subscribes to a module, calling the callback when the module is required
+ * Subscribes to a module/all modules, calling the callback when the module is required
  * @param id The module ID
  * @param callback The callback to call when the module is required
  * @returns A function to unsubscribe
  */
-export const subscribeModule = Object.assign(
-    function subscribeModule(id: Metro.ModuleID, callback: MetroModuleSubscriptionCallback) {
-        if (!subscriptions.has(id)) subscriptions.set(id, new Set())
-        const set = subscriptions.get(id)!
-        set.add(callback)
-        return () => set.delete(callback)
-    },
-    {
-        /**
-         * Subscribes to a module once, calling the callback when the module is required
-         * @param id The module ID
-         * @param callback The callback to call when the module is required
-         * @returns A function to unsubscribe
-         */
-        once: function subscribeModuleOnce(id: Metro.ModuleID, callback: MetroModuleSubscriptionCallback) {
-            const unsub = subscribeModule(id, (...args) => {
-                unsub()
-                callback(...args)
-            })
+export function afterSpecificModuleInitialized(id: Metro.ModuleID, callback: SpecificMetroModuleSubscriptionCallback) {
+    if (!subscriptions.has(id)) subscriptions.set(id, new Set())
+    const set = subscriptions.get(id)!
+    set.add(callback)
+    return () => set.delete(callback)
+}
 
-            return unsub
-        },
-    },
-    {
-        /**
-         * Subscribes to all modules, calling the callback when any modules are required
-         * @param callback The callback to call when any modules are required
-         * @returns A function to unsubscribe
-         */
-        all: function subscribeModuleAll(callback: MetroModuleSubscriptionCallback) {
-            allSubscriptionsSet.add(callback)
-            return () => allSubscriptionsSet.delete(callback)
-        },
-    },
-)
+/**
+ * Subscribes to all modules, calling the callback when the module is required
+ * @param callback The callback to call when the module is required
+ * @returns A function to unsubscribe
+ */
+export function afterModuleInitialized(callback: MetroModuleSubscriptionCallback) {
+    allSubscriptionsSet.add(callback)
+    return () => allSubscriptionsSet.delete(callback)
+}
 
 /**
  * Returns whether the module is blacklisted

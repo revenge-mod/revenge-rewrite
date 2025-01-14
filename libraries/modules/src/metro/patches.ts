@@ -1,7 +1,7 @@
 import { createPatcherInstance } from '@revenge-mod/patcher'
 import { noop, noopPromise } from '@revenge-mod/utils/functions'
 
-import { blacklistModule, getImportingModuleId, isModuleBlacklisted, subscribeModule } from '.'
+import { blacklistModule, getImportingModuleId, isModuleBlacklisted, afterSpecificModuleInitialized, afterModuleInitialized } from '.'
 
 import { cache } from './caches'
 import { logger } from '../shared'
@@ -21,7 +21,7 @@ subscribePatchableModule(
             ([filePath]) => {
                 const importingModuleId = getImportingModuleId()
                 if (importingModuleId === -1 || !filePath) return
-                cache.moduleFilePaths.set(importingModuleId, filePath)
+                cache.moduleFilePaths.set(filePath, importingModuleId)
             },
             'trackFilePath',
         )
@@ -97,10 +97,10 @@ function subscribePatchableModule(
 ) {
     const cachedId = cache.patchableModules[patchId]
     const unsub = cachedId
-        ? subscribeModule(cachedId, exports => {
+        ? afterSpecificModuleInitialized(cachedId, exports => {
               patch(exports, cachedId)
           })
-        : subscribeModule.all((id, exports) => {
+        : afterModuleInitialized((id, exports) => {
               if (!filter(exports, id)) return
               unsub()
 

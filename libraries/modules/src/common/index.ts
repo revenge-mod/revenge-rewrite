@@ -1,13 +1,13 @@
 import { lazyDestructure, lazyValue } from '@revenge-mod/utils/lazy'
 
+import { byName, byProps } from '../filters'
+import { find, findByFilePath, findEager, findSingleProp } from '../finders'
+
 import React from 'react'
 import ReactNative from 'react-native'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { DiscordModules } from '../types'
-
-import { byFilePath, byName, byProps } from '@revenge-mod/modules/filters'
-import { find, findEager, findSingleProp } from '../finders'
 
 export * as components from './components'
 export * as stores from './stores'
@@ -52,8 +52,8 @@ export const links = find(byProps<DiscordModules.LinkingUtils>('openURL', 'openD
 export const clipboard = find(byProps<DiscordModules.ClipboardUtils>('getImagePNG'))!
 export const invites = find(byProps<DiscordModules.InviteUtils>('createInvite'))!
 export const commands = find(byProps('getBuiltInCommands'))!
-export const toasts = find(
-    byFilePath<DiscordModules.ToastActionCreators>('modules/toast/native/ToastActionCreators.tsx'),
+export const toasts = findByFilePath<DiscordModules.ToastActionCreators>(
+    'modules/toast/native/ToastActionCreators.tsx',
 )!
 export const filePicker = find(byProps<DiscordModules.FilePickerUtils>('handleDocumentSelection'))!
 export const messages = find(byProps<DiscordModules.MessageUtils>('sendBotMessage'))!

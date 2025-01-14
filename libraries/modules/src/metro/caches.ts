@@ -58,7 +58,7 @@ export const cache = {
      * Registry for module file paths
      * #### This is in-memory.
      */
-    moduleFilePaths: new Map() as Map<Metro.ModuleID, string>,
+    moduleFilePaths: new Map() as Map<string, Metro.ModuleID>,
     /**
      * The total modules count
      */

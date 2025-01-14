@@ -1,5 +1,5 @@
 import { isModuleExportsBad, moduleIdsForFilter, requireModule } from './metro'
-import { cacherFor } from './metro/caches'
+import { cache, cacherFor } from './metro/caches'
 import { createLazyModule, createLazyModuleById, lazyContextSymbol } from './utils/lazy'
 
 import { lazyValue, type LazyOptions } from '@revenge-mod/utils/lazy'
@@ -109,11 +109,10 @@ export type AsyncFinderOptions = LazyFinderOptions & {
     timeout?: number
 }
 
-export type LazyFinderReturn<F extends FilterFunction<any>, LF extends LazyFinderOptions> = LazyModule<
-    FinderReturn<F, LF>
->
-// TODO: Type this properly
-//    & NonNullable<NonNullable<LF['lazyOptions']>['exemptedEntries']>
+export type LazyFinderReturn<
+    F extends FilterFunction<any>,
+    LF extends LazyFinderOptions,
+> = LF extends LazyFinderOptions<LazyOptions<infer E>> ? LazyModule<FinderReturn<F, LF>> & E : never
 
 export type FinderReturn<F extends FilterFunction<any>, FO extends FinderOptions> =
     | (FO['returnWholeModule'] extends true
@@ -189,6 +188,20 @@ export function* findAllEager<F extends FilterFunction<any>>(
     filter: F,
 ): Generator<InferFilterFunctionReturnType<F>, void, unknown> {
     for (const [, exports] of findAllModules(filter)) yield exports
+}
+
+/**
+ * Finds exports by its module file path
+ * @param path The module file path
+ * @param options The options for the finder
+ * @returns Exports of the module with the given file path
+ */
+export function findByFilePath<T>(path: string, options?: FinderOptions) {
+    const id = cache.moduleFilePaths.get(path)
+    if (id === undefined) return
+    const exports = requireModule(id)
+    if (exports === undefined) return
+    return (!options?.returnWholeModule && exports.__esModule ? exports.default : exports) as T
 }
 
 /**

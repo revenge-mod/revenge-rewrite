@@ -4,7 +4,7 @@ import { lazyValue } from '@revenge-mod/utils/lazy'
 
 import { findEager, type FinderOptions, type LazyFinderOptions } from '../finders'
 
-import { requireModule, subscribeModule } from '../metro'
+import { requireModule, afterSpecificModuleInitialized } from '../metro'
 import { cache, cachedModuleIdsForFilter } from '../metro/caches'
 
 import type { FilterFunction, InferFilterFunctionReturnType, LazyModule, LazyModuleContext, Metro } from '../types'
@@ -26,7 +26,9 @@ export function subscribeModuleLazy(
             `Lazy module has no module ID attached, check if your filter matches any modules: ${info.filter?.key}`,
         )
 
-    return subscribeModule(moduleId, (_, exports) => callback(info.filter ? findEager(info.filter, options) : exports))
+    return afterSpecificModuleInitialized(moduleId, exports =>
+        callback(info.filter ? findEager(info.filter, options) : exports),
+    )
 }
 
 function getLazyContext<A extends unknown[]>(proxy: Metro.ModuleExports): LazyModuleContext<A> | undefined {

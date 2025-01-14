@@ -1,4 +1,3 @@
-import { cache } from './metro/caches'
 import { createFilter } from './utils/filters'
 
 export * from './utils/filters'
@@ -109,20 +108,6 @@ export const byStoreName = createFilter<Parameters<ByStoreName>>(
     ([name], m) => m.getName?.length === 0 && m.getName() === name,
     ([name]) => `revenge.storeName(${name})`,
 ) as ByStoreName
-
-type ByFilePath = Filter<<T>(path: string) => FilterFunction<[path: string], T>>
-
-/**
- * Filters for exports with matching imported file path. Useful for finding modules whose properties are not unique.
- *
- * @param path The file path to search for
- */
-export const byFilePath = createFilter<Parameters<ByFilePath>>(
-    ([path], _, id) => {
-        return cache.moduleFilePaths.get(id) === path
-    },
-    ([path]) => `revenge.filePath(${path})`,
-) as ByFilePath
 
 type BySinglePropArgs<T extends Record<string, any>> = [prop: keyof T]
 type BySingleProp = Filter<

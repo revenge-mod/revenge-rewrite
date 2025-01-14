@@ -1,4 +1,4 @@
-export type ExemptedEntries = Record<symbol | string, unknown>
+export type ExemptedEntries = Record<symbol | string, any>
 
 export interface LazyOptions<E extends ExemptedEntries = ExemptedEntries> {
     hint?: 'function' | 'object'
