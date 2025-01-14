@@ -1,7 +1,8 @@
 import { byStoreName } from '@revenge-mod/modules/filters'
 import { find } from '../finders'
 
-export const ThemeStore = find(byStoreName<{
-    getName(): 'ThemeStore'
-    theme: string
-}>('ThemeStore'))!
+export const ThemeStore = find(
+    byStoreName<{
+        theme: string
+    }>('ThemeStore'),
+)!

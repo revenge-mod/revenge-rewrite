@@ -3,6 +3,7 @@ import { createFilter } from './utils/filters'
 export * from './utils/filters'
 
 import type { FilterFunction } from '@revenge-mod/modules'
+import type { AnyObject } from '@revenge-mod/shared/types'
 
 type Filter<F> = F extends (...args: infer A) => FilterFunction<any>
     ? F & {
@@ -10,11 +11,8 @@ type Filter<F> = F extends (...args: infer A) => FilterFunction<any>
       }
     : never
 
-type ByPropsArgs<T extends Record<string, any> = Record<string, any>> = [
-    prop: keyof T,
-    ...props: Array<keyof T | (string & {})>,
-]
-type ByProps = Filter<<T extends Record<string, any>>(...args: ByPropsArgs<T>) => FilterFunction<ByPropsArgs<T>, T>>
+type ByPropsArgs<T extends AnyObject = AnyObject> = [prop: keyof T, ...props: Array<keyof T | (string & {})>]
+type ByProps = Filter<<T extends AnyObject>(...args: ByPropsArgs<T>) => FilterFunction<ByPropsArgs<T>, T>>
 
 /**
  * Filters exports where specified properties are truthy
@@ -25,14 +23,14 @@ type ByProps = Filter<<T extends Record<string, any>>(...args: ByPropsArgs<T>) =
  * @param props Additional properties to search for
  */
 export const byProps = createFilter<ByPropsArgs>(
-    (props, m) => props.length === 1 ? m[props[0]] : props.every(p => m[p]),
+    (props, m) => (props.length === 1 ? m[props[0]] : props.every(p => m[p])),
     props => `revenge.props(${props.join(',')})`,
 ) as ByProps
 
-type ByNameArgs<T extends { name?: string }> = [name: NameOf<T>]
-type NameOf<T extends { name?: string }> = T['name'] extends undefined ? string : T['name']
+type ByNameArgs<T extends AnyObject> = [name: NameOf<T>]
+type NameOf<T extends AnyObject> = T['name'] extends string ? T['name'] : string
 type ByName = Filter<
-    <T extends { name?: string }>(...args: ByNameArgs<T>) => FilterFunction<ByNameArgs<T>, T & { name: NameOf<T> }>
+    <T extends AnyObject>(...args: ByNameArgs<T>) => FilterFunction<ByNameArgs<T>, T & { name: NameOf<T> }>
 >
 
 /**
@@ -47,10 +45,10 @@ export const byName = createFilter<Parameters<ByName>>(
     ([name]) => `revenge.name(${name})`,
 ) as ByName
 
-type ByDisplayNameArgs<T extends { displayName?: string }> = [displayName: DisplayNameOf<T>]
-type DisplayNameOf<T extends { displayName?: string }> = T['displayName'] extends undefined ? string : T['displayName']
+type ByDisplayNameArgs<T extends AnyObject> = [displayName: DisplayNameOf<T>]
+type DisplayNameOf<T extends AnyObject> = T['displayName'] extends string ? T['displayName'] : string
 type ByDisplayName = Filter<
-    <T extends { displayName?: string }>(
+    <T extends AnyObject>(
         ...args: ByDisplayNameArgs<T>
     ) => FilterFunction<ByDisplayNameArgs<T>, T & { displayName: DisplayNameOf<T> }>
 >
@@ -67,12 +65,10 @@ export const byDisplayName = createFilter<Parameters<ByDisplayName>>(
     ([displayName]) => `revenge.displayName(${displayName})`,
 ) as ByDisplayName
 
-type ByTypeNameArgs<T extends { type?: { name?: string } }> = [typeName: TypeNameOf<T>]
-type TypeNameOf<T extends { type?: { name?: string } }> = T['type'] extends { name?: string }
-    ? T['type']['name']
-    : string
+type ByTypeNameArgs<T extends AnyObject> = [typeName: TypeNameOf<T>]
+type TypeNameOf<T extends AnyObject> = T['type']['name'] extends string ? T['type']['name'] : string
 type ByTypeName = Filter<
-    <T extends { type?: { name?: string } }>(
+    <T extends AnyObject>(
         ...args: ByTypeNameArgs<T>
     ) => FilterFunction<ByTypeNameArgs<T>, T & { type: { name: TypeNameOf<T> } }>
 >
@@ -89,10 +85,10 @@ export const byTypeName = createFilter<Parameters<ByTypeName>>(
     ([typeName]) => `revenge.typeName(${typeName})`,
 ) as ByTypeName
 
-type ByStoreNameArgs<T extends { getName?: () => string }> = [storeName: StoreNameOf<T>]
-type StoreNameOf<T extends { getName?: () => string }> = T['getName'] extends () => infer U ? U : string
+type ByStoreNameArgs<T extends AnyObject> = [storeName: StoreNameOf<T>]
+type StoreNameOf<T extends AnyObject> = T['getName'] extends () => infer U ? U : string
 type ByStoreName = Filter<
-    <T extends { getName?: () => string }>(
+    <T extends AnyObject>(
         ...args: ByStoreNameArgs<T>
     ) => FilterFunction<ByStoreNameArgs<T>, T & { getName: () => StoreNameOf<T> }>
 >
@@ -100,7 +96,7 @@ type ByStoreName = Filter<
 /**
  * Filters for exports with matching store names.
  *
- * `m.getName?.length === 0 && m.getName() === name`
+ * `m.getName.length === 0 && m.getName() === name`
  *
  * @param name The store name to search for
  */

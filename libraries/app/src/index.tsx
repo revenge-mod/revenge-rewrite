@@ -71,7 +71,7 @@ afterErrorBoundaryPatchable(async function patchErrorBoundary() {
 
     setImmediate(() => {
         patcher.after.await(
-            findAsync(byName<{ name: string; prototype: ErrorBoundaryComponentPrototype }>('ErrorBoundary')).then(
+            findAsync(byName<{ prototype: ErrorBoundaryComponentPrototype }>('ErrorBoundary')).then(
                 it => it!.prototype,
             ),
             'render',
