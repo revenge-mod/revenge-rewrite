@@ -3,7 +3,7 @@ import { AlertActionButton, AlertModal } from '@revenge-mod/modules/common/compo
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 import { registerPlugin } from '@revenge-mod/plugins/internals'
 
-const MinimumSupportedBuildNumber = ReactNative.Platform.select({ android: 263000, ios: 69420 })!
+const MinimumSupportedBuildNumber = ReactNative.Platform.select({ android: 263000, ios: 69886 })!
 
 registerPlugin<{
     supportWarningDismissedAt?: number
@@ -33,7 +33,7 @@ registerPlugin<{
                         content={
                             // biome-ignore lint/style/useTemplate: I can't see the whole message when not doing concatenation
                             'Revenge does not officially support this build of Discord. Please update to a newer version as some features may not work as expected.\n\n' +
-                            `Supported Builds: 260.0 (${MinimumSupportedBuildNumber}) and above\nYour Build: ${ClientInfoModule.Version} (${ClientInfoModule.Build})`
+                            `Supported Builds: 263.0 (${MinimumSupportedBuildNumber}) and above\nYour Build: ${ClientInfoModule.Version} (${ClientInfoModule.Build})`
                         }
                         actions={
                             <AlertActionButton
