@@ -9,7 +9,7 @@ import shimmedDeps from '../shims/deps'
 import { spawnSync } from 'child_process'
 
 const args = yargs(process.argv.slice(2))
-const { release, minify, dev } = args
+const { release, dev } = args
 
 const context = {
     hash: 'local',
@@ -18,6 +18,7 @@ const context = {
         .nothrow()
         .then(res => res.exitCode)),
 }
+const shimmedDepsNames = Object.keys(shimmedDeps)
 
 /**
  * @type {import('esbuild').BuildOptions}
@@ -28,7 +29,7 @@ const config = {
     outfile: 'dist/js/revenge.js',
     format: 'iife',
     splitting: false,
-    external: ['react', 'react-native', 'react/jsx-runtime', '@shopify/flash-list'],
+    external: shimmedDepsNames,
     supported: {
         // Hermes does not actually support const and let, even though it syntactically
         // accepts it, but it's treated just like 'var' and causes issues
@@ -54,7 +55,7 @@ const config = {
     },
     plugins: [
         pluginGlobals({
-            ...Object.keys(shimmedDeps).reduce((deps, name) => {
+            ...shimmedDepsNames.reduce((deps, name) => {
                 deps[name] = `require('!deps-shim!').default[${JSON.stringify(name)}]()`
                 return deps
             }, {}),
@@ -126,15 +127,10 @@ const isThisFileBeingRunViaCLI = pathToThisFile.includes(pathPassedToNode)
 if (isThisFileBeingRunViaCLI) {
     const initialStartTime = performance.now()
 
-    if (minify)
-        await buildBundle({
-            minifyWhitespace: true,
-            minifySyntax: true,
-        })
-    else await buildBundle()
+    await buildBundle()
 
     compileToBytecode(config.outfile)
-    printBuildSuccess(context.hash, release, performance.now() - initialStartTime, minify)
+    printBuildSuccess(context.hash, release, performance.now() - initialStartTime)
 }
 
 export function compileToBytecode(path) {
@@ -152,10 +148,10 @@ export function compileToBytecode(path) {
     ])
 }
 
-export function printBuildSuccess(hash, release, timeTook, minified = false) {
+export function printBuildSuccess(hash, release, timeTook) {
     console.info(
         [
-            chalk.bold.greenBright(`✔ Built bundle${minified ? ' (minified)' : ''}`),
+            chalk.bold.greenBright('✔ Built bundle'),
             hash && chalk.bold.blueBright(`(${hash})`),
             !release && chalk.bold.cyanBright('(local)'),
             timeTook && chalk.gray(`in ${timeTook.toFixed(3)}ms`),
