@@ -1,113 +1,81 @@
-import { createPatcherInstance } from '@revenge-mod/patcher'
 import { noop, noopPromise } from '@revenge-mod/utils/functions'
 
-import { blacklistModule, getImportingModuleId, isModuleBlacklisted, afterSpecificModuleInitialized, afterModuleInitialized } from '.'
+import {
+    blacklistModule,
+    getImportingModuleId,
+    afterModuleInitialized,
+} from '.'
 
 import { cache } from './caches'
 import { logger } from '../shared'
 
-import type { Metro } from '../types'
-
-const patcher = createPatcherInstance('revenge.library.modules.metro.patches')
-
 // Tracks file path so find(byFilePath(...)) works
-subscribePatchableModule(
-    'f',
-    exports => exports.fileFinishedImporting,
-    exports => {
-        patcher.before(
-            exports,
-            'fileFinishedImporting',
-            ([filePath]) => {
-                const importingModuleId = getImportingModuleId()
-                if (importingModuleId === -1 || !filePath) return
-                cache.moduleFilePaths.set(filePath, importingModuleId)
-            },
-            'trackFilePath',
-        )
-    },
-)
+const uFFIT = afterModuleInitialized((_, m) => {
+    if (m.fileFinishedImporting) {
+        const origFFI = m.fileFinishedImporting
+
+        m.fileFinishedImporting = (filePath: string) => {
+            const id = getImportingModuleId()
+            if (!filePath || id === -1) return
+            cache.moduleFilePaths.set(filePath, id)
+            origFFI(filePath)
+        }
+
+        uFFIT()
+    }
+})
+
+// Stops the freezing on initialized module from starting up:
+// The module before cannot get initialized without causing a freeze
+// [NativeStartupFlagsModule, (Problematic), (OtherModule)]
+// We are gonna looking for NativeStartupFlagsModule to blacklist the problematic module
+const uBPM = afterModuleInitialized((id, m) => {
+    if (m.default.reactProfilingEnabled && !modules.get(id + 1)!.isInitialized) {
+        blacklistModule(id + 1)
+        logger.log(`Blacklisted module ${id + 1} as it causes freeze when initialized`)
+        uBPM()
+    }
+})
 
 // Stops the module from registering the same native component twice
-subscribePatchableModule(
-    'r',
-    exports => ['customBubblingEventTypes', 'customDirectEventTypes', 'register', 'get'].every(x => exports[x]),
-    exports => {
-        patcher.instead(
-            exports,
-            'register',
-            (args, origFunc) => {
-                try {
-                    return origFunc(...args)
-                } catch {}
-            },
-            'fixNativeComponentRegistryDuplicateRegister',
-        )
-    },
-)
-
-// Stops the freezing on initialized module from starting up
-subscribePatchableModule(
-    'b',
-    (exports, id) => {
-        // The module before cannot get initialized without causing a freeze
-        // [NativeStartupFlagsModule, (Problematic), (OtherModule)]
-        // We are gonna patch: NativeStartupFlagsModule
-        return exports.default?.reactProfilingEnabled && !modules.get(id + 1)?.publicModule.exports.default
-    },
-    (_, id) => {
-        // So we just blacklist it here
-        if (!isModuleBlacklisted(id + 1)) {
-            blacklistModule(id + 1)
-            logger.log(`Blacklisted module ${id + 1} as it causes freeze when initialized`)
+const uNCRF = afterModuleInitialized((_, m) => {
+    if (m.customBubblingEventTypes) {
+        const origReg = m.register
+        m.register = (...args: unknown[]) => {
+            try {
+                return origReg(...args)
+            } catch {}
         }
-    },
-)
 
-// Blocks Sentry
-subscribePatchableModule(
-    's',
-    m => m.initSentry,
-    m => (m.initSentry = noop),
-)
+        uNCRF()
+    }
+})
 
-// Blocks Discord analytics
-subscribePatchableModule(
-    'd',
-    m => m.default?.track && m.default.trackMaker,
-    m => (m.default.track = () => noopPromise),
-)
+// Block Sentry
+const uBS = afterModuleInitialized((_, m) => {
+    if (m.initSentry) m.initSentry = noop
+    uBS()
+})
+
+// Block Discord analytics
+const uBDA = afterModuleInitialized((_, m) => {
+    if (m.default?.track && m.default.trackMaker) {
+        m.default.track = () => noopPromise
+        uBDA()
+    }
+})
 
 // Moment locale fix
-subscribePatchableModule(
-    'm',
-    m => m.isMoment,
-    moment =>
-        patcher.instead(moment, 'defineLocale', (args, orig) => {
-            const origLocale = moment.locale()
-            orig(...args)
-            moment.locale(origLocale)
-        }),
-)
+const uMLF = afterModuleInitialized((_, m) => {
+    if (m.isMoment) {
+        const origDfL = m.defineLocale
 
-function subscribePatchableModule(
-    patchId: keyof (typeof cache)['patchableModules'],
-    filter: (exports: Metro.ModuleExports, id: Metro.ModuleID) => boolean,
-    patch: (exports: Metro.ModuleExports, id: Metro.ModuleID) => unknown,
-) {
-    const cachedId = cache.patchableModules[patchId]
-    const unsub = cachedId
-        ? afterSpecificModuleInitialized(cachedId, exports => {
-              patch(exports, cachedId)
-          })
-        : afterModuleInitialized((id, exports) => {
-              if (!filter(exports, id)) return
-              unsub()
+        m.defineLocale = (...args: unknown[]) => {
+            const origLocale = m.locale()
+            origDfL(...args)
+            m.locale(origLocale)
+        }
 
-              cache.patchableModules[patchId] = id
-              patch(exports, id)
-
-              // Subscribe to the module again (this time it is cached)
-              subscribePatchableModule(patchId, filter, patch)
-          })
-}
+        uMLF()
+    }
+})

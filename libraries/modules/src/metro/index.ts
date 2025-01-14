@@ -37,10 +37,10 @@ function handleModuleInitializeError(id: Metro.ModuleID, error: unknown) {
  * Initializes the Metro modules patches and caches
  */
 export async function initializeModules() {
-    const cacheRestored = await restoreCache()
+    const cacheRestoredPromise = restoreCache()
 
     // Patches modules on load
-    await import('./patches')
+    import('./patches')
 
     function executeModuleSubscriptions(this: Metro.ModuleDefinition) {
         const id = this.publicModule.id
@@ -85,6 +85,8 @@ export async function initializeModules() {
     logger.log('Importing index module...')
     // ! Do NOT use requireModule for this
     __r(IndexMetroModuleId)
+
+    const cacheRestored = await cacheRestoredPromise
 
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
     if (!cacheRestored) requireAssetModules()

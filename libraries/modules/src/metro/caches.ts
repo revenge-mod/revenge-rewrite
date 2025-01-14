@@ -44,17 +44,6 @@ export const cache = {
         [assetCacheIndexSymbol]: {},
     } as MetroCacheObject['a'],
     /**
-     * Registry for patchable modules, the key being the patch, and the value being the module ID of the module to patch
-     *
-     * - `f`: File path tracking
-     * - `r`: Fix native component registry duplicate register
-     * - `b`: Blacklist freezing module
-     * - `d`: Block Discord analytics
-     * - `s`: Block Sentry initialization
-     * - `m`: Fix Moment locale
-     */
-    patchableModules: {} as MetroCacheObject['p'],
-    /**
      * Registry for module file paths
      * #### This is in-memory.
      */
@@ -73,11 +62,11 @@ export async function restoreCache() {
     // invalidateCache()
 
     const path = `${FileModule.getConstants().CacheDirPath}/${MetroCacheRelativeFilePath}`
+    if (!(await FileModule.fileExists(path))) return (savePending = false)
 
-    if (!(await FileModule.fileExists(path))) return false
     const savedCache = await FileModule.readFile(path, 'utf8')
-
     const storedCache = JSON.parse(savedCache) as MetroCacheObject
+
     logger.log(
         `Cache found, validating... (compare: ${storedCache.v} === ${MetroCacheVersion}, ${storedCache.b} === ${ClientInfoModule.Build}, ${storedCache.t} === ${modules.size})`,
     )
@@ -87,11 +76,10 @@ export async function restoreCache() {
         storedCache.b !== ClientInfoModule.Build ||
         storedCache.t !== modules.size
     )
-        return false
+        return (savePending = false)
 
     logger.log(`Restoring cache of ${modules.size} modules`)
 
-    cache.totalModules = storedCache.t
     cache.exportsFlags = storedCache.e
     cache.lookupFlags = storedCache.l
     cache.assetModules = storedCache.a
@@ -99,7 +87,7 @@ export async function restoreCache() {
     cache.assets[assetCacheIndexSymbol] = {}
     cache.assetModules[assetCacheIndexSymbol] = {}
 
-    return true
+    return !(savePending = false)
 }
 
 /**
@@ -135,7 +123,7 @@ export function requireAssetModules() {
     }
 }
 
-let savePending = false
+let savePending = true
 
 /** @internal */
 export async function saveCache() {
@@ -153,7 +141,6 @@ export async function saveCache() {
             e: cache.exportsFlags,
             l: cache.lookupFlags,
             a: cache.assetModules,
-            p: cache.patchableModules,
         } satisfies MetroCacheObject),
         'utf8',
     )
@@ -232,6 +219,7 @@ export function* cachedModuleIdsForFilter(key: string) {
     const modulesMap = cache.lookupFlags[key]
     if (!modulesMap) return undefined
 
+    // TODO: Make this better
     for (const k in modulesMap) {
         if (k !== 'flags') yield Number(k)
     }
@@ -251,7 +239,6 @@ export interface MetroCacheObject {
         Asset['name'],
         Record<Asset['type'], Metro.ModuleID> & { [FirstAssetTypeRegisteredKey]: Asset['type'] }
     > & { [assetCacheIndexSymbol]: Record<number, Metro.ModuleID> }
-    p: Record<'f' | 'r' | 'b' | 's' | 'd' | 'm', number | undefined>
 }
 
 /**
