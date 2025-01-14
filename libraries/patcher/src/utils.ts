@@ -5,7 +5,7 @@ type CallableFunction = (...args: any[]) => any
 
 export function createExtendedPatchFunction<N extends WrappableName>(fn: CallableFunction) {
     function patchFn(this: any, ...args: any) {
-        if (patcherLazyModuleSymbol in args[0]) {
+        if (args[0][patcherLazyModuleSymbol]) {
             const onceModuleLoaded = args[0][patcherLazyModuleSymbol] as OnceModuleLoadedCallback
 
             let cancel = false
@@ -25,7 +25,7 @@ export function createExtendedPatchFunction<N extends WrappableName>(fn: Callabl
 
     function promisePatchFn(this: any, ...args: [Promise<any>, ...any[]]) {
         const thenable = args[0]
-        if (!thenable || !('then' in thenable)) throw new Error('Cannot await a non-thenable object')
+        if (!thenable || !thenable.then) throw new Error('Cannot await a non-thenable object')
 
         let cancel = false
         let unpatch = () => (cancel = true)

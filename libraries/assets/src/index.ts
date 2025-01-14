@@ -29,7 +29,7 @@ patcher.after(
     assetsRegistry,
     'registerAsset',
     ([asset], index) => {
-        if (CustomAssetBrandKey in asset) return
+        if ((asset as CustomAsset)[CustomAssetBrandKey]) return
         const moduleId = getImportingModuleId()
         cacheAsset(asset.name, index, moduleId, asset.type)
     },
@@ -52,7 +52,8 @@ function maybeResolveCustomAsset(
     args: unknown[],
     orig: (...args: unknown[]) => ImageSourcePropType,
 ) {
-    if (CustomAssetBrandKey in this.asset) return { uri: this.asset[CustomAssetBrandKey] }
+    if ((this.asset as CustomAsset)[CustomAssetBrandKey])
+        return { uri: (this.asset as CustomAsset)[CustomAssetBrandKey] }
     return orig.apply(this, args)
 }
 
@@ -84,7 +85,7 @@ export type AssetsLibrary = typeof AssetsLibrary
 export function registerCustomAsset(asset: Pick<PackagerAsset, 'width' | 'height' | 'type' | 'name'>, source: string) {
     // TODO: Support multiple custom assets with the same name
 
-    if (asset.name in customAssets)
+    if (customAssets[asset.name])
         throw new Error(
             'Custom asset with the same name already exists, and registering multiple custom assets with the same name is not supported yet',
         )
@@ -105,7 +106,7 @@ export function registerCustomAsset(asset: Pick<PackagerAsset, 'width' | 'height
  * @returns Whether the asset is a custom asset
  */
 export function isCustomAsset(asset: PackagerAsset): asset is CustomAsset {
-    return CustomAssetBrandKey in asset
+    return Boolean((asset as CustomAsset)[CustomAssetBrandKey])
 }
 
 /**
@@ -114,7 +115,7 @@ export function isCustomAsset(asset: PackagerAsset): asset is CustomAsset {
  * @returns The asset tied to the name
  */
 export function getAssetByName(name: string, preferredType: PackagerAsset['type'] = defaultPreferredType) {
-    if (name in customAssets) return getAssetByIndex(customAssets[name]!)
+    if (customAssets[name]) return getAssetByIndex(customAssets[name]!)
     return getAssetByIndex(getAssetIndexByName(name, preferredType)!)
 }
 
@@ -134,7 +135,7 @@ export function getAssetByIndex(index: number) {
  * @returns The preferred asset index tied to the name
  */
 export function getAssetIndexByName(name: string, preferredType: PackagerAsset['type'] = defaultPreferredType) {
-    if (name in customAssets) return customAssets[name]
+    if (customAssets[name]) return customAssets[name]
 
     const assetModule = cache.assetModules[name]
     if (!assetModule) return

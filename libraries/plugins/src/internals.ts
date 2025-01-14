@@ -47,7 +47,7 @@ export function registerPlugin<
     definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>,
     opts: RegisterPluginOptions = {},
 ) {
-    if (manifest.id in registeredPlugins) throw new Error(`Plugin "${manifest.id}" is already registered`)
+    if (registeredPlugins[manifest.id]) throw new Error(`Plugin "${manifest.id}" is already registered`)
 
     const external = opts.external ?? true
     const options: Required<RegisterPluginOptions> = {
