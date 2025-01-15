@@ -126,28 +126,21 @@ export type FilterPredicate<A extends unknown[]> = (
      * The ID of the module
      */
     moduleId: Metro.ModuleID,
-    /**
-     * Whether the returned value should be unmodified
-     */
-    raw: boolean,
 ) => boolean
 
-export interface FilterFn<A extends unknown[]> {
-    (m: ModuleExports, id: number, raw: boolean): boolean
+export type InferFilterFunctionReturnType<F extends FilterFunction<any>> = F extends FilterFunction<infer A, infer T> ? T : never
+
+export type FilterFunction<A extends unknown[], _T = any> = {
+    (m: ModuleExports, id: number): boolean
     filter: FilterPredicate<A>
-    /**
-     * Whether the filter is raw
-     */
-    raw: boolean
     /**
      * The key for the filter
      */
     key: string
 }
 
-export interface Filter<A extends unknown[]> {
-    (...args: A): FilterFn<A>
-    raw(...args: A): FilterFn<A>
+export interface FilterObject<A extends unknown[], T = any> {
+    (...args: A): FilterFunction<A, T>
     /**
      * Generates a unique key for this value
      * @param args The value to generate a key for
@@ -159,12 +152,11 @@ export interface Filter<A extends unknown[]> {
 
 /** @internal */
 export interface LazyModuleContext<A extends unknown[] = unknown[]> {
-    filter: FilterFn<A>
-    getModuleId(): number | undefined
-    getExports(cb: (exports: ModuleExports) => void): () => void
+    filter?: FilterFunction<A>
+    moduleId(): number | undefined
+    exports(cb: (exports: ModuleExports) => void): () => void
     subscribe(cb: (exports: ModuleExports) => void): () => void
-    forceLoad(): ModuleExports
-    get cache(): ModuleExports
+    factory(): ModuleExports
 }
 
 export type LazyModule<T> = T extends unknown | undefined
@@ -317,6 +309,7 @@ export namespace DiscordModules {
      * Logs will be shown in the **Debug Logs** section in settings
      */
     export class Logger {
+        static name: string
         constructor(tag: string)
         log(...args: unknown[]): void
         error(...args: unknown[]): void

@@ -1,5 +1,5 @@
 import { afterAppRender, isAppRendered } from '@revenge-mod/app'
-import { subscribeModule } from '@revenge-mod/modules/metro'
+import { afterModuleInitialized } from '@revenge-mod/modules/metro'
 import { createPatcherInstance } from '@revenge-mod/patcher'
 import { DefaultPluginStopConfig, PluginStatus, WhitelistedPluginObjectKeys } from '@revenge-mod/plugins/constants'
 import { type PluginStates, pluginsStates } from '@revenge-mod/preferences'
@@ -47,7 +47,7 @@ export function registerPlugin<
     definition: PluginDefinition<Storage, AppLaunchedReturn, AppInitializedReturn>,
     opts: RegisterPluginOptions = {},
 ) {
-    if (manifest.id in registeredPlugins) throw new Error(`Plugin "${manifest.id}" is already registered`)
+    if (registeredPlugins[manifest.id]) throw new Error(`Plugin "${manifest.id}" is already registered`)
 
     const external = opts.external ?? true
     const options: Required<RegisterPluginOptions> = {
@@ -77,7 +77,7 @@ export function registerPlugin<
                 ? () => {
                       def.lifecycles.prepare()
 
-                      const unsub = subscribeModule.all((id, exports) =>
+                      const unsub = afterModuleInitialized((id, exports) =>
                           definition.onMetroModuleLoad!(ctx, id, exports, unsub),
                       )
 

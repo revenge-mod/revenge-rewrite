@@ -46,7 +46,13 @@ const plugin = registerPlugin<Storage>(
                 patcher,
                 revenge: {
                     assets,
-                    modules,
+                    modules: {
+                        find,
+                        filters: {
+                            byProps,
+                            byName,
+                        }
+                    },
                     ui: { settings: sui },
                 },
             } = context
@@ -120,8 +126,8 @@ const plugin = registerPlugin<Storage>(
             // Wait single tick
             await sleep(0)
 
-            const SettingsConstants = modules.findByProps('SETTING_RENDERER_CONFIG')!
-            const SettingsOverviewScreen = modules.findByName<FC, false>('SettingsOverviewScreen', false)!
+            const SettingsConstants = find(byProps('SETTING_RENDERER_CONFIG'))!
+            const SettingsOverviewScreen = find(byName<FC & { name: string }>('SettingsOverviewScreen'), { wildcard: true })!
 
             const originalRendererConfig = SettingsConstants.SETTING_RENDERER_CONFIG as Record<string, RawRowConfig>
             let rendererConfig = originalRendererConfig

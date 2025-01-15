@@ -1,5 +1,6 @@
 import { React, ReactNative } from '@revenge-mod/modules/common'
-import { findByName } from '@revenge-mod/modules/finders'
+import { byName } from '@revenge-mod/modules/filters'
+import { findAsync } from '@revenge-mod/modules/finders'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { createPatcherInstance } from '@revenge-mod/patcher'
 import { ReactJSXLibrary } from '@revenge-mod/react/jsx'
@@ -68,13 +69,10 @@ afterErrorBoundaryPatchable(async function patchErrorBoundary() {
 
     const { default: Screen } = await import('./components/ErrorBoundaryScreen')
 
-    setImmediate(() => {
-        patcher.after.await(
-            findByName
-                .async('ErrorBoundary')
-                .then(it => (it as { name: string; prototype: ErrorBoundaryComponentPrototype }).prototype),
-            'render',
-            function () {
+    setImmediate(() =>
+        findAsync(byName<{ prototype: ErrorBoundaryComponentPrototype }>('ErrorBoundary')).then(it => {
+            const origRender = it!.prototype.render
+            it!.prototype.render = function render() {
                 if (this.state.error)
                     return (
                         <Screen
@@ -83,12 +81,13 @@ afterErrorBoundaryPatchable(async function patchErrorBoundary() {
                             reload={this.handleReload}
                         />
                     )
-            },
-            'patchErrorBoundary',
-        )
 
-        logger.log('ErrorBoundary patched')
-    })
+                return origRender.call(this)
+            }
+
+            logger.log('ErrorBoundary patched')
+        }),
+    )
 })
 
 export const AppLibrary = {

@@ -21,7 +21,7 @@ export const SettingsUILibrary = {
 export type SettingsUILibrary = typeof SettingsUILibrary
 
 function createSettingsSection(section: (typeof customData.sections)[string]) {
-    if (section.name in customData.sections)
+    if (customData.sections[section.name])
         throw new Error(`The settings section with the name "${section.name}" already exists`)
     customData.sections[section.name] = section
     return () => delete customData.sections[section.name]
@@ -33,7 +33,7 @@ function createSettingsRoute(key: string, route: RouteRowConfig) {
 }
 
 function addSettingsRowsToSection(name: string, rows: Record<string, RowConfig>) {
-    if (!(name in customData.sections)) throw new Error(`No setting section exists with the name "${name}"`)
+    if (!customData.sections[name]) throw new Error(`No setting section exists with the name "${name}"`)
     const section = customData.sections[name]
     Object.assign(section!.settings, rows)
     return () => {

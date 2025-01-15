@@ -47,7 +47,7 @@ export async function installPlugin(uri: string, trustUnsigned = false) {
 
         try {
             const manifest = parseSchema(PluginManifestSchema, JSON.parse(new TextDecoder().decode(manifestJson)))
-            if (manifest.id in registeredPlugins) return InstallPluginResult.AlreadyInstalled
+            if (registeredPlugins[manifest.id]) return InstallPluginResult.AlreadyInstalled
 
             if (!sourceZipSig || !publicKey) {
                 if (!trustUnsigned) return InstallPluginResult.PluginUnsigned
@@ -96,7 +96,7 @@ export function clearPluginStorage(id: string) {
 }
 
 export async function uninstallPlugin(id: string) {
-    if (id in registeredPlugins) {
+    if (registeredPlugins[id]) {
         const plugin = registeredPlugins[id]!
         if (!plugin.external) throw new Error(`Cannot uninstall internal plugin: ${plugin.id}`)
 
@@ -105,7 +105,7 @@ export async function uninstallPlugin(id: string) {
         delete registeredPlugins[id]
     }
 
-    if (!(id in externalPluginsMetadata)) throw new Error(`Plugin "${id}" is not installed`)
+    if (!externalPluginsMetadata[id]) throw new Error(`Plugin "${id}" is not installed`)
 
     delete externalPluginsMetadata[id]
     delete pluginsStates[id]

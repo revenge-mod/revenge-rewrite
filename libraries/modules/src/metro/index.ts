@@ -1,13 +1,13 @@
 import {
     cache,
     cacheModuleAsBlacklisted,
-    indexedModuleIdsForLookup,
+    cachedModuleIdsForFilter,
     requireAssetModules,
     restoreCache,
     saveCache,
 } from './caches'
 
-import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
+import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupRegistryFlags } from '../constants'
 
 import { logger } from '../shared'
 
@@ -22,12 +22,11 @@ export function getImportingModuleId() {
     return importingModuleId
 }
 
+export type SpecificMetroModuleSubscriptionCallback = (exports: Metro.ModuleExports) => unknown
 export type MetroModuleSubscriptionCallback = (id: Metro.ModuleID, exports: Metro.ModuleExports) => unknown
 
 const allSubscriptionsSet = new Set<MetroModuleSubscriptionCallback>()
-const subscriptions: Map<Metro.ModuleID | 'all', Set<MetroModuleSubscriptionCallback>> = new Map([
-    ['all', allSubscriptionsSet],
-])
+const subscriptions: Map<Metro.ModuleID, Set<SpecificMetroModuleSubscriptionCallback>> = new Map()
 
 function handleModuleInitializeError(id: Metro.ModuleID, error: unknown) {
     logger.error(`Blacklisting module ${id} because it could not be imported: ${error}`)
@@ -38,17 +37,17 @@ function handleModuleInitializeError(id: Metro.ModuleID, error: unknown) {
  * Initializes the Metro modules patches and caches
  */
 export async function initializeModules() {
-    const cacheRestored = await restoreCache()
+    const cacheRestoredPromise = restoreCache()
 
     // Patches modules on load
-    await import('./patches')
+    import('./patches')
 
     function executeModuleSubscriptions(this: Metro.ModuleDefinition) {
         const id = this.publicModule.id
         const exports = this.publicModule.exports
 
         const subs = subscriptions.get(id)
-        if (subs) for (const sub of subs) sub(id, exports)
+        if (subs) for (const sub of subs) sub(exports)
         for (const sub of allSubscriptionsSet) sub(id, exports)
     }
 
@@ -86,6 +85,8 @@ export async function initializeModules() {
     logger.log('Importing index module...')
     // ! Do NOT use requireModule for this
     __r(IndexMetroModuleId)
+
+    const cacheRestored = await cacheRestoredPromise
 
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
     if (!cacheRestored) requireAssetModules()
@@ -128,46 +129,27 @@ export function requireModule(id: Metro.ModuleID) {
 }
 
 /**
- * Subscribes to a module, calling the callback when the module is required
+ * Subscribes to a module/all modules, calling the callback when the module is required
  * @param id The module ID
  * @param callback The callback to call when the module is required
  * @returns A function to unsubscribe
  */
-export const subscribeModule = Object.assign(
-    function subscribeModule(id: Metro.ModuleID, callback: MetroModuleSubscriptionCallback) {
-        if (!subscriptions.has(id)) subscriptions.set(id, new Set())
-        const set = subscriptions.get(id)!
-        set.add(callback)
-        return () => set.delete(callback)
-    },
-    {
-        /**
-         * Subscribes to a module once, calling the callback when the module is required
-         * @param id The module ID
-         * @param callback The callback to call when the module is required
-         * @returns A function to unsubscribe
-         */
-        once: function subscribeModuleOnce(id: Metro.ModuleID, callback: MetroModuleSubscriptionCallback) {
-            const unsub = subscribeModule(id, (...args) => {
-                unsub()
-                callback(...args)
-            })
+export function afterSpecificModuleInitialized(id: Metro.ModuleID, callback: SpecificMetroModuleSubscriptionCallback) {
+    if (!subscriptions.has(id)) subscriptions.set(id, new Set())
+    const set = subscriptions.get(id)!
+    set.add(callback)
+    return () => set.delete(callback)
+}
 
-            return unsub
-        },
-    },
-    {
-        /**
-         * Subscribes to all modules, calling the callback when any modules are required
-         * @param callback The callback to call when any modules are required
-         * @returns A function to unsubscribe
-         */
-        all: function subscribeModuleAll(callback: MetroModuleSubscriptionCallback) {
-            allSubscriptionsSet.add(callback)
-            return () => allSubscriptionsSet.delete(callback)
-        },
-    },
-)
+/**
+ * Subscribes to all modules, calling the callback when the module is required
+ * @param callback The callback to call when the module is required
+ * @returns A function to unsubscribe
+ */
+export function afterModuleInitialized(callback: MetroModuleSubscriptionCallback) {
+    allSubscriptionsSet.add(callback)
+    return () => allSubscriptionsSet.delete(callback)
+}
 
 /**
  * Returns whether the module is blacklisted
@@ -195,33 +177,28 @@ function moduleShouldNotBeHooked(id: Metro.ModuleID) {
 }
 
 /**
- * Yields the modules for a specific finder call
+ * Yields the modules for a specific filter key
  * @param key Filter key
  */
-export function* modulesForFinder(key: string, fullLookup = false) {
+export function* moduleIdsForFilter(key: string, fullLookup = false) {
     const lookupCache = cache.lookupFlags[key]
 
     if (
-        lookupCache?.flags &&
+        lookupCache?.f &&
         // Check if any modules were found
-        !(lookupCache.flags & MetroModuleLookupFlags.NotFound) &&
+        !(lookupCache.f & MetroModuleLookupRegistryFlags.NotFound) &&
         // Pass immediately if it's not a full lookup, otherwise check if it's a full lookup
-        (!fullLookup || lookupCache.flags & MetroModuleLookupFlags.FullLookup)
+        (!fullLookup || lookupCache.f & MetroModuleLookupRegistryFlags.FullLookup)
     )
-        for (const id of indexedModuleIdsForLookup(key)) {
+        for (const id of cachedModuleIdsForFilter(key)) {
             if (isModuleBlacklisted(id)) continue
-            yield [id, requireModule(id)]
+            yield id
         }
-    else {
+    else
         for (const id of modules.keys()) {
             if (isModuleBlacklisted(id)) continue
-
-            const exports = requireModule(id)
-            if (!exports) continue
-
-            yield [id, exports]
+            yield id
         }
-    }
 }
 
 /**
@@ -231,7 +208,7 @@ export function* modulesForFinder(key: string, fullLookup = false) {
  */
 export function isModuleExportsBad(exports: Metro.ModuleExports) {
     return (
-        typeof exports === 'undefined' ||
+        exports === undefined ||
         exports === null ||
         exports === globalThis ||
         exports[''] === null ||

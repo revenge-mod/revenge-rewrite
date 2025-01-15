@@ -1,4 +1,5 @@
 import type { Metro } from '@revenge-mod/modules'
+import type { AnyObject } from '@revenge-mod/shared/types'
 
 type WrappableName = 'after' | 'before' | 'instead'
 type UnpatchFunction = () => boolean
@@ -7,8 +8,8 @@ type SafeParameters<T> = T extends (...args: infer P) => any ? P : any[]
 
 type KeysWithFunctionValues<T extends AnyObject> = {
     // biome-ignore lint/complexity/noBannedTypes: Would you shut up please?
-    [K in Extract<keyof T, string>]: T[K] extends Function ? K : never
-}[Extract<keyof T, string>]
+    [K in keyof T]: T[K] extends Function ? K : never
+}[keyof T]
 
 type WrappableParams<N extends WrappableName, Parent extends AnyObject, Name extends KeysWithFunctionValues<Parent>> = [
     /**

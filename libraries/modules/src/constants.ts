@@ -4,19 +4,21 @@ import { createBitFlagEnum } from '@revenge-mod/utils/enums'
  * The module flags
  */
 export const MetroModuleFlags = createBitFlagEnum('Blacklisted', 'Asset')
+
 /**
- * The module lookup flags
+ * The lookup registry flags
  */
-export const MetroModuleLookupFlags = createBitFlagEnum('NotFound', 'FullLookup')
+export const MetroModuleLookupRegistryFlags = createBitFlagEnum('NotFound', 'FullLookup')
 
 /**
  * The module ID for the index module
  */
 export const IndexMetroModuleId = 0
+
 /**
  * The Metro cache version
  */
-export const MetroCacheVersion = 3
+export const MetroCacheVersion = 4
 
 /**
  * The storage key for the Metro cache

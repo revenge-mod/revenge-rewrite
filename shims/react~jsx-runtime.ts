@@ -1,9 +1,10 @@
 import '@revenge-mod/modules'
+import { byProps } from '@revenge-mod/modules/filters'
 
-import { findByProps } from '@revenge-mod/modules/finders'
+import { find } from '@revenge-mod/modules/finders'
 import { getProxyFactory } from '@revenge-mod/utils/lazy'
 
-const jsxRuntime = findByProps<typeof import('react/jsx-runtime')>('jsx', 'jsxs', 'Fragment')!
+const jsxRuntime = find(byProps<typeof import('react/jsx-runtime')>('jsx', 'jsxs', 'Fragment'))!
 
 function unproxyFirstArg<T>(args: T[]) {
     if (!args[0]) {

@@ -1,96 +1,123 @@
-import { cache } from './metro/caches'
 import { createFilter } from './utils/filters'
 
 export * from './utils/filters'
 
+import type { FilterFunction } from '@revenge-mod/modules'
+import type { AnyObject } from '@revenge-mod/shared/types'
+
+type Filter<F> = F extends (...args: infer A) => FilterFunction<any>
+    ? F & {
+          keyFor(args: A): string
+      }
+    : never
+
+type ByPropsArgs<T extends AnyObject = AnyObject> = [prop: keyof T, ...props: Array<keyof T | (string & {})>]
+type ByProps = Filter<<T extends AnyObject>(...args: ByPropsArgs<T>) => FilterFunction<ByPropsArgs<T>, T>>
+
 /**
- * Filters for exports which has given properties
+ * Filters exports where specified properties are truthy
+ *
+ * `m[prop] && props.every(p => m[p])`
+ *
+ * @param prop The property to search for
+ * @param props Additional properties to search for
  */
-export const byProps = createFilter<string[]>(
-    (props, m) => (props.length === 0 ? m[props[0]] : props.every(p => m[p])),
+export const byProps = createFilter<ByPropsArgs>(
+    (props, m) => (props.length === 1 ? m[props[0]] : props.every(p => m[p])),
     props => `revenge.props(${props.join(',')})`,
-)
+) as ByProps
+
+type ByNameArgs<T extends AnyObject> = [name: NameOf<T>]
+type NameOf<T extends AnyObject> = T['name'] extends string ? T['name'] : string
+type ByName = Filter<
+    <T extends AnyObject>(...args: ByNameArgs<T>) => FilterFunction<ByNameArgs<T>, T & { name: NameOf<T> }>
+>
 
 /**
- * Filters for exports which has the given mutable property
+ * Filters for exports with matching names. Some functions and React components have a `name` property.
+ *
+ * `m.name === name`
+ *
+ * @param name The name to search for
  */
-export const byMutableProp = createFilter<[prop: string]>(
-    ([prop], m) => m?.[prop] && !Object.getOwnPropertyDescriptor(m, prop)?.get,
-    prop => `revenge.mutableProp(${prop})`,
-)
-
-/**
- * Filters for exports whose `name` property matches the given name
- */
-export const byName = createFilter<[name: string]>(
+export const byName = createFilter<Parameters<ByName>>(
     ([name], m) => m.name === name,
-    name => `revenge.name(${name})`,
-)
+    ([name]) => `revenge.name(${name})`,
+) as ByName
+
+type ByDisplayNameArgs<T extends AnyObject> = [displayName: DisplayNameOf<T>]
+type DisplayNameOf<T extends AnyObject> = T['displayName'] extends string ? T['displayName'] : string
+type ByDisplayName = Filter<
+    <T extends AnyObject>(
+        ...args: ByDisplayNameArgs<T>
+    ) => FilterFunction<ByDisplayNameArgs<T>, T & { displayName: DisplayNameOf<T> }>
+>
 
 /**
- * Filters for exports whose `displayName` property matches the given name
+ * Filters for exports with matching display names. Some React components have a `displayName` property.
+ *
+ * `m.displayName === name`
+ *
+ * @param name The display name to search for
  */
-export const byDisplayName = createFilter<[displayName: string]>(
+export const byDisplayName = createFilter<Parameters<ByDisplayName>>(
     ([displayName], m) => m.displayName === displayName,
-    name => `revenge.displayName(${name})`,
-)
+    ([displayName]) => `revenge.displayName(${displayName})`,
+) as ByDisplayName
+
+type ByTypeNameArgs<T extends AnyObject> = [typeName: TypeNameOf<T>]
+type TypeNameOf<T extends AnyObject> = T['type']['name'] extends string ? T['type']['name'] : string
+type ByTypeName = Filter<
+    <T extends AnyObject>(
+        ...args: ByTypeNameArgs<T>
+    ) => FilterFunction<ByTypeNameArgs<T>, T & { type: { name: TypeNameOf<T> } }>
+>
 
 /**
- * Filters for exports whose `type.name` property matches the given name
+ * Filters for exports with matching type names. React's component tree/fiber has these properties.
+ *
+ * `m.type.name === name`
+ *
+ * @param name The type name to search for
  */
-export const byTypeName = createFilter<[typeName: string]>(
+export const byTypeName = createFilter<Parameters<ByTypeName>>(
     ([typeName], m) => m.type?.name === typeName,
-    name => `revenge.typeName(${name})`,
-)
+    ([typeName]) => `revenge.typeName(${typeName})`,
+) as ByTypeName
+
+type ByStoreNameArgs<T extends AnyObject> = [storeName: StoreNameOf<T>]
+type StoreNameOf<T extends AnyObject> = T['getName'] extends () => infer U ? U : string
+type ByStoreName = Filter<
+    <T extends AnyObject>(
+        ...args: ByStoreNameArgs<T>
+    ) => FilterFunction<ByStoreNameArgs<T>, T & { getName: () => StoreNameOf<T> }>
+>
 
 /**
- * Filters for store exports which has a given store name
+ * Filters for exports with matching store names.
+ *
+ * `m.getName.length === 0 && m.getName() === name`
+ *
+ * @param name The store name to search for
  */
-export const byStoreName = createFilter<[storeName: string]>(
+export const byStoreName = createFilter<Parameters<ByStoreName>>(
     ([name], m) => m.getName?.length === 0 && m.getName() === name,
-    name => `revenge.storeName(${name})`,
-)
+    ([name]) => `revenge.storeName(${name})`,
+) as ByStoreName
+
+type BySinglePropArgs<T extends Record<string, any>> = [prop: keyof T]
+type BySingleProp = Filter<
+    <T extends Record<string, any>>(...args: BySinglePropArgs<T>) => FilterFunction<BySinglePropArgs<T>, T>
+>
 
 /**
- * Filters for exports whose file path matches the given path
+ * Filters for exports with a single property matching the property name
+ *
+ * `m[prop] && Object.keys(m).length === 1`
+ *
+ * @param name The property to search for
  */
-export const byFilePath = createFilter<[path: string, returnDefaultExport: boolean]>(
-    ([path, returnDefaultExport], _, id, isDefaultExport) => {
-        return returnDefaultExport === isDefaultExport && cache.moduleFilePaths.get(id) === path
-    },
-    ([path, returnDefaultExport]) => `revenge.filePath(${path},${returnDefaultExport})`,
-)
-
-/**
- * Filters for exports with only has the given property
- */
-export const bySingleProp = createFilter<[prop: string]>(
+export const bySingleProp = createFilter<Parameters<BySingleProp>>(
     ([prop], m) => m[prop] && Object.keys(m).length === 1,
     prop => `revenge.singleProp(${prop})`,
-)
-
-/**
- * Filters for exports which matches the given query (very expensive, should only use in development)
- */
-export const byQuery = createFilter<[query: string, caseSensitive: boolean]>(
-    ([query, caseSensitive], m) => {
-        const applyStringTransformation = (str: string) => (caseSensitive ? str : str.toLowerCase())
-        const transformedQuery = applyStringTransformation(query)
-
-        try {
-            return (
-                m.name?.toLowerCase()?.includes(transformedQuery) ||
-                m.displayName?.toLowerCase()?.includes(transformedQuery) ||
-                m.type?.name?.toLowerCase()?.includes(transformedQuery) ||
-                (m.getName?.length === 0 && m.getName?.()?.toLowerCase()?.includes(transformedQuery)) ||
-                cache.moduleFilePaths.get(m.id)?.toLowerCase()?.includes(transformedQuery) ||
-                Object.keys(m).some(k => k.toLowerCase().includes(transformedQuery)) ||
-                Object.values(m).some(v => String(v).toLowerCase().includes(transformedQuery))
-            )
-        } catch {
-            // You can't access some properties of some objects (proxy error), so just return false
-            return false
-        }
-    },
-    ([query, caseSensitive]) => `revenge.query(${caseSensitive ? query : query.toLowerCase()})`,
-)
+) as BySingleProp

@@ -25,7 +25,7 @@ const patchCallback = (
     // Hopefully fixes iOS "invalid element type" issue after patching ErrorBoundary
     // Comp can be undefined for some reason
     // @ts-expect-error
-    if (typeof (Comp?.type ?? Comp) === 'undefined') {
+    if ((Comp?.type ?? Comp) === undefined) {
         args[0] = 'RCTView' as keyof JSX.IntrinsicElements
         args[1] = { style: styles.hidden } satisfies ViewProps
         return orig.apply(ReactJSXRuntime, args)
@@ -42,7 +42,7 @@ const patchCallback = (
     if (!name) return orig.apply(ReactJSXRuntime, args)
 
     let newArgs = args
-    if (name in beforeCallbacks)
+    if (beforeCallbacks[name])
         for (const cb of beforeCallbacks[name]!) {
             const maybeArgs = cb(newArgs as [ElementType, ComponentProps<ElementType>, string | undefined])
             if (maybeArgs) newArgs = maybeArgs
@@ -50,7 +50,7 @@ const patchCallback = (
 
     let tree = orig.apply(ReactJSXRuntime, newArgs)
 
-    if (name in afterCallbacks) {
+    if (afterCallbacks[name]) {
         for (const cb of afterCallbacks[name]!) {
             const maybeTree = cb(Comp, props, tree)
             if (typeof maybeTree !== 'undefined') tree = maybeTree!
