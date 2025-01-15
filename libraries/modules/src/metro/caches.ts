@@ -94,18 +94,40 @@ export async function restoreCache() {
  * Filters all "asset" modules and requires them, making them cacheable
  */
 export function requireAssetModules() {
-    const [assetsRegistryModuleId] = findModule(byProps('registerAsset'))
+    let [assetsRegistryModuleId] = findModule(byProps('registerAsset'))
+
     if (!assetsRegistryModuleId)
         return void logger.warn(
             'Unable to create asset cache, cannot find assets-registry module ID, some assets may not load',
         )
 
+    let assetsRegistryNotExportedTwice = true
+
+    // In older Discord versions (<264), the assets registry is exported twice, and we need to find the latest one
+    for (let i = assetsRegistryModuleId + 1; i < modules.size; i++) {
+        const module = modules.get(i)!
+        if (module.dependencyMap?.length !== 1) continue
+        if (module.dependencyMap![0] === assetsRegistryModuleId) {
+            const exports = requireModule(i)
+            if (exports.registerAsset) {
+                logger.warn('Found another assets-registry module ID, using the latest one')
+                assetsRegistryModuleId = i
+                assetsRegistryNotExportedTwice = false
+                break
+            }
+        }
+    }
+
+    if (assetsRegistryNotExportedTwice)
+        return logger.log('Assets-registry module ID not exported twice, all assets are most likely already registered')
+
     logger.log('Importing all assets modules...')
 
-    for (const [id, module] of modules) {
-        if (!module.dependencyMap) continue
-        if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryModuleId)
-            requireModule(id)
+    // We continue from the assets registry module ID, as all assets are undoubtedly registered after this module
+    for (let i = assetsRegistryModuleId + 1; i < modules.size; i++) {
+        const module = modules.get(i)!
+        if (module.dependencyMap?.length !== 1) continue
+        if (module.dependencyMap[0] === assetsRegistryModuleId) requireModule(i)
     }
 }
 
