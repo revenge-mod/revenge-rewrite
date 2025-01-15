@@ -30,7 +30,7 @@ const uFFIT = afterModuleInitialized((_, m) => {
 // [NativeStartupFlagsModule, (Problematic), (OtherModule)]
 // We are gonna looking for NativeStartupFlagsModule to blacklist the problematic module
 const uBPM = afterModuleInitialized((id, m) => {
-    if (m.default.reactProfilingEnabled && !modules.get(id + 1)!.isInitialized) {
+    if (m.default?.reactProfilingEnabled && !modules.get(id + 1)!.isInitialized) {
         blacklistModule(id + 1)
         logger.log(`Blacklisted module ${id + 1} as it causes freeze when initialized`)
         uBPM()
