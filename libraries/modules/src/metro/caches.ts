@@ -100,25 +100,11 @@ export function requireAssetModules() {
             'Unable to create asset cache, cannot find assets-registry module ID, some assets may not load',
         )
 
-    let assetsRegistryExporterModuleId = 0
-    for (const [id, module] of modules) {
-        if (!module.dependencyMap) continue
-        if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryModuleId) {
-            assetsRegistryExporterModuleId = id
-            break
-        }
-    }
-
-    if (!assetsRegistryExporterModuleId)
-        return void logger.warn(
-            'Unable to create asset cache, cannot find assets-registry exporter module ID, some assets may not load',
-        )
-
     logger.log('Importing all assets modules...')
 
     for (const [id, module] of modules) {
         if (!module.dependencyMap) continue
-        if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryExporterModuleId)
+        if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryModuleId)
             requireModule(id)
     }
 }
