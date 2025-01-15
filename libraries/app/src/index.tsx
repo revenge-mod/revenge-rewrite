@@ -69,13 +69,10 @@ afterErrorBoundaryPatchable(async function patchErrorBoundary() {
 
     const { default: Screen } = await import('./components/ErrorBoundaryScreen')
 
-    setImmediate(() => {
-        patcher.after.await(
-            findAsync(byName<{ prototype: ErrorBoundaryComponentPrototype }>('ErrorBoundary')).then(
-                it => it!.prototype,
-            ),
-            'render',
-            function () {
+    setImmediate(() =>
+        findAsync(byName<{ prototype: ErrorBoundaryComponentPrototype }>('ErrorBoundary')).then(it => {
+            const origRender = it!.prototype.render
+            it!.prototype.render = function render() {
                 if (this.state.error)
                     return (
                         <Screen
@@ -84,12 +81,13 @@ afterErrorBoundaryPatchable(async function patchErrorBoundary() {
                             reload={this.handleReload}
                         />
                     )
-            },
-            'patchErrorBoundary',
-        )
 
-        logger.log('ErrorBoundary patched')
-    })
+                return origRender.call(this)
+            }
+
+            logger.log('ErrorBoundary patched')
+        }),
+    )
 })
 
 export const AppLibrary = {
