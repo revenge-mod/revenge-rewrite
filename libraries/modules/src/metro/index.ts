@@ -7,7 +7,7 @@ import {
     saveCache,
 } from './caches'
 
-import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupFlags } from '../constants'
+import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupRegistryFlags } from '../constants'
 
 import { logger } from '../shared'
 
@@ -184,11 +184,11 @@ export function* moduleIdsForFilter(key: string, fullLookup = false) {
     const lookupCache = cache.lookupFlags[key]
 
     if (
-        lookupCache?.flags &&
+        lookupCache?.f &&
         // Check if any modules were found
-        !(lookupCache.flags & MetroModuleLookupFlags.NotFound) &&
+        !(lookupCache.f & MetroModuleLookupRegistryFlags.NotFound) &&
         // Pass immediately if it's not a full lookup, otherwise check if it's a full lookup
-        (!fullLookup || lookupCache.flags & MetroModuleLookupFlags.FullLookup)
+        (!fullLookup || lookupCache.f & MetroModuleLookupRegistryFlags.FullLookup)
     )
         for (const id of cachedModuleIdsForFilter(key)) {
             if (isModuleBlacklisted(id)) continue

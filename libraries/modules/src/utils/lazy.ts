@@ -5,7 +5,7 @@ import { lazyValue } from '@revenge-mod/utils/lazy'
 import { findEager, type FinderOptions, type LazyFinderOptions } from '../finders'
 
 import { requireModule, afterSpecificModuleInitialized } from '../metro'
-import { cache, cachedModuleIdsForFilter } from '../metro/caches'
+import { cachedModuleIdsForFilter } from '../metro/caches'
 
 import type { FilterFunction, InferFilterFunctionReturnType, LazyModule, LazyModuleContext, Metro } from '../types'
 
@@ -56,7 +56,7 @@ export function createLazyModuleById<F extends FilterFunction<any[]>>(moduleId: 
         factory() {
             if (cachedValue === undefined) {
                 const exports = requireModule(moduleId)
-                if (exports) cachedValue = !options?.returnWholeModule && exports.__esModule ? exports.default : exports
+                if (exports) cachedValue = !options?.wildcard && exports.__esModule ? exports.default : exports
             }
 
             return cachedValue
@@ -91,11 +91,8 @@ export function createLazyModule<F extends FilterFunction<any[]>>(filter: F, opt
 
                 // If the module has already been initialized
                 if (modules.get(moduleId)?.isInitialized) {
-                    if (!cachedValue && !this.factory()) {
-                        // This module apparently doesn't exist, so we remove it from the cache
-                        delete cache.lookupFlags[filter.key]?.[moduleId]
-                        continue
-                    }
+                    // TODO: Invalidate cache when this happens
+                    if (!cachedValue && !this.factory()) continue
 
                     cb(cachedValue)
                     return noop

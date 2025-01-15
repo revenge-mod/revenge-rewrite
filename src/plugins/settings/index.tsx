@@ -127,7 +127,7 @@ const plugin = registerPlugin<Storage>(
             await sleep(0)
 
             const SettingsConstants = find(byProps('SETTING_RENDERER_CONFIG'))!
-            const SettingsOverviewScreen = find(byName<FC & { name: string }>('SettingsOverviewScreen'), { returnWholeModule: true })!
+            const SettingsOverviewScreen = find(byName<FC & { name: string }>('SettingsOverviewScreen'), { wildcard: true })!
 
             const originalRendererConfig = SettingsConstants.SETTING_RENDERER_CONFIG as Record<string, RawRowConfig>
             let rendererConfig = originalRendererConfig

@@ -1,26 +1,27 @@
-import { isModuleExportsBad, moduleIdsForFilter, requireModule } from './metro'
+import { MetroModuleLookupRegistryFlags } from './constants'
+import { byProps, bySingleProp } from './filters'
+import { blacklistModule, isModuleExportsBad, moduleIdsForFilter, requireModule } from './metro'
 import { cache, cacherFor } from './metro/caches'
 import { createLazyModule, createLazyModuleById, lazyContextSymbol } from './utils/lazy'
 
 import { lazyValue, type LazyOptions } from '@revenge-mod/utils/lazy'
 import type { FilterFunction, InferFilterFunctionReturnType, LazyModule, Metro } from './types'
-import { byProps, bySingleProp } from '@revenge-mod/modules/filters'
 
-function filterExports<F extends FilterFunction<any>>(
+function* filterExports<F extends FilterFunction<any>>(
     moduleExports: Metro.ModuleExports,
     moduleId: number,
     filter: F,
     opts?: FinderOptions,
-): [] | [exports: Metro.ModuleExports, pass: boolean] {
-    if (!opts?.skipDefaultExportCheck && moduleExports.__esModule) {
+): Generator<[exports: Metro.ModuleExports, defaultExport: boolean], void, unknown> {
+    if (isModuleExportsBad(moduleExports)) return blacklistModule(moduleId)
+
+    if (!opts?.ignoreDefaultExport && moduleExports.__esModule) {
         const defaultExport = moduleExports.default
-        if ((defaultExport || typeof defaultExport === 'number') && filter(defaultExport, moduleId))
-            return [opts?.returnWholeModule ? moduleExports : defaultExport, true]
+        if (!isModuleExportsBad(defaultExport) && filter(defaultExport, moduleId))
+            yield opts?.wildcard ? [moduleExports, false] : [defaultExport, true]
     }
 
-    if (filter(moduleExports, moduleId)) return [moduleExports, true]
-
-    return []
+    if (filter(moduleExports, moduleId)) yield [moduleExports, false]
 }
 
 /**
@@ -31,24 +32,20 @@ function filterExports<F extends FilterFunction<any>>(
 export function findModule<F extends FilterFunction<any>>(
     filter: F,
     opts?: FinderOptions,
-): [Metro.ModuleID, Metro.ModuleExports] | [] {
-    const { cache, finish } = cacherFor(filter.key, !!opts?.returnWholeModule)
+): [moduleId: Metro.ModuleID, exports: InferFilterFunctionReturnType<F>, defaultExport: boolean] | [] {
+    const { cache, finish } = cacherFor(filter.key)
 
     for (const id of moduleIdsForFilter(filter.key, false)) {
-        const fullExports = requireModule(id)
-        if (isModuleExportsBad(fullExports)) continue
-
-        const [exports, pass] = filterExports(fullExports, id, filter, opts)
-        if (pass) {
-            const cached = cache(id, exports)
-            if (!cached) continue
-
-            finish(false)
-            return [id, exports]
+        const exports = requireModule(id)
+        const { value } = filterExports(exports, id, filter, opts).next()
+        if (value) {
+            cache(id)
+            finish(0)
+            return [id, value[0], value[1]]
         }
     }
 
-    finish(true)
+    finish(MetroModuleLookupRegistryFlags.NotFound)
     return []
 }
 
@@ -59,39 +56,52 @@ export function findModule<F extends FilterFunction<any>>(
  */
 export function* findAllModules<F extends FilterFunction<any>>(
     filter: F,
-    opts?: FinderOptions,
-): Generator<[Metro.ModuleID, InferFilterFunctionReturnType<F>], void, unknown> {
-    const { cache, finish } = cacherFor(filter.key, !!opts?.returnWholeModule)
-
-    let found = false
+    opts?: AllFinderOptions<FinderOptions>,
+): Generator<
+    [moduleId: Metro.ModuleID, exports: InferFilterFunctionReturnType<F>, defaultExport: boolean],
+    void,
+    unknown
+> {
+    const { cache, finish } = cacherFor(filter.key)
+    let count = 0
 
     for (const id of moduleIdsForFilter(filter.key, true)) {
-        const fullExports = requireModule(id)
-        if (isModuleExportsBad(fullExports)) continue
-
-        const [exports, pass] = filterExports(fullExports, id, filter, opts)
-        if (pass) {
-            const cached = cache(id, exports)
-            if (!cached) continue
-            found = true
-            yield [id, exports]
+        const exports = requireModule(id)
+        for (const value of filterExports(exports, id, filter, opts)) {
+            cache(id)
+            yield [id, value[0], value[1]]
+            if (++count > opts?.limit!) break
         }
     }
 
-    finish(found, true)
+    finish(MetroModuleLookupRegistryFlags.FullLookup | (count ? 0 : MetroModuleLookupRegistryFlags.NotFound))
 }
 
 export type FinderOptions = {
     /**
-     * Whether to return the whole module instead of just the default export
+     * Whether to return the whole module instead of just the default export.
+     *
+     * CJS modules are not affected by this option, the whole exports will always be returned.
+     *
      * @default false
      */
-    returnWholeModule?: boolean
+    wildcard?: boolean
     /**
-     * Whether the finder should skip filtering the default export. The default export check is always prioritized over the whole module check.
+     * Whether the finder should skip filtering the default export (`exports.default`) for ES modules (`exports.__esModule === true`).
+     * The default export check is always prioritized over the whole module check.
+     *
+     * CJS modules are not affected by this option.
+     *
      * @default false
      */
-    skipDefaultExportCheck?: boolean
+    ignoreDefaultExport?: boolean
+}
+
+export type AllFinderOptions<B extends FinderOptions> = B & {
+    /**
+     * The limit of modules to search for
+     */
+    limit?: number
 }
 
 export type LazyFinderOptions<L extends LazyOptions = LazyOptions> = FinderOptions & {
@@ -115,9 +125,7 @@ export type LazyFinderReturn<
 > = LF extends LazyFinderOptions<LazyOptions<infer E>> ? LazyModule<FinderReturn<F, LF>> & E : never
 
 export type FinderReturn<F extends FilterFunction<any>, FO extends FinderOptions> =
-    | (FO['returnWholeModule'] extends true
-          ? { default: InferFilterFunctionReturnType<F> }
-          : InferFilterFunctionReturnType<F>)
+    | (FO['wildcard'] extends true ? { default: InferFilterFunctionReturnType<F> } : InferFilterFunctionReturnType<F>)
     | undefined
 
 /**
@@ -172,10 +180,10 @@ export function findEager<F extends FilterFunction<any>, FF extends FinderOption
  * @param opts The options for the finder
  * @yields Lazy exports of all modules which the given filter matches
  */
-export function* findAll<F extends FilterFunction<any>, LF extends LazyFinderOptions>(
+export function* findAll<F extends FilterFunction<any>, LAF extends AllFinderOptions<LazyFinderOptions>>(
     filter: F,
-    opts?: LF,
-): Generator<LazyFinderReturn<F, LF>, void, unknown> {
+    opts?: LAF,
+): Generator<LazyFinderReturn<F, LAF>, void, unknown> {
     for (const [id] of findAllModules(filter, opts)) yield createLazyModuleById(id, opts)
 }
 
@@ -186,8 +194,9 @@ export function* findAll<F extends FilterFunction<any>, LF extends LazyFinderOpt
  */
 export function* findAllEager<F extends FilterFunction<any>>(
     filter: F,
+    opts?: AllFinderOptions<FinderOptions>,
 ): Generator<InferFilterFunctionReturnType<F>, void, unknown> {
-    for (const [, exports] of findAllModules(filter)) yield exports
+    for (const [, exports] of findAllModules(filter, opts)) yield exports
 }
 
 /**
@@ -201,7 +210,7 @@ export function findByFilePath<T>(path: string, options?: FinderOptions) {
     if (id === undefined) return
     const exports = requireModule(id)
     if (exports === undefined) return
-    return (!options?.returnWholeModule && exports.__esModule ? exports.default : exports) as T
+    return (!options?.wildcard && exports.__esModule ? exports.default : exports) as T
 }
 
 /**

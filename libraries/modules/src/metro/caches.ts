@@ -3,7 +3,6 @@ import {
     MetroCacheRelativeFilePath,
     MetroCacheVersion,
     MetroModuleFlags,
-    MetroModuleLookupFlags,
     assetCacheIndexSymbol,
 } from '../constants'
 import { byProps } from '../filters'
@@ -24,7 +23,6 @@ export const cache = {
     /**
      * Lookup registry for each filters, the key being the filter key, and the value being the registry
      * @see {@link MetroLookupCacheRegistry}
-     * @see {@link MetroModuleLookupFlags}
      */
     lookupFlags: {} as MetroCacheObject['l'],
     /**
@@ -169,30 +167,17 @@ export function invalidateCache() {
  * @param key The filter key
  * @returns A cacher object
  */
-export function cacherFor(key: string, whole: boolean) {
-    // TODO: This may conflict with filters that have the "whole:" prefix as key
-    const registry = (cache.lookupFlags[whole ? `whole:${key}` : key] ??= {})
+export function cacherFor(key: string) {
+    const registry = (cache.lookupFlags[key] ??= { f: 0, m: [] })
     let invalidated = false
 
     return {
-        cache: (id: Metro.ModuleID, exports: Metro.ModuleExports) => {
-            // biome-ignore lint/style/noCommaOperator: Sets invalidated to true if this is a new module
-            registry[id] ??= ((invalidated = true), 0)
-
-            if (isModuleExportsBad(exports)) {
-                blacklistModule(id)
-                invalidated = true
-                if (id in registry) delete registry[id]
-
-                return false
-            }
-
-            return true
+        cache: (id: Metro.ModuleID) => {
+            registry.m.push(id)
+            invalidated = true
         },
-        finish: (notFound: boolean, fullLookup = false) => {
-            registry.flags ??= 0
-            if (notFound) registry.flags |= MetroModuleLookupFlags.NotFound
-            if (fullLookup) registry.flags |= MetroModuleLookupFlags.FullLookup
+        finish: (flags: number) => {
+            registry.f = flags
             if (invalidated) saveCache()
         },
     }
@@ -224,13 +209,10 @@ export function cacheAsset(name: Asset['name'], index: number, moduleId: Metro.M
 }
 
 export function* cachedModuleIdsForFilter(key: string) {
-    const modulesMap = cache.lookupFlags[key]
-    if (!modulesMap) return undefined
+    const registry = cache.lookupFlags[key]
+    if (!registry) return
 
-    // TODO: Make this better
-    for (const k in modulesMap) {
-        if (k !== 'flags') yield Number(k)
-    }
+    for (const id of registry.m) yield id
 }
 
 /**
@@ -249,14 +231,17 @@ export interface MetroCacheObject {
     > & { [assetCacheIndexSymbol]: Record<number, Metro.ModuleID> }
 }
 
+// TODO: Improve this cache by saving individual module flags for the current lookup, save information like if the default/whole module matches the filter, etc.
 /**
- * Registry for Metro lookup cache, a glorified serializable Set if you will
- * @see {@link MetroCache}
- * @see {@link MetroModuleLookupFlags}
+ * Registry for Metro module lookup cache
  */
 export type MetroLookupCacheRegistry = Record<Metro.ModuleID, number> & {
     /**
+     * Module IDs that match the filter
+     */
+    m: Metro.ModuleID[]
+    /**
      * Lookup flags for this registry
      */
-    flags?: number
+    f: number
 }
