@@ -3,7 +3,7 @@
 import type { NavigationNativeStackNavigationParamList } from '@revenge-mod/modules/common'
 import type { If, Nullish } from '@revenge-mod/shared/types'
 
-import type { ComponentProps, ComponentType, FC, ReactNode } from 'react'
+import type { ComponentProps, ComponentType, FC, ReactNode, JSX } from 'react'
 import type {
     ImageProps,
     ImageSourcePropType,
@@ -23,7 +23,7 @@ import type { lazyContextSymbol } from './utils/lazy'
 
 /// METRO
 
-/** @see {@link https://github.com/facebook/metro/blob/c2d7539dfc10aacb2f99fcc2f268a3b53e867a90/packages/metro-runtime/src/polyfills/require.js} */
+/** @see {@link https://github.com/facebook/metro/blob/1361405ffe6f1bdef54295addfef0f30523aaab2/packages/metro-runtime/src/polyfills/require.js} */
 export namespace Metro {
     export type DependencyMap = Array<ModuleID> & {
         readonly paths?: Readonly<Record<ModuleID, string>> | undefined
@@ -42,8 +42,6 @@ export namespace Metro {
     ) => void
 
     export type ModuleID = number
-
-    export type ModuleIDKey = ModuleID | string
 
     export interface ModuleDefinition<Initialized = boolean> {
         /** Set to undefined once module is initialized */
@@ -79,7 +77,7 @@ export namespace Metro {
         [MetroModuleFilePathKey]?: string
     }
 
-    export type ModuleList = Record<ModuleID, ModuleDefinition | Nullish>
+    export type ModuleList = Map<ModuleID, ModuleDefinition>
 
     export type RequireFn = (id: ModuleID) => ModuleExports
 
@@ -214,6 +212,31 @@ export namespace DiscordModules {
     export interface Alerts {
         openAlert(key: string, alert: JSX.Element): void
         dismissAlerts(): void
+    }
+
+    export interface ActionSheets {
+        openLazy<T extends ComponentType>(sheet: Promise<{ default: T }>, key: string, props: ComponentProps<T>): void
+        hideActionSheet(key?: string): void
+    }
+
+    export namespace ActionSheets {
+        interface SimpleActionSheetOption {
+            icon?: number
+            label: string
+            isDestructive?: boolean
+            disabled?: boolean
+            onPress?(): void
+        }
+
+        function showSimpleActionSheet(options: {
+            key: string
+            header: {
+                title: string
+                icon?: ReactNode
+                onClose?(): void
+            }
+            options: SimpleActionSheetOption[]
+        }): void
     }
 
     export interface LinkingUtils {
@@ -480,13 +503,18 @@ export namespace DiscordModules {
         }
 
         // Sheets
-        export type ActionSheet = FC
-        export type ActionSheetCloseButton = FC
-        export type ActionSheetRow = FC
-        export type ActionSheetSwitchRow = FC
-        export type ActionSheetIconHeader = FC
-        export type ActionSheetHeaderBar = FC
-        export type BottomSheetTitleHeader = FC
+        export type ActionSheet = FC<{ children: ReactNode }>
+        export type ActionSheetCloseButton = FC<Pick<ComponentProps<IconButton>, 'variant' | 'onPress'>>
+        export type ActionSheetRow = FC & {
+            Icon: ActionSheetRowIcon
+            Group: ActionSheetRowGroup
+        }
+        export type ActionSheetRowIcon = TableRowIcon
+        export type ActionSheetRowGroup = TableRowGroup
+        export type ActionSheetSwitchRow = TableSwitchRow
+        // export type ActionSheetIconHeader = FC
+        // export type ActionSheetHeaderBar = FC
+        // export type BottomSheetTitleHeader = FC
 
         export type IconSize =
             | 'extraSmall10'

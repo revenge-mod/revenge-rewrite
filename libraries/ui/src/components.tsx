@@ -24,7 +24,7 @@ export function SearchInput(props: ComponentProps<DiscordModules.Components.Text
 }
 
 /**
- * A switch component that is styled to match Discord's configurationw
+ * A switch component that is styled to match Discord's configuration
  */
 export function FormSwitch(props: ComponentProps<DiscordModules.Components.FormSwitch>) {
     return (

@@ -6,9 +6,10 @@ import { build } from 'esbuild'
 import pluginGlobals from 'esbuild-plugin-globals'
 import yargs from 'yargs-parser'
 import shimmedDeps from '../shims/deps'
+import { spawnSync } from 'child_process'
 
 const args = yargs(process.argv.slice(2))
-const { release, minify, dev } = args
+const { release, dev } = args
 
 const context = {
     hash: 'local',
@@ -17,6 +18,7 @@ const context = {
         .nothrow()
         .then(res => res.exitCode)),
 }
+const shimmedDepsNames = Object.keys(shimmedDeps)
 
 /**
  * @type {import('esbuild').BuildOptions}
@@ -24,10 +26,10 @@ const context = {
 const config = {
     entryPoints: ['src/index.ts'],
     bundle: true,
-    outfile: 'dist/revenge.js',
+    outfile: 'dist/js/revenge.js',
     format: 'iife',
     splitting: false,
-    external: ['react', 'react-native', 'react/jsx-runtime'],
+    external: shimmedDepsNames,
     supported: {
         // Hermes does not actually support const and let, even though it syntactically
         // accepts it, but it's treated just like 'var' and causes issues
@@ -53,13 +55,10 @@ const config = {
     },
     plugins: [
         pluginGlobals({
-            ...Object.keys(shimmedDeps).reduce(
-                (deps, name) => {
-                    deps[name] = `require('!deps-shim!').default[${JSON.stringify(name)}]()`
-                    return deps
-                },
-                {},
-            ),
+            ...shimmedDepsNames.reduce((deps, name) => {
+                deps[name] = `require('!deps-shim!').default[${JSON.stringify(name)}]()`
+                return deps
+            }, {}),
         }),
         {
             name: 'swc',
@@ -110,15 +109,14 @@ export async function buildBundle(overrideConfig = {}) {
         .quiet()
         .text()
         .then(res => res.trim())
+
     config.define.__REVENGE_HASH__ = `"${context.hash}"`
 
-    const initialStartTime = performance.now()
     await build({ ...config, ...overrideConfig })
 
     return {
         config,
         context,
-        timeTook: performance.now() - initialStartTime,
     }
 }
 
@@ -127,25 +125,33 @@ const pathPassedToNode = resolvePath(process.argv[1])
 const isThisFileBeingRunViaCLI = pathToThisFile.includes(pathPassedToNode)
 
 if (isThisFileBeingRunViaCLI) {
-    const { timeTook } = await buildBundle()
+    const initialStartTime = performance.now()
 
-    printBuildSuccess(context.hash, release, timeTook)
+    await buildBundle()
 
-    if (minify) {
-        const { timeTook } = await buildBundle({
-            minifyWhitespace: true,
-            minifySyntax: true,
-            outfile: config.outfile.replace(/\.js$/, '.min.js'),
-        })
-
-        printBuildSuccess(context.hash, release, timeTook, true)
-    }
+    compileToBytecode(config.outfile)
+    printBuildSuccess(context.hash, release, performance.now() - initialStartTime)
 }
 
-export function printBuildSuccess(hash, release, timeTook, minified = false) {
+export function compileToBytecode(path) {
+    const hermesCBin = {
+        win32: 'hermesc.exe',
+        darwin: 'darwin/hermesc',
+        linux: 'linux/hermesc',
+    }[process.platform]
+
+    spawnSync(`./node_modules/@unbound-mod/hermesc/${process.platform}/${hermesCBin}`, [
+        path,
+        '-emit-binary',
+        '-out',
+        './dist/revenge.bundle',
+    ])
+}
+
+export function printBuildSuccess(hash, release, timeTook) {
     console.info(
         [
-            chalk.bold.greenBright(`✔ Built bundle${minified ? ' (minified)' : ''}`),
+            chalk.bold.greenBright('✔ Built bundle'),
             hash && chalk.bold.blueBright(`(${hash})`),
             !release && chalk.bold.cyanBright('(local)'),
             timeTook && chalk.gray(`in ${timeTook.toFixed(3)}ms`),

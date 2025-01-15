@@ -20,7 +20,7 @@ export const DevToolsContext = {
 }
 
 export function disconnectFromDevTools() {
-    DevToolsContext.ws!.close()
+    DevToolsContext.ws?.close()
     DevToolsContext.connected = false
 }
 

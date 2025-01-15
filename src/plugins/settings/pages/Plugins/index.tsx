@@ -15,12 +15,11 @@ import { CheckmarkLargeIcon } from '@revenge-mod/modules/common/components/icons
 import { type ComponentProps, memo, useContext, useState } from 'react'
 import { ScrollView, View } from 'react-native'
 
-import { pluginsStates } from '@revenge-mod/preferences'
-import { useObservable } from '@revenge-mod/storage'
+import { useObserveStorage } from '@revenge-mod/storage'
 
 import { externalPluginsMetadata, registeredPlugins } from '@revenge-mod/plugins/internals'
 
-import { Show } from '@revenge-mod/shared/components'
+import { Show } from '@revenge-mod/utils/components'
 
 import BrowsePluginsButton from './components/BrowsePluginsButton'
 import { NoPlugins, NoResults } from './components/Illustrations'
@@ -38,7 +37,7 @@ import type { DiscordModules } from '@revenge-mod/modules'
 
 export default function PluginsSettingsPage() {
     const { storage } = useContext(PluginContext)
-    useObservable([pluginsStates, storage, externalPluginsMetadata])
+    useObserveStorage([storage, externalPluginsMetadata])
 
     const [query, setQuery] = useState('')
     const { showInternal, showUnmanageable } = storage.plugins

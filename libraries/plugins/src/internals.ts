@@ -48,10 +48,13 @@ export function registerPlugin<
 ) {
     if (manifest.id in registeredPlugins) throw new Error(`Plugin "${manifest.id}" is already registered`)
 
+    const external = opts.external ?? true
     const options: Required<RegisterPluginOptions> = {
-        external: opts.external ?? true,
-        manageable: opts.manageable ?? opts.external ?? true,
-        enabled: opts.enabled ?? !opts.external,
+        external,
+        manageable: opts.manageable ?? external,
+        // Internal plugins are enabled by default
+        // While external plugins are disabled by default
+        enabled: opts.enabled ?? !external,
     }
 
     let status: PluginStatus = PluginStatus.Stopped
@@ -87,8 +90,6 @@ export function registerPlugin<
         state: lazyValue(
             () =>
                 (pluginsStates[manifest.id] ??= {
-                    // Internal plugins are enabled by default
-                    // While external plugins are disabled by default
                     enabled: options.enabled,
                     errors: [],
                 }),

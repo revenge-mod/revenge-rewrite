@@ -3,7 +3,6 @@ import '@revenge-mod/utils/functions'
 
 import { createLogger } from '@revenge-mod/utils/library'
 
-import { recordTimestamp } from '@revenge-mod/debug'
 import { IndexMetroModuleId } from '@revenge-mod/modules/constants'
 import { ClientInfoModule } from '@revenge-mod/modules/native'
 import { createPatcherInstance } from '@revenge-mod/patcher'
@@ -15,8 +14,6 @@ Object.freeze = Object.seal = o => o
 
 // ! This function is BLOCKING, so we need to make sure it's as fast as possible
 async function initialize() {
-    recordTimestamp('Init_Initialize')
-
     try {
         const { createModulesLibrary } = await import('@revenge-mod/modules')
         const ModulesLibraryPromise = createModulesLibrary()
@@ -40,7 +37,6 @@ async function initialize() {
             ])
 
         // TODO: Don't expose this global, instead pass to plugin contexts, for development, expose it via the developer-settings plugin
-        // TODO: Only expose revenge.plugins.registerPlugin
         globalThis.revenge = {
             app: AppLibrary,
             assets: AssetsLibrary,
@@ -56,15 +52,12 @@ async function initialize() {
 
         await import('./plugins')
         await registerExternalPlugins()
-        recordTimestamp('Plugins_Registered')
 
         await awaitStorage(settings, pluginsStates)
-        recordTimestamp('Storage_Initialized')
 
         // TODO: Safe mode when plugins fail to load
         // Maybe put logic in ErrorBoundary
         await startPlugins()
-        recordTimestamp('Plugins_Started')
     } catch (e) {
         onError(e)
     }
@@ -100,8 +93,6 @@ if (typeof __r !== 'undefined') initialize()
 
 // We hold calls from the native side
 function onceIndexRequired() {
-    recordTimestamp('Native_RequiredIndex')
-
     const batchedBridge = __fbBatchedBridge
 
     const callQueue: any[] = []
@@ -121,7 +112,6 @@ function onceIndexRequired() {
 
     initialize()
         .then(() => {
-            recordTimestamp('Init_PromiseResolved')
             unpatch()
             for (const queue of callQueue)
                 batchedBridge.getCallableModule(queue[0]) && batchedBridge.__callFunction(...queue)

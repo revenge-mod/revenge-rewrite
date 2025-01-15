@@ -41,6 +41,11 @@ export const {
     AlertModal,
     AlertActionButton,
 
+    // Sheets
+    ActionSheet,
+    ActionSheetCloseButton,
+    ActionSheetRow,
+
     // Inputs
 
     TextInput,
@@ -69,6 +74,10 @@ export const {
             TextField: DiscordModules.Components.TextField
             TextArea: DiscordModules.Components.TextArea
             GhostInput: DiscordModules.Components.GhostInput
+
+            ActionSheet: DiscordModules.Components.ActionSheet
+            ActionSheetCloseButton: DiscordModules.Components.ActionSheetCloseButton
+            ActionSheetRow: DiscordModules.Components.ActionSheetRow
 
             Button: DiscordModules.Components.Button
             IconButton: DiscordModules.Components.IconButton

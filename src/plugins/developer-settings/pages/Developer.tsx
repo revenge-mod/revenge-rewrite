@@ -11,7 +11,12 @@ import {
     TextInput,
 } from '@revenge-mod/modules/common/components'
 import { BundleUpdaterManager, FileModule } from '@revenge-mod/modules/native'
-import { storageContextSymbol, useObservable } from '@revenge-mod/storage'
+import { storageContextSymbol, useObserveStorage } from '@revenge-mod/storage'
+
+import { settings } from '@revenge-mod/preferences'
+import { PluginsDirectoryPath } from '@revenge-mod/shared/paths'
+
+import { getErrorStack } from '@revenge-mod/utils/errors'
 
 import PageWrapper from '../../../plugins/settings/pages/(Wrapper)'
 
@@ -30,20 +35,21 @@ import {
     disconnectFromDevTools,
 } from '../devtools'
 
-import { settings } from '@revenge-mod/preferences'
-import { PluginsDirectoryPath } from '@revenge-mod/shared/paths'
+import { PluginContext } from '..'
+
 import { useContext, useEffect, useRef, useState } from 'react'
 import { ScrollView } from 'react-native'
-import { PluginContext } from '..'
+import { invalidateCache } from '@revenge-mod/modules/metro/caches'
+
 
 export default function DeveloperSettingsPage() {
     const context = useContext(PluginContext)
     const {
         storage,
-        revenge: { assets, modules },
+        revenge: { assets },
     } = context
 
-    useObservable([storage])
+    useObserveStorage([storage])
 
     const navigation = NavigationNative.useNavigation()
 
@@ -239,13 +245,6 @@ export default function DeveloperSettingsPage() {
                         }
                     />
                 </TableRowGroup>
-                <TableRowGroup title="Performance">
-                    <TableRow
-                        label="Show Debug Performance Times"
-                        icon={<TableRowIcon source={assets.getIndexByName('TimerIcon')!} />}
-                        onPress={() => navigation.navigate('RevengeDebugPerformanceTimes')}
-                    />
-                </TableRowGroup>
                 <TableRowGroup title="Caches">
                     <TableRow
                         variant="danger"
@@ -253,7 +252,7 @@ export default function DeveloperSettingsPage() {
                         subLabel="Module blacklists, lookup flags, asset index maps, asset module ID maps. This will reload the app."
                         icon={<TableRowIcon variant="danger" source={assets.getIndexByName('TrashIcon')!} />}
                         onPress={() => {
-                            modules.metro.invalidateCache()
+                            invalidateCache()
                             BundleUpdaterManager.reload()
                         }}
                     />
@@ -298,15 +297,19 @@ function DeveloperSettingsPageEvaluateJavaScriptAlert() {
                         text="Evaluate"
                         variant="primary"
                         onPress={async () => {
-                            // biome-ignore lint/security/noGlobalEval: This is intentional
-                            const res = globalThis.eval(codeRef.current)
+                            try {
+                                // biome-ignore lint/security/noGlobalEval: This is intentional
+                                const res = globalThis.eval(codeRef.current)
 
-                            alert(
-                                modules.findProp<(val: unknown, opts?: { depth?: number }) => string>('inspect')!(
-                                    res instanceof Promise && evalAwaitResult ? await res : res,
-                                    { depth: 5 },
-                                ),
-                            )
+                                alert(
+                                    modules.findProp<(val: unknown, opts?: { depth?: number }) => string>('inspect')!(
+                                        res instanceof Promise && evalAwaitResult ? await res : res,
+                                        { depth: 5 },
+                                    ),
+                                )
+                            } catch (e) {
+                                alert(getErrorStack(e))
+                            }
                         }}
                     />
                     <AlertActionButton text="Cancel" variant="secondary" />

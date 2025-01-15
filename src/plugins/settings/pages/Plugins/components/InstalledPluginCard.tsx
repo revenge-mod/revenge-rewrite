@@ -1,5 +1,7 @@
 import { getAssetIndexByName } from '@revenge-mod/assets'
 import { FormSwitch } from '@revenge-mod/ui/components'
+import { Show } from '@revenge-mod/utils/components'
+import { useRerenderer } from '@revenge-mod/utils/hooks'
 
 import { openAlert } from '@revenge-mod/modules/common'
 import { AlertActionButton, AlertModal, IconButton } from '@revenge-mod/modules/common/components'
@@ -7,8 +9,6 @@ import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 
 import { registeredPlugins } from '@revenge-mod/plugins/internals'
 
-import { Show } from '@revenge-mod/shared/components'
-import { useRerenderer } from '@revenge-mod/shared/hooks'
 
 import { useContext } from 'react'
 

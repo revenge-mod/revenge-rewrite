@@ -3,7 +3,6 @@
   "module": "src/index.ts",
   "type": "module",
   "exports": {
-    "./components": "./src/components.tsx",
     "./paths": "./src/paths.ts",
     "./types": "./src/types.d.ts"
   }

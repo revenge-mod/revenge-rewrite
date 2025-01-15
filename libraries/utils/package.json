@@ -3,12 +3,16 @@
   "module": "src/index.ts",
   "type": "module",
   "exports": {
+    "./components": "./src/components.tsx",
     "./enums": "./src/enums.ts",
     "./errors": "./src/errors.ts",
+    "./hooks": "./src/hooks.ts",
     "./react": "./src/react.ts",
     "./library": "./src/library.ts",
+    "./observables": "./src/observables.ts",
     "./functions": "./src/functions.ts",
     "./lazy": "./src/lazy.ts",
-    "./trees": "./src/trees.ts"
+    "./trees": "./src/trees.ts",
+    "./zip": "./src/zip.ts"
   }
 }

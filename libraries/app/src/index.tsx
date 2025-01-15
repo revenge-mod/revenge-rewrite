@@ -1,4 +1,3 @@
-import { recordTimestamp } from '@revenge-mod/debug'
 import { React, ReactNative } from '@revenge-mod/modules/common'
 import { findByName } from '@revenge-mod/modules/finders'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
@@ -38,12 +37,8 @@ const unpatchRunApplication = patcher.after(
     () => {
         unpatchRunApplication()
 
-        recordTimestamp('App_RunApplicationCalled')
         logger.log('AppRegistry.runApplication called')
-
         for (const callback of initializeCallbacks) callback()
-
-        recordTimestamp('App_AfterRunRACallbacks')
         logger.log('Initialized callbacks called')
     },
     'runInitializeCallbacks',
@@ -55,12 +50,8 @@ const unpatchCreateElement = patcher.after(
     () => {
         unpatchCreateElement()
 
-        recordTimestamp('App_CreateElementCalled')
         logger.log('React.createElement called')
-
         for (const callback of renderCallbacks) callback()
-
-        recordTimestamp('App_AfterRunCECallbacks')
         logger.log('Rendered callbacks called')
     },
     'runRenderCallbacks',

@@ -11,9 +11,10 @@ const args = yargs(process.argv.slice(2))
 export function serve() {
     const server = createServer(async (_, res) => {
         try {
-            const { config, context, timeTook } = await buildBundle()
+            const initialStartTime = performance.now()
+            const { config, context } = await buildBundle()
 
-            printBuildSuccess(context.hash, undefined, timeTook, false)
+            printBuildSuccess(context.hash, undefined, performance.now() - initialStartTime, false)
 
             res.writeHead(200, { 'Content-Type': 'application/javascript' })
             res.end(await readFile(config.outfile, 'utf-8'))

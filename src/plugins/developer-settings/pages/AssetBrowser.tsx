@@ -9,7 +9,8 @@ import {
     TableRow,
     Text,
 } from '@revenge-mod/modules/common/components'
-import { cache as metroCache, requireModule } from '@revenge-mod/modules/metro'
+import { requireModule } from '@revenge-mod/modules/metro'
+import { cache } from '@revenge-mod/modules/metro/caches'
 import { SearchInput } from '@revenge-mod/ui/components'
 
 import { useState } from 'react'
@@ -120,7 +121,7 @@ export default function AssetBrowserSettingsPage() {
         <PageWrapper>
             <SearchInput size="md" onChange={(v: string) => setSearch(v)} />
             <FlashList
-                data={Object.values(metroCache.assetModules)
+                data={Object.values(cache.assetModules)
                     .flatMap(
                         reg =>
                             Object.values(reg)

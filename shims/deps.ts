@@ -11,4 +11,5 @@ export default {
     'chroma-js': () => lazyFindByProps('brewer'),
     lodash: () => lazyFindByProps('forEachRight'),
     '@shopify/react-native-skia': () => lazyFindByProps('useFont'),
+    '@shopify/flash-list': () => lazyFindByProps('FlashList'),
 }

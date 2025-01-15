@@ -1,8 +1,9 @@
 import { assetsRegistry } from '@revenge-mod/modules/common'
 import { findByName } from '@revenge-mod/modules/finders'
-import { cacheAsset, getImportingModuleId, cache as metroCache, requireModule } from '@revenge-mod/modules/metro'
+import { getImportingModuleId, requireModule } from '@revenge-mod/modules/metro'
 import { createPatcherInstance } from '@revenge-mod/patcher'
 
+import { cache, cacheAsset } from '@revenge-mod/modules/metro/caches'
 import { FirstAssetTypeRegisteredKey, assetCacheIndexSymbol } from '@revenge-mod/modules/constants'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
@@ -132,7 +133,7 @@ export function getAssetByIndex(index: number) {
 export function getAssetIndexByName(name: string, preferredType: PackagerAsset['type'] = defaultPreferredType) {
     if (name in customAssets) return customAssets[name]
 
-    const assetModule = metroCache.assetModules[name]
+    const assetModule = cache.assetModules[name]
     if (!assetModule) return
 
     const mid = assetModule[preferredType] ?? assetModule[getFirstRegisteredAssetTypeByName(name)!]
@@ -148,7 +149,7 @@ export function getAssetIndexByName(name: string, preferredType: PackagerAsset['
  * @returns The asset's registrar module ID
  */
 export function getAssetModuleIdByName(name: string, preferredType: PackagerAsset['type'] = defaultPreferredType) {
-    const moduleIds = metroCache.assetModules[name]
+    const moduleIds = cache.assetModules[name]
     if (!moduleIds) return
     return moduleIds[preferredType] ?? moduleIds[getFirstRegisteredAssetTypeByName(name)!]
 }
@@ -159,7 +160,7 @@ export function getAssetModuleIdByName(name: string, preferredType: PackagerAsse
  * @returns The asset's registrar module ID
  */
 export function getAssetModuleIdByIndex(index: number) {
-    return metroCache.assetModules[assetCacheIndexSymbol][index]
+    return cache.assetModules[assetCacheIndexSymbol][index]
 }
 
 /**
@@ -178,7 +179,7 @@ export function getAssetTypesByName(name: string, preferredType: PackagerAsset['
  * @returns The asset's types tied to the index
  */
 export function getAssetTypesByIndex(index: number) {
-    return Object.keys(metroCache.assetModules[assetCacheIndexSymbol][index] ?? {})
+    return Object.keys(cache.assetModules[assetCacheIndexSymbol][index] ?? {})
 }
 
 /**
@@ -187,7 +188,7 @@ export function getAssetTypesByIndex(index: number) {
  * @returns The first registered asset type tied to the name
  */
 export function getFirstRegisteredAssetTypeByName(name: string): PackagerAsset['type'] | undefined {
-    return metroCache.assetModules[name]?.[FirstAssetTypeRegisteredKey]
+    return cache.assetModules[name]?.[FirstAssetTypeRegisteredKey]
 }
 
 /**

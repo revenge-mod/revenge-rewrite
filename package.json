@@ -11,7 +11,6 @@
   "dependencies": {
     "@revenge-mod/app": "workspace:*",
     "@revenge-mod/assets": "workspace:*",
-    "@revenge-mod/debug": "workspace:*",
     "@revenge-mod/keyutil": "https://github.com/revenge-mod/revenge-keyutil#2f5db07",
     "@revenge-mod/modules": "workspace:*",
     "@revenge-mod/plugins": "workspace:*",
@@ -20,6 +19,7 @@
     "@revenge-mod/shared": "workspace:*",
     "@revenge-mod/ui": "workspace:*",
     "@revenge-mod/utils": "workspace:*",
+    "@unbound-mod/hermesc": "1.0.3",
     "fflate": "^0.8.2",
     "valibot": "^1.0.0-beta.9"
   },

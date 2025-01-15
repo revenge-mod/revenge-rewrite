@@ -1,5 +1,4 @@
-import { MetroModuleFilePathKey } from './constants'
-import { getMetroModules } from './metro'
+import { cache } from './metro/caches'
 import { createFilter } from './utils/filters'
 
 export * from './utils/filters'
@@ -52,14 +51,12 @@ export const byStoreName = createFilter<[storeName: string]>(
     name => `revenge.storeName(${name})`,
 )
 
-const modules = getMetroModules()
-
 /**
  * Filters for exports whose file path matches the given path
  */
 export const byFilePath = createFilter<[path: string, returnDefaultExport: boolean]>(
     ([path, returnDefaultExport], _, id, isDefaultExport) => {
-        return returnDefaultExport === isDefaultExport && modules[id]?.[MetroModuleFilePathKey] === path
+        return returnDefaultExport === isDefaultExport && cache.moduleFilePaths.get(id) === path
     },
     ([path, returnDefaultExport]) => `revenge.filePath(${path},${returnDefaultExport})`,
 )
@@ -86,7 +83,7 @@ export const byQuery = createFilter<[query: string, caseSensitive: boolean]>(
                 m.displayName?.toLowerCase()?.includes(transformedQuery) ||
                 m.type?.name?.toLowerCase()?.includes(transformedQuery) ||
                 (m.getName?.length === 0 && m.getName?.()?.toLowerCase()?.includes(transformedQuery)) ||
-                modules[m.id]?.[MetroModuleFilePathKey]?.toLowerCase()?.includes(transformedQuery) ||
+                cache.moduleFilePaths.get(m.id)?.toLowerCase()?.includes(transformedQuery) ||
                 Object.keys(m).some(k => k.toLowerCase().includes(transformedQuery)) ||
                 Object.values(m).some(v => String(v).toLowerCase().includes(transformedQuery))
             )

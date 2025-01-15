@@ -1,5 +1,5 @@
 import { lazyDestructure, lazyValue } from '@revenge-mod/utils/lazy'
-import { findByFilePath, findByName, findByProps } from '../finders'
+import { findByFilePath, findByName, findByProps, findSingleProp } from '../finders'
 
 import React from 'react'
 import ReactNative from 'react-native'
@@ -41,6 +41,7 @@ export const intlModule = findByProps<typeof import('@discord/intl')>('runtimeHa
 
 export const Logger = findByName<typeof DiscordModules.Logger, true>('Logger')!
 
+export const actionSheets = findByProps<DiscordModules.ActionSheets>('hideActionSheet')!
 export const alerts = findByProps<DiscordModules.Alerts>('openAlert', 'dismissAlert')!
 export const channels = findByProps('getVoiceChannelId')!
 export const links = findByProps<DiscordModules.LinkingUtils>('openURL', 'openDeeplink')!
@@ -70,6 +71,8 @@ export const { TextStyleSheet, createStyles, dismissAlerts, openAlert } = lazyDe
             openAlert: DiscordModules.Alerts['openAlert']
         }>('createStyles', 'TextStyleSheet')!,
 )
+
+export const showSimpleActionSheet = findSingleProp<typeof DiscordModules.ActionSheets.showSimpleActionSheet>('showSimpleActionSheet')!
 
 /// FLUX
 

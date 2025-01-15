@@ -6,6 +6,12 @@ declare module '*.webp' {
     export = src
 }
 
+declare module '@revenge-mod/modules/metro/caches' {
+    // We need this line for some reason...
+    const caches: import('./libraries/modules/src/metro/caches')
+    export * from './libraries/modules/src/metro/caches'
+}
+
 declare module '@revenge-mod/modules/finders' {
     // We need this line for some reason...
     const finders: import('./libraries/modules/src/finders')

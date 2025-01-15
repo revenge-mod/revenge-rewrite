@@ -2,12 +2,17 @@ import { sha512 } from '@noble/hashes/sha512'
 
 import { readRevengeKey, readRevengeSignature } from '@revenge-mod/keyutil/v1'
 import { FileModule } from '@revenge-mod/modules/native'
-import { ExternalPluginManifestFilePath, ExternalPluginSourceFilePath } from '@revenge-mod/shared/paths'
+import { pluginsStates } from '@revenge-mod/preferences'
+import {
+    ExternalPluginManifestFilePath,
+    ExternalPluginSourceFilePath,
+    PluginDirectoryPath,
+    PluginStoragePath,
+} from '@revenge-mod/shared/paths'
 import { awaitStorage } from '@revenge-mod/storage'
 import { getErrorStack } from '@revenge-mod/utils/errors'
+import { parseZip, parseZipFromURI } from '@revenge-mod/utils/zip'
 
-import { Platform } from 'react-native'
-import { unzipSync, type Unzipped } from 'fflate/browser'
 import { parse as parseSchema } from 'valibot'
 
 import {
@@ -26,56 +31,15 @@ import { type PluginManifest, type PluginDefinition, PluginManifestSchema } from
 import type { PluginContext, PluginStage } from './types'
 export type * from './types'
 
-async function parseZipFromUri(uri: string): Promise<[local: boolean, zip: Unzipped]> {
-    if (uri.startsWith('http://') || uri.startsWith('https://')) {
-        const headRes = await fetch(uri, {
-            method: 'HEAD',
-        })
-
-        const cl = headRes.headers.get('content-length')
-        if (!cl) throw new Error('Server did not provide "Content-Length" header')
-        if (Number(cl) > PluginZipFileSizeLimit)
-            throw new Error(`File size exceeds the limit of ${PluginZipFileSizeLimit} bytes`)
-
-        const res = await fetch(uri)
-        if (!res.ok) throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`)
-
-        const buf = new Uint8Array(await res.arrayBuffer())
-        return [false, unzipSync(buf)] as const
-    }
-
-    if (Platform.OS === 'android' && uri.startsWith('content://')) {
-        const fs = ReactNative.NativeModules.RNFSManager
-
-        // https://github.com/itinance/react-native-fs/issues/1074#issuecomment-1049915910
-        // const { size } = await fs.stat(uri)
-        // if (size > PluginZipFileSizeLimit)
-        //     throw new Error(`File size exceeds the limit of ${PluginZipFileSizeLimit} bytes`)
-
-        const b64 = await fs.readFile(uri)
-        return [true, unzipSync(Buffer.from(b64, 'base64'))]
-    }
-
-    if (Platform.OS === 'ios' && uri.startsWith('file://')) {
-        // TODO: File size check
-        const buf = await fetch(uri).then(res => res.arrayBuffer())
-        return [true, unzipSync(new Uint8Array(buf))]
-    }
-
-    throw new Error(`Unsupported URI: ${uri}`)
-}
-
 export async function installPlugin(uri: string, trustUnsigned = false) {
     try {
-        const [
-            local,
-            {
-                'manifest.json': manifestJson,
-                'source.zip': sourceZip,
-                public_key: publicKey,
-                'source.zip.sig': sourceZipSig,
-            },
-        ] = await parseZipFromUri(uri)
+        const local = !(uri.startsWith('http://') || uri.startsWith('https://'))
+        const {
+            'manifest.json': manifestJson,
+            'source.zip': sourceZip,
+            public_key: publicKey,
+            'source.zip.sig': sourceZipSig,
+        } = await parseZipFromURI(uri, { httpFileSizeLimit: PluginZipFileSizeLimit })
 
         if (!manifestJson || !sourceZip) return InstallPluginResult.InvalidFileFormat
 
@@ -125,6 +89,30 @@ export async function installPlugin(uri: string, trustUnsigned = false) {
     } catch (e) {
         return InstallPluginResult.InvalidFileFormat
     }
+}
+
+export function clearPluginStorage(id: string) {
+    return FileModule.removeFile('documents', PluginStoragePath(id))
+}
+
+export async function uninstallPlugin(id: string) {
+    if (id in registeredPlugins) {
+        const plugin = registeredPlugins[id]!
+        if (!plugin.external) throw new Error(`Cannot uninstall internal plugin: ${plugin.id}`)
+
+        plugin.disable()
+        plugin.unregister()
+        delete registeredPlugins[id]
+    }
+
+    if (!(id in externalPluginsMetadata)) throw new Error(`Plugin "${id}" is not installed`)
+
+    delete externalPluginsMetadata[id]
+    delete pluginsStates[id]
+
+    await FileModule.clearFolder('documents', PluginDirectoryPath(id))
+
+    return true
 }
 
 export const InstallPluginResultMessage: Record<PluginInstallResult, string> = {
@@ -181,7 +169,7 @@ export async function registerExternalPlugin(id: PluginManifest['id']) {
 
     const manifest = parseSchema(PluginManifestSchema, JSON.parse(manifestJson))
     // TODO: native plugins :O
-    const { 'plugin.js': pluginJs } = unzipSync(Buffer.from(pluginZipB64, 'base64'))
+    const { 'plugin.js': pluginJs } = parseZip(Buffer.from(pluginZipB64, 'base64'))
 
     try {
         type AnyPluginDefinition = PluginDefinition<any, any, any>

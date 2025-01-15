@@ -19,7 +19,7 @@ export const DebuggerContext = {
 }
 
 export function disconnectFromDebugger() {
-    DebuggerContext.ws!.close()
+    DebuggerContext.ws?.close()
     DebuggerContext.connected = false
 }
 

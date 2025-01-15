@@ -5,11 +5,10 @@ import { registerPlugin } from '@revenge-mod/plugins/internals'
 import { sleep } from '@revenge-mod/utils/functions'
 
 import AssetBrowserSettingsPage from './pages/AssetBrowser'
-import DebugPerformanceTimesSettingsPage from './pages/DebugPerformanceTimes'
 import DeveloperSettingsPage from './pages/Developer'
 
-import { DebuggerContext, connectToDebugger } from './debugger'
-import { DevToolsEvents, connectToDevTools } from './devtools'
+import { DebuggerContext, connectToDebugger, disconnectFromDebugger } from './debugger'
+import { DevToolsEvents, connectToDevTools, disconnectFromDevTools } from './devtools'
 
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import type { PluginContextFor } from '@revenge-mod/plugins'
@@ -85,19 +84,15 @@ const plugin = registerPlugin<{
                     },
                 }),
 
-                sui.createRoute('RevengeDebugPerformanceTimes', {
-                    type: 'route',
-                    label: 'Debug Performance Times',
-                    component: DebugPerformanceTimesSettingsPage,
-                    icon: assets.getIndexByName('TimerIcon'),
-                }),
-
                 sui.createRoute('RevengeAssetBrowser', {
                     type: 'route',
                     label: 'Asset Browser',
                     component: AssetBrowserSettingsPage,
                     icon: assets.getIndexByName('ImageIcon'),
                 }),
+
+                disconnectFromDebugger,
+                disconnectFromDevTools,
             )
         },
         initializeStorage: () => ({

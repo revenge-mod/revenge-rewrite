@@ -13,18 +13,10 @@ export const MetroModuleLookupFlags = createBitFlagEnum('NotFound', 'FullLookup'
  * The module ID for the index module
  */
 export const IndexMetroModuleId = 0
-
-/**
- * The safe amount of modules to hook instantly before deferring to hook later.
- * Lowering this may cause issues like not being able to blacklist a problematic module in time.
- * Setting this too high will result in a noticably slower startup time, especially on lower end devices.
- */
-export const SafeModuleHookAmountBeforeDefer = 1500
-
 /**
  * The Metro cache version
  */
-export const MetroCacheVersion = 2
+export const MetroCacheVersion = 3
 
 /**
  * The storage key for the Metro cache
@@ -34,12 +26,7 @@ export const MetroCacheRelativeFilePath = 'RevengeMetroCache'
 /**
  * The key for the first asset type registered
  */
-export const FirstAssetTypeRegisteredKey = '__firstAssetTypeRegistered'
-
-/**
- * The key for a module's file path (using a symbol does not work for some reason)
- */
-export const MetroModuleFilePathKey = '__moduleFilePath'
+export const FirstAssetTypeRegisteredKey = '__ftr'
 
 /**
  * The symbol to access asset caches using indexes instead of names
