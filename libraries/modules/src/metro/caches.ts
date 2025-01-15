@@ -10,7 +10,7 @@ import { byProps } from '../filters'
 import { findModule } from '../finders'
 import { ClientInfoModule, FileModule } from '../native'
 import { logger } from '../shared'
-import { blacklistModule, isModuleExportsBad, requireModule } from './index'
+import { requireModule } from './index'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { Metro } from '../types'
