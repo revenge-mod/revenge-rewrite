@@ -16,6 +16,8 @@ import type {
     ViewStyle,
 } from 'react-native'
 
+import type { Message } from 'discord-types/general'
+import type { Command } from './common/commands'
 import type { MetroModuleFilePathKey } from './constants'
 import type { lazyContextSymbol } from './utils/lazy'
 
@@ -301,6 +303,11 @@ export namespace DiscordModules {
         }
     }
 
+    export interface CommandUtils {
+        // STUB document these args
+        getBuiltInCommands(foo: [1], bar: true, baz: false): Command[]
+    }
+
     export type InviteUtils = {
         __stub?: any
     }
@@ -308,7 +315,9 @@ export namespace DiscordModules {
     export type ClipboardUtils = typeof import('@react-native-clipboard/clipboard').default
 
     export type MessageUtils = {
-        __stub?: any
+        sendMessage(channelId: string, { content: string }): Promise<Message>
+        editMessage(channelId: string, messageId: string, { content: string }): Promise<Message>
+        sendBotMessage(channelId: string, content: string): Promise<Message>
     }
 
     /**

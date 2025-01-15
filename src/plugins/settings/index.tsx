@@ -51,7 +51,7 @@ const plugin = registerPlugin<Storage>(
                 },
             } = context
 
-            for (const member of Contributors.team.concat(Contributors.contributors)) {
+            for (const member of Object.values(Contributors).flat()) {
                 if (!member.icon) continue
 
                 assets.registerCustom(
