@@ -26,5 +26,5 @@ export function createSimpleFilter(predicate: (m: Metro.ModuleExports) => boolea
     return createFilter(
         (_, m) => predicate(m),
         () => `dyn:${key}`,
-    )()
+    )
 }
