@@ -182,6 +182,7 @@ function moduleShouldNotBeHooked(id: Metro.ModuleID) {
  */
 export function* moduleIdsForFilter(key: string, fullLookup = false) {
     const lookupCache = cache.lookupFlags[key]
+    const pending = new Set<Metro.ModuleID>()
 
     if (
         lookupCache?.f &&
@@ -189,16 +190,38 @@ export function* moduleIdsForFilter(key: string, fullLookup = false) {
         !(lookupCache.f & MetroModuleLookupRegistryFlags.NotFound) &&
         // Pass immediately if it's not a full lookup, otherwise check if it's a full lookup
         (!fullLookup || lookupCache.f & MetroModuleLookupRegistryFlags.FullLookup)
-    )
+    ) {
         for (const id of cachedModuleIdsForFilter(key)) {
             if (isModuleBlacklisted(id)) continue
+            if (!modules.get(id)!.isInitialized) {
+                pending.add(id)
+                continue
+            }
+
             yield id
         }
-    else
-        for (const id of modules.keys()) {
-            if (isModuleBlacklisted(id)) continue
-            yield id
+
+        for (const id of pending) yield id
+
+        // Invalidate the cache if nothing was found...
+        // We invalidate the cache and try to iterate over all modules
+        delete cache.lookupFlags[key]
+        pending.clear()
+    }
+
+    for (const id of modules.keys()) {
+        if (isModuleBlacklisted(id)) continue
+        if (!modules.get(id)!.isInitialized) {
+            pending.add(id)
+            continue
         }
+
+        yield id
+    }
+
+    for (const id of pending) yield id
+
+    // At this point, we have iterated over all modules, and nothing was found
 }
 
 /**
