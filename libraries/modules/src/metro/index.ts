@@ -40,7 +40,7 @@ export async function initializeModules() {
     const cacheRestoredPromise = restoreCache()
 
     // Patches modules on load
-    import('./patches')
+    await import('./patches')
 
     function executeModuleSubscriptions(this: Metro.ModuleDefinition) {
         const id = this.publicModule.id
