@@ -7,7 +7,7 @@ import {
     saveCache,
 } from './caches'
 
-import { IndexMetroModuleId, MetroModuleFlags, MetroModuleLookupRegistryFlags } from '../constants'
+import { MetroModuleFlags, MetroModuleLookupRegistryFlags } from '../constants'
 
 import { logger } from '../shared'
 
@@ -82,10 +82,6 @@ export async function initializeModules() {
             }
         }
     }
-
-    logger.log('Importing index module...')
-    // ! Do NOT use requireModule for this
-    __r(IndexMetroModuleId)
 
     const cacheRestored = await cacheRestoredPromise
 
@@ -236,6 +232,6 @@ export function isModuleExportsBad(exports: Metro.ModuleExports) {
         exports === null ||
         exports === globalThis ||
         exports[''] === null ||
-        (exports.__proto__ === Object.prototype && Reflect.ownKeys(exports).length === 0)
+        (exports.__proto__ === Object.prototype && !Reflect.ownKeys(exports).length)
     )
 }

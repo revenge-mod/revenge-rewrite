@@ -5,8 +5,8 @@ export interface LazyOptions<E extends ExemptedEntries = ExemptedEntries> {
     exemptedEntries?: E
 }
 
-const unconfigurable = new Set(['arguments', 'caller', 'prototype'])
-const isUnconfigurable = (key: PropertyKey) => typeof key === 'string' && unconfigurable.has(key)
+const unconfigurable = new Set<string | symbol>(['arguments', 'caller', 'prototype'])
+const isUnconfigurable = (key: string | symbol) => unconfigurable.has(key)
 
 const factories = new WeakMap<any, () => any>()
 const proxyContextHolder = new WeakMap<

@@ -11,11 +11,6 @@ export const MetroModuleFlags = createBitFlagEnum('Blacklisted', 'Asset')
 export const MetroModuleLookupRegistryFlags = createBitFlagEnum('NotFound', 'FullLookup')
 
 /**
- * The module ID for the index module
- */
-export const IndexMetroModuleId = 0
-
-/**
  * The Metro cache version
  */
 export const MetroCacheVersion = 4
