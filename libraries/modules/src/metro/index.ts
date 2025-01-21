@@ -46,9 +46,10 @@ export async function initializeModules() {
         const id = this.publicModule.id
         const exports = this.publicModule.exports
 
+        for (const sub of allSubscriptionsSet) sub(id, exports)
+
         const subs = subscriptions.get(id)
         if (subs) for (const sub of subs) sub(exports)
-        for (const sub of allSubscriptionsSet) sub(id, exports)
     }
 
     for (const [id, module] of modules.entries()) {
