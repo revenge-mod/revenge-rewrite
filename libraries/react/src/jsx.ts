@@ -1,82 +1,57 @@
 import { ReactJSXRuntime } from '@revenge-mod/modules/common'
-import { patcher } from './shared'
 
-import type { ComponentProps, ElementType, ReactElement } from 'react'
-import { Platform, StyleSheet, type ViewProps } from 'react-native'
-
-const styles = StyleSheet.create({
-    hidden: {
-        display: 'none',
-    },
-})
+import type { ComponentProps, ElementType, Key, ReactElement } from 'react'
 
 let patched = false
-const persistentPatch = Platform.OS === 'ios'
+
+const origJsx = ReactJSXRuntime.jsx
+const origJsxs = ReactJSXRuntime.jsxs
 
 const beforeCallbacks: Record<string, Set<JSXBeforeComponentCreateCallback>> = {}
 const afterCallbacks: Record<string, Set<JSXAfterComponentCreateCallback>> = {}
 
-const patchCallback = (
-    args: Parameters<(typeof ReactJSXRuntime)['jsx' | 'jsxs']>,
-    orig: (typeof ReactJSXRuntime)['jsx' | 'jsxs'],
-) => {
-    const [Comp, props] = args
+const patchCallback =
+    <T extends (typeof ReactJSXRuntime)['jsx' | 'jsxs']>(orig: T) =>
+    (...args: Parameters<T>) => {
+        const [Comp, props] = args
+        // @ts-expect-error
+        const name = Comp?.displayName ?? Comp?.type?.name ?? Comp?.type ?? Comp?.name ?? Comp
+        if (typeof name !== 'string') return orig.apply(ReactJSXRuntime, args)
 
-    // Hopefully fixes iOS "invalid element type" issue after patching ErrorBoundary
-    // Comp can be undefined for some reason
-    // @ts-expect-error
-    if ((Comp?.type ?? Comp) === undefined) {
-        args[0] = 'RCTView' as keyof JSX.IntrinsicElements
-        args[1] = { style: styles.hidden } satisfies ViewProps
-        return orig.apply(ReactJSXRuntime, args)
-    }
+        let pArgs = args
+        if (beforeCallbacks[name])
+            for (const cb of beforeCallbacks[name]!) {
+                const maybeArgs = cb(pArgs)
+                if (maybeArgs) pArgs = maybeArgs as Parameters<T>
+            }
 
-    const name =
-        typeof Comp === 'string'
-            ? Comp
-            : (Comp?.name ??
-              // @ts-expect-error
-              (typeof Comp?.type === 'string' ? Comp.type : Comp?.type?.name) ??
-              Comp?.displayName)
+        let pTree = orig.apply(ReactJSXRuntime, pArgs)
 
-    if (!name) return orig.apply(ReactJSXRuntime, args)
-
-    let newArgs = args
-    if (beforeCallbacks[name])
-        for (const cb of beforeCallbacks[name]!) {
-            const maybeArgs = cb(newArgs as [ElementType, ComponentProps<ElementType>, string | undefined])
-            if (maybeArgs) newArgs = maybeArgs
+        if (afterCallbacks[name]) {
+            for (const cb of afterCallbacks[name]!) {
+                const maybeTree = cb(Comp, props, pTree)
+                if (!(maybeTree === undefined)) pTree = maybeTree!
+            }
         }
 
-    let tree = orig.apply(ReactJSXRuntime, newArgs)
-
-    if (afterCallbacks[name]) {
-        for (const cb of afterCallbacks[name]!) {
-            const maybeTree = cb(Comp, props, tree)
-            if (typeof maybeTree !== 'undefined') tree = maybeTree!
-        }
+        return pTree
     }
-
-    return tree
-}
-
-// Without setTimeout, causes app freeze
-setTimeout(() => persistentPatch && patchJsxRuntimeIfNotPatched())
 
 const patchJsxRuntimeIfNotPatched = () => {
     if (patched) return
     patched = true
 
-    patcher.instead(ReactJSXRuntime, 'jsx', patchCallback, 'patchJsxRuntime')
-    patcher.instead(ReactJSXRuntime, 'jsxs', patchCallback, 'patchJsxRuntime')
+    ReactJSXRuntime.jsx = patchCallback(origJsx)
+    ReactJSXRuntime.jsxs = patchCallback(origJsxs)
 }
 
 const unpatchIfNoListenersLeft = () => {
-    if (persistentPatch) return
     if (Object.values(beforeCallbacks).some(set => set.size) || Object.values(afterCallbacks).some(set => set.size))
         return
 
-    patcher.unpatchAll()
+    ReactJSXRuntime.jsx = origJsx
+    ReactJSXRuntime.jsxs = origJsxs
+
     patched = false
 }
 
@@ -88,20 +63,22 @@ export const ReactJSXLibrary = {
 
 export type ReactJSXLibrary = typeof ReactJSXLibrary
 
-export type JSXBeforeComponentCreateCallback<E extends ElementType = ElementType, P = ComponentProps<E>> = (
-    args: [element: E, props: P, key?: string | undefined],
+export type JSXBeforeComponentCreateCallback<
+    E extends ElementType = ElementType,
+    P = ComponentProps<E>,
+> = (
+    args: [element: E, props: P, key?: Key | undefined],
 ) => Parameters<(typeof ReactJSXRuntime)['jsx']> | undefined | void
 
-export type JSXAfterComponentCreateCallback<E extends ElementType = ElementType, P = ComponentProps<E>> = (
-    Comp: E,
-    props: P,
-    tree: ReactElement,
-) => ReactElement | null | undefined | void
+export type JSXAfterComponentCreateCallback<
+    E extends ElementType = ElementType,
+    P = ComponentProps<E>,
+> = (Comp: E, props: P, tree: ReactElement) => ReactElement | null | undefined | void
 
-export function afterJSXElementCreate<E extends ElementType = ElementType, P = ComponentProps<E>>(
-    elementName: string,
-    callback: JSXAfterComponentCreateCallback<E, P>,
-) {
+export function afterJSXElementCreate<
+    E extends ElementType = ElementType<any, keyof JSX.IntrinsicElements>,
+    P = ComponentProps<E>,
+>(elementName: string, callback: JSXAfterComponentCreateCallback<E, P>) {
     patchJsxRuntimeIfNotPatched()
 
     const set = (afterCallbacks[elementName] ??= new Set())
@@ -109,7 +86,7 @@ export function afterJSXElementCreate<E extends ElementType = ElementType, P = C
 
     return () => {
         set.delete(callback as JSXAfterComponentCreateCallback)
-        unpatchIfNoListenersLeft()
+        if (!set.size) unpatchIfNoListenersLeft()
     }
 }
 
@@ -124,7 +101,7 @@ export function beforeJSXElementCreate<E extends ElementType = ElementType, P = 
 
     return () => {
         set.delete(callback as JSXBeforeComponentCreateCallback)
-        unpatchIfNoListenersLeft()
+        if (!set.size) unpatchIfNoListenersLeft()
     }
 }
 
