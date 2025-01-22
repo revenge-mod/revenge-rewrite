@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { type SearchFilter, findInTree } from './trees'
 
 export function useIsFirstRender() {
     let firstRender = false
     // biome-ignore lint/correctness/useExhaustiveDependencies: Not needed
-    React.useEffect(() => void (firstRender = true), [])
+    useEffect(() => void (firstRender = true), [])
     return firstRender
 }
 

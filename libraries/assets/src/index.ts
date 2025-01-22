@@ -9,8 +9,9 @@ import { createPatcherInstance } from '@revenge-mod/patcher'
 import { cache, cacheAsset } from '@revenge-mod/modules/metro/caches'
 import { FirstAssetTypeRegisteredKey, assetCacheIndexSymbol } from '@revenge-mod/modules/constants'
 
+import { Platform, type ImageSourcePropType } from 'react-native'
+
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
-import type { ImageSourcePropType } from 'react-native'
 
 const patcher = createPatcherInstance('revenge.library.assets')
 
@@ -23,15 +24,14 @@ type CustomAsset = PackagerAsset & {
     [CustomAssetBrandKey]: string
 }
 
-let defaultPreferredType: PackagerAsset['type'] = ReactNative.Platform.OS === 'ios' ? 'png' : 'svg'
+let defaultPreferredType: PackagerAsset['type'] = Platform.OS === 'ios' ? 'png' : 'svg'
 
 patcher.after(
     assetsRegistry,
     'registerAsset',
     ([asset], index) => {
         if ((asset as CustomAsset)[CustomAssetBrandKey]) return
-        const moduleId = getImportingModuleId()
-        cacheAsset(asset.name, index, moduleId, asset.type)
+        cacheAsset(asset.name, index, getImportingModuleId()!, asset.type)
     },
     'patchRegisterAsset',
 )

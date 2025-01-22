@@ -12,8 +12,7 @@ import { ClientInfoModule } from '@revenge-mod/modules/native'
 import PageWrapper from './(Wrapper)'
 
 import { ScrollView } from 'react-native'
-
-import type { ComponentProps } from 'react'
+import { version, type ComponentProps } from 'react'
 
 export default function AboutSettingsPage() {
     const runtimeProps = (HermesInternal as HermesInternalObject).getRuntimeProperties()
@@ -43,7 +42,7 @@ export default function AboutSettingsPage() {
                         {
                             label: 'React',
                             icon: 'Revenge.ReactIcon',
-                            trailing: React.version,
+                            trailing: version,
                         },
                         {
                             label: 'React Native',

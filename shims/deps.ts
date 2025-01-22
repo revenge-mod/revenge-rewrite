@@ -4,13 +4,15 @@ const findByProps = (...props: string[]) => {
     return find(byProps(...props))
 }
 
+const findByPropsEager = (...props: string[]) => {
+    const { findEager } = require('@revenge-mod/modules/finders')
+    const { byProps } = require('@revenge-mod/modules/filters')
+    return findEager(byProps(...props))
+}
+
 export default {
-    react: () => (globalThis.React = findByProps('createElement')!),
-    'react-native': () => (globalThis.ReactNative = findByProps('AppRegistry')!),
-    util: () => findByProps('inspect', 'isNullOrUndefined'),
-    moment: () => findByProps('isMoment'),
-    'chroma-js': () => findByProps('brewer'),
+    react: () => findByPropsEager('createElement')!,
+    'react-native': () => findByPropsEager('AppRegistry')!,
     lodash: () => findByProps('forEachRight'),
-    '@shopify/react-native-skia': () => findByProps('useFont'),
     '@shopify/flash-list': () => findByProps('FlashList'),
 }

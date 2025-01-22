@@ -20,9 +20,6 @@ declare global {
 
     var revenge: RevengeLibrary
 
-    var React: typeof import('react')
-    var ReactNative: typeof import('react-native')
-
     var __REACT_DEVTOOLS_GLOBAL_HOOK__: unknown | undefined
     var __reactDevTools:
         | {

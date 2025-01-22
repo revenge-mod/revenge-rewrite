@@ -3,7 +3,7 @@ import { IconButton } from '@revenge-mod/modules/common/components'
 import { SearchInput } from '@revenge-mod/ui/components'
 import { Show } from '@revenge-mod/utils/components'
 
-import { useContext } from 'react'
+import { createElement, useContext } from 'react'
 import { View } from 'react-native'
 
 import { PluginSettingsPageContext, styles } from './shared'
@@ -22,7 +22,7 @@ export default function PluginListSearchAndFilters() {
                 />
             </View>
             <Show when={ContextMenuComponent}>
-                {React.createElement(ContextMenuComponent!, {
+                {createElement(ContextMenuComponent!, {
                     // biome-ignore lint/correctness/noChildrenProp: This is a valid use case
                     children: props => (
                         <IconButton

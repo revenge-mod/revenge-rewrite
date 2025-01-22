@@ -13,10 +13,10 @@ import { logger } from '../shared'
 
 import type { Metro } from '../types'
 
-let importingModuleId = -1
+let importingModuleId: Metro.ModuleID | null = null
 
 /**
- * Gets the module ID that is currently being imported, `-1` if none
+ * Gets the module ID that is currently being imported, `null` if none
  */
 export function getImportingModuleId() {
     return importingModuleId
@@ -37,14 +37,14 @@ function handleModuleInitializeError(id: Metro.ModuleID, error: unknown) {
  * Initializes the Metro modules patches and caches
  */
 export async function initializeModules() {
-    const cacheRestoredPromise = restoreCache()
+    const isCacheRestoredPromise = restoreCache()
 
     // Patches modules on load
     await import('./patches')
 
-    function executeModuleSubscriptions(this: Metro.ModuleDefinition) {
-        const id = this.publicModule.id
-        const exports = this.publicModule.exports
+    const executeModuleSubscriptions = (module: Metro.ModuleDefinition) => {
+        const id = module.publicModule.id
+        const exports = module.publicModule.exports
 
         for (const sub of allSubscriptionsSet) sub(id, exports)
 
@@ -53,32 +53,29 @@ export async function initializeModules() {
     }
 
     for (const [id, module] of modules.entries()) {
-        if (!moduleShouldNotBeHooked(id)) {
-            // Allow patching already initialized modules
-            // These are critical modules like React, React Native, some polyfills, and native modules
-            if (module.isInitialized) {
-                if (isModuleExportsBad(module.publicModule.exports)) blacklistModule(id)
-                else {
-                    logger.warn(`Hooking already initialized module: ${id}`)
-                    executeModuleSubscriptions.call(module)
-                }
-                continue
-            }
+        // Allow patching already initialized modules
+        // These are critical modules like React, React Native, some polyfills, and native modules
+        if (module.isInitialized) {
+            // ! There is a possibility that the module should be blacklisted, but from my testing, it's not necessary to check
+            executeModuleSubscriptions(module)
+            continue
+        }
 
-            const origFac = module.factory!
-            ;(module as Metro.ModuleDefinition<false>).factory = (...args: Parameters<Metro.FactoryFn>) => {
-                const originalImportingId = importingModuleId
-                importingModuleId = id
+        if (moduleShouldNotBeHooked(id)) continue
 
-                try {
-                    origFac(...args)
-                    if (isModuleExportsBad(module.publicModule.exports)) return blacklistModule(id)
-                    executeModuleSubscriptions.call(module)
-                } catch (error) {
-                    handleModuleInitializeError(id, error)
-                } finally {
-                    importingModuleId = originalImportingId
-                }
+        const origFac = module.factory!
+        ;(module as Metro.ModuleDefinition<false>).factory = (...args: Parameters<Metro.FactoryFn>) => {
+            const originalImportingId = importingModuleId
+            importingModuleId = id
+
+            try {
+                origFac(...args)
+                if (isModuleExportsBad(module.publicModule.exports)) return blacklistModule(id)
+                executeModuleSubscriptions(module)
+            } catch (error) {
+                handleModuleInitializeError(id, error)
+            } finally {
+                importingModuleId = originalImportingId
             }
         }
     }
@@ -87,10 +84,8 @@ export async function initializeModules() {
     // ! Do NOT use requireModule for this
     if (!modules.get(0)!.isInitialized) __r(0)
 
-    const cacheRestored = await cacheRestoredPromise
-
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
-    if (!cacheRestored) requireAssetModules()
+    if (!(await isCacheRestoredPromise)) requireAssetModules()
 
     saveCache()
 }

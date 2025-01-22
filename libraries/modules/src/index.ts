@@ -10,7 +10,6 @@ export async function createModulesLibrary() {
     const native = await import('./native')
 
     return {
-        constants,
         common,
         filters,
         native,

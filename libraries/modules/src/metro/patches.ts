@@ -1,10 +1,8 @@
 import { noop, noopPromise } from '@revenge-mod/utils/functions'
 
-import {
-    blacklistModule,
-    getImportingModuleId,
-    afterModuleInitialized,
-} from '.'
+import { Platform } from 'react-native'
+
+import { blacklistModule, getImportingModuleId, afterModuleInitialized } from '.'
 
 import { cache } from './caches'
 import { logger } from '../shared'
@@ -16,7 +14,7 @@ const uFFIT = afterModuleInitialized((_, m) => {
 
         m.fileFinishedImporting = (filePath: string) => {
             const id = getImportingModuleId()
-            if (!filePath || id === -1) return
+            if (!filePath || id === null) return
             cache.moduleFilePaths.set(filePath, id)
             origFFI(filePath)
         }
@@ -25,17 +23,19 @@ const uFFIT = afterModuleInitialized((_, m) => {
     }
 })
 
-// Stops the freezing on initialized module from starting up:
-// The module before cannot get initialized without causing a freeze
-// [NativeStartupFlagsModule, (Problematic), (OtherModule)]
-// We are gonna looking for NativeStartupFlagsModule to blacklist the problematic module
-const uBPM = afterModuleInitialized((id, m) => {
-    if (m.default?.reactProfilingEnabled && !modules.get(id + 1)!.isInitialized) {
-        blacklistModule(id + 1)
-        logger.log(`Blacklisted module ${id + 1} as it causes freeze when initialized`)
-        uBPM()
-    }
-})
+if (Platform.OS === 'android') {
+    // Stops the freezing on initialized module from starting up:
+    // The module before cannot get initialized without causing a freeze
+    // [NativeStartupFlagsModule, (Problematic), (OtherModule)]
+    // We are gonna looking for NativeStartupFlagsModule to blacklist the problematic module
+    const uBPM = afterModuleInitialized((id, m) => {
+        if (m.default?.reactProfilingEnabled && !modules.get(id + 1)!.isInitialized) {
+            blacklistModule(id + 1)
+            logger.log(`Blacklisted module ${id + 1} as it causes freeze when initialized`)
+            uBPM()
+        }
+    })
+}
 
 // Stops the module from registering the same native component twice
 const uNCRF = afterModuleInitialized((_, m) => {
@@ -53,8 +53,10 @@ const uNCRF = afterModuleInitialized((_, m) => {
 
 // Block Sentry
 const uBS = afterModuleInitialized((_, m) => {
-    if (m.initSentry) m.initSentry = noop
-    uBS()
+    if (m.initSentry) {
+        m.initSentry = noop
+        uBS()
+    }
 })
 
 // Block Discord analytics

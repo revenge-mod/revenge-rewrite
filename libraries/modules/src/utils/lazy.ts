@@ -17,7 +17,7 @@ export function subscribeModuleLazy(
     callback: (exports: Metro.ModuleExports) => void,
     options?: FinderOptions,
 ) {
-    const info = getLazyContext(proxy)
+    const info = lazyContexts.get(proxy)
     if (!info) throw new Error('No lazy module attached to this proxy')
 
     const moduleId = info.moduleId()
@@ -31,29 +31,21 @@ export function subscribeModuleLazy(
     )
 }
 
-function getLazyContext<A extends unknown[]>(proxy: Metro.ModuleExports): LazyModuleContext<A> | undefined {
-    return lazyContexts.get(proxy) as LazyModuleContext<A> | undefined
-}
-
 export function createLazyModuleById<F extends FilterFunction<any[]>>(moduleId: number, options?: LazyFinderOptions) {
     let cachedValue: Metro.ModuleExports
 
     const context: LazyModuleContext<Parameters<F>> = {
         moduleId: () => moduleId,
         exports(cb) {
-            this.factory()
-
-            if (cachedValue) {
+            if (this.factory()) {
                 cb(cachedValue)
                 return noop
             }
 
             return this.subscribe(cb)
         },
-        subscribe(cb) {
-            return subscribeModuleLazy(proxy, cb, options)
-        },
-        factory() {
+        subscribe: cb => subscribeModuleLazy(proxy, cb, options),
+        factory: () => {
             if (cachedValue === undefined) {
                 const exports = requireModule(moduleId)
                 if (exports) cachedValue = !options?.wildcard && exports.__esModule ? exports.default : exports
@@ -63,12 +55,12 @@ export function createLazyModuleById<F extends FilterFunction<any[]>>(moduleId: 
         },
     }
 
-    const proxy = lazyValue(() => context.factory() as NonNullable<InferFilterFunctionReturnType<F>>, {
+    const proxy = lazyValue(context.factory as () => NonNullable<InferFilterFunctionReturnType<F>>, {
         ...options,
         exemptedEntries: {
-            ...options?.lazyOptions?.exemptedEntries,
             [lazyContextSymbol]: context,
             [patcherLazyModuleSymbol]: (cb: (exports: Metro.ModuleExports) => void) => context.exports(cb),
+            ...options?.lazyOptions?.exemptedEntries,
         },
     })
 
@@ -105,7 +97,7 @@ export function createLazyModule<F extends FilterFunction<any[]>>(filter: F, opt
                 return this.subscribe(cb)
             }
 
-            if (cachedValue || this.factory()) {
+            if (this.factory()) {
                 cb(cachedValue)
                 return noop
             }
@@ -114,21 +106,19 @@ export function createLazyModule<F extends FilterFunction<any[]>>(filter: F, opt
             moduleId = undefined
             return noop
         },
-        subscribe(cb) {
-            return subscribeModuleLazy(proxy, cb, options)
-        },
+        subscribe: cb => subscribeModuleLazy(proxy, cb, options),
         factory() {
             cachedValue ??= findEager(filter, options)
             return cachedValue
         },
     }
 
-    const proxy = lazyValue(() => context.factory() as NonNullable<InferFilterFunctionReturnType<F>>, {
+    const proxy = lazyValue(context.factory as () => NonNullable<InferFilterFunctionReturnType<F>>, {
         ...options?.lazyOptions,
         exemptedEntries: {
-            ...options?.lazyOptions?.exemptedEntries,
             [lazyContextSymbol]: context,
             [patcherLazyModuleSymbol]: (cb: (exports: Metro.ModuleExports) => void) => context.exports(cb),
+            ...options?.lazyOptions?.exemptedEntries,
         },
     })
 
