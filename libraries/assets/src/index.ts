@@ -1,13 +1,17 @@
 import { assetsRegistry } from '@revenge-mod/modules/common'
-import { findByName } from '@revenge-mod/modules/finders'
+
+import { byName } from '@revenge-mod/modules/filters'
+import { findAsync } from '@revenge-mod/modules/finders'
 import { getImportingModuleId, requireModule } from '@revenge-mod/modules/metro'
+
 import { createPatcherInstance } from '@revenge-mod/patcher'
 
 import { cache, cacheAsset } from '@revenge-mod/modules/metro/caches'
 import { FirstAssetTypeRegisteredKey, assetCacheIndexSymbol } from '@revenge-mod/modules/constants'
 
+import { Platform, type ImageSourcePropType } from 'react-native'
+
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
-import type { ImageSourcePropType } from 'react-native'
 
 const patcher = createPatcherInstance('revenge.library.assets')
 
@@ -20,15 +24,14 @@ type CustomAsset = PackagerAsset & {
     [CustomAssetBrandKey]: string
 }
 
-let defaultPreferredType: PackagerAsset['type'] = ReactNative.Platform.OS === 'ios' ? 'png' : 'svg'
+let defaultPreferredType: PackagerAsset['type'] = Platform.OS === 'ios' ? 'png' : 'svg'
 
 patcher.after(
     assetsRegistry,
     'registerAsset',
     ([asset], index) => {
-        if (CustomAssetBrandKey in asset) return
-        const moduleId = getImportingModuleId()
-        cacheAsset(asset.name, index, moduleId, asset.type)
+        if ((asset as CustomAsset)[CustomAssetBrandKey]) return
+        cacheAsset(asset.name, index, getImportingModuleId()!, asset.type)
     },
     'patchRegisterAsset',
 )
@@ -42,14 +45,15 @@ type AssetSourceResolver = {
     }
 }
 
-const AssetSourceResolver = findByName.async<AssetSourceResolver, true>('AssetSourceResolver').then(it => it!.prototype)
+const AssetSourceResolver = findAsync(byName<AssetSourceResolver>('AssetSourceResolver')).then(it => it!.prototype)
 
 function maybeResolveCustomAsset(
     this: AssetSourceResolver['prototype'],
     args: unknown[],
     orig: (...args: unknown[]) => ImageSourcePropType,
 ) {
-    if (CustomAssetBrandKey in this.asset) return { uri: this.asset[CustomAssetBrandKey] }
+    if ((this.asset as CustomAsset)[CustomAssetBrandKey])
+        return { uri: (this.asset as CustomAsset)[CustomAssetBrandKey] }
     return orig.apply(this, args)
 }
 
@@ -81,7 +85,7 @@ export type AssetsLibrary = typeof AssetsLibrary
 export function registerCustomAsset(asset: Pick<PackagerAsset, 'width' | 'height' | 'type' | 'name'>, source: string) {
     // TODO: Support multiple custom assets with the same name
 
-    if (asset.name in customAssets)
+    if (customAssets[asset.name])
         throw new Error(
             'Custom asset with the same name already exists, and registering multiple custom assets with the same name is not supported yet',
         )
@@ -102,7 +106,7 @@ export function registerCustomAsset(asset: Pick<PackagerAsset, 'width' | 'height
  * @returns Whether the asset is a custom asset
  */
 export function isCustomAsset(asset: PackagerAsset): asset is CustomAsset {
-    return CustomAssetBrandKey in asset
+    return Boolean((asset as CustomAsset)[CustomAssetBrandKey])
 }
 
 /**
@@ -111,7 +115,7 @@ export function isCustomAsset(asset: PackagerAsset): asset is CustomAsset {
  * @returns The asset tied to the name
  */
 export function getAssetByName(name: string, preferredType: PackagerAsset['type'] = defaultPreferredType) {
-    if (name in customAssets) return getAssetByIndex(customAssets[name]!)
+    if (customAssets[name]) return getAssetByIndex(customAssets[name]!)
     return getAssetByIndex(getAssetIndexByName(name, preferredType)!)
 }
 
@@ -131,13 +135,13 @@ export function getAssetByIndex(index: number) {
  * @returns The preferred asset index tied to the name
  */
 export function getAssetIndexByName(name: string, preferredType: PackagerAsset['type'] = defaultPreferredType) {
-    if (name in customAssets) return customAssets[name]
+    if (customAssets[name]) return customAssets[name]
 
     const assetModule = cache.assetModules[name]
     if (!assetModule) return
 
     const mid = assetModule[preferredType] ?? assetModule[getFirstRegisteredAssetTypeByName(name)!]
-    if (typeof mid === 'undefined') return
+    if (typeof mid !== 'number') return
 
     return requireModule(mid)
 }

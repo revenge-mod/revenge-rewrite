@@ -1,15 +1,18 @@
-const lazyFindByProps = (...props: string[]) => {
-    const { findByProps } = require('@revenge-mod/modules/finders')
-    return findByProps(...props)
+const findByProps = (...props: string[]) => {
+    const { find } = require('@revenge-mod/modules/finders')
+    const { byProps } = require('@revenge-mod/modules/filters')
+    return find(byProps(...props))
+}
+
+const findByPropsEager = (...props: string[]) => {
+    const { findEager } = require('@revenge-mod/modules/finders')
+    const { byProps } = require('@revenge-mod/modules/filters')
+    return findEager(byProps(...props))
 }
 
 export default {
-    react: () => (globalThis.React = lazyFindByProps('createElement')!),
-    'react-native': () => (globalThis.ReactNative = lazyFindByProps('AppRegistry')!),
-    util: () => lazyFindByProps('inspect', 'isNullOrUndefined'),
-    moment: () => lazyFindByProps('isMoment'),
-    'chroma-js': () => lazyFindByProps('brewer'),
-    lodash: () => lazyFindByProps('forEachRight'),
-    '@shopify/react-native-skia': () => lazyFindByProps('useFont'),
-    '@shopify/flash-list': () => lazyFindByProps('FlashList'),
+    react: () => findByPropsEager('createElement')!,
+    'react-native': () => findByPropsEager('AppRegistry')!,
+    lodash: () => findByProps('forEachRight'),
+    '@shopify/flash-list': () => findByProps('FlashList'),
 }

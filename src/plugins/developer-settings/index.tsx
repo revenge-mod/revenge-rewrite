@@ -4,6 +4,8 @@ import { toasts } from '@revenge-mod/modules/common'
 import { registerPlugin } from '@revenge-mod/plugins/internals'
 import { sleep } from '@revenge-mod/utils/functions'
 
+import { createContext, type FunctionComponent } from 'react'
+
 import AssetBrowserSettingsPage from './pages/AssetBrowser'
 import DeveloperSettingsPage from './pages/Developer'
 
@@ -12,7 +14,6 @@ import { DevToolsEvents, connectToDevTools, disconnectFromDevTools } from './dev
 
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import type { PluginContextFor } from '@revenge-mod/plugins'
-import type { FunctionComponent } from 'react'
 
 const plugin = registerPlugin<{
     reactDevTools: {
@@ -165,4 +166,4 @@ function setupDebugger({ patcher, cleanup }: PluginContextFor<typeof plugin, 'Af
     )
 }
 
-export const PluginContext = React.createContext<PluginContextFor<typeof plugin, 'AfterAppRender'>>(null!)
+export const PluginContext = createContext<PluginContextFor<typeof plugin, 'AfterAppRender'>>(null!)

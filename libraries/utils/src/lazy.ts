@@ -1,12 +1,12 @@
-export type ExemptedEntries = Record<symbol | string, unknown>
+export type ExemptedEntries = Record<symbol | string, any>
 
 export interface LazyOptions<E extends ExemptedEntries = ExemptedEntries> {
     hint?: 'function' | 'object'
     exemptedEntries?: E
 }
 
-const unconfigurable = new Set(['arguments', 'caller', 'prototype'])
-const isUnconfigurable = (key: PropertyKey) => typeof key === 'string' && unconfigurable.has(key)
+const unconfigurable = new Set<string | symbol>(['arguments', 'caller', 'prototype'])
+const isUnconfigurable = (key: string | symbol) => unconfigurable.has(key)
 
 const factories = new WeakMap<any, () => any>()
 const proxyContextHolder = new WeakMap<
@@ -88,7 +88,7 @@ const lazyHandler: ProxyHandler<any> = {
  * @param opts.hint Hint for the lazy proxy, if it's an object or a function (default `'function'`)
  * @param opts.exemptedEntries Exempted entries that will be returned directly from the specified values
  * @returns A proxy that will call the factory function only when needed
- * @example const ChannelStore = lazyValue(() => findByProps.eager("getChannelId"));
+ * @example const ChannelStore = lazyValue(() => findEager(byProps("getChannelId")));
  */
 export function lazyValue<T, I extends ExemptedEntries>(factory: () => T, opts: LazyOptions<I> = {}): T {
     let cache: T
@@ -118,7 +118,7 @@ export function lazyValue<T, I extends ExemptedEntries>(factory: () => T, opts: 
  * @param opts Options for the lazy destructure
  * @example
  *
- * const { uuid4 } = lazyDestructure(() => findByProps.eager("uuid4"))
+ * const { uuid4 } = lazyDestructure(() => findEager(byProps("uuid4")))
  * uuid4; // <- is a lazy value!
  */
 export function lazyDestructure<T extends Record<PropertyKey, unknown>, I extends ExemptedEntries>(

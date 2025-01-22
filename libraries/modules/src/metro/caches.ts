@@ -3,14 +3,13 @@ import {
     MetroCacheRelativeFilePath,
     MetroCacheVersion,
     MetroModuleFlags,
-    MetroModuleLookupFlags,
     assetCacheIndexSymbol,
 } from '../constants'
 import { byProps } from '../filters'
-import { findId } from '../finders'
+import { findModule } from '../finders'
 import { ClientInfoModule, FileModule } from '../native'
 import { logger } from '../shared'
-import { blacklistModule, isModuleExportsBad, requireModule } from './index'
+import { requireModule } from './index'
 
 import type { ReactNativeInternals } from '@revenge-mod/revenge'
 import type { Metro } from '../types'
@@ -24,7 +23,6 @@ export const cache = {
     /**
      * Lookup registry for each filters, the key being the filter key, and the value being the registry
      * @see {@link MetroLookupCacheRegistry}
-     * @see {@link MetroModuleLookupFlags}
      */
     lookupFlags: {} as MetroCacheObject['l'],
     /**
@@ -44,21 +42,10 @@ export const cache = {
         [assetCacheIndexSymbol]: {},
     } as MetroCacheObject['a'],
     /**
-     * Registry for patchable modules, the key being the patch, and the value being the module ID of the module to patch
-     *
-     * - `f`: File path tracking
-     * - `r`: Fix native component registry duplicate register
-     * - `b`: Blacklist freezing module
-     * - `d`: Block Discord analytics
-     * - `s`: Block Sentry initialization
-     * - `m`: Fix Moment locale
-     */
-    patchableModules: {} as MetroCacheObject['p'],
-    /**
      * Registry for module file paths
      * #### This is in-memory.
      */
-    moduleFilePaths: new Map() as Map<Metro.ModuleID, string>,
+    moduleFilePaths: new Map() as Map<string, Metro.ModuleID>,
     /**
      * The total modules count
      */
@@ -73,11 +60,11 @@ export async function restoreCache() {
     // invalidateCache()
 
     const path = `${FileModule.getConstants().CacheDirPath}/${MetroCacheRelativeFilePath}`
+    if (!(await FileModule.fileExists(path))) return (savePending = false)
 
-    if (!(await FileModule.fileExists(path))) return false
     const savedCache = await FileModule.readFile(path, 'utf8')
-
     const storedCache = JSON.parse(savedCache) as MetroCacheObject
+
     logger.log(
         `Cache found, validating... (compare: ${storedCache.v} === ${MetroCacheVersion}, ${storedCache.b} === ${ClientInfoModule.Build}, ${storedCache.t} === ${modules.size})`,
     )
@@ -87,11 +74,10 @@ export async function restoreCache() {
         storedCache.b !== ClientInfoModule.Build ||
         storedCache.t !== modules.size
     )
-        return false
+        return (savePending = false)
 
     logger.log(`Restoring cache of ${modules.size} modules`)
 
-    cache.totalModules = storedCache.t
     cache.exportsFlags = storedCache.e
     cache.lookupFlags = storedCache.l
     cache.assetModules = storedCache.a
@@ -99,43 +85,51 @@ export async function restoreCache() {
     cache.assets[assetCacheIndexSymbol] = {}
     cache.assetModules[assetCacheIndexSymbol] = {}
 
-    return true
+    return !(savePending = false)
 }
 
 /**
  * Filters all "asset" modules and requires them, making them cacheable
  */
 export function requireAssetModules() {
-    const [assetsRegistryModuleId] = findId(byProps('registerAsset'))
+    let [assetsRegistryModuleId] = findModule(byProps('registerAsset'))
+
     if (!assetsRegistryModuleId)
         return void logger.warn(
             'Unable to create asset cache, cannot find assets-registry module ID, some assets may not load',
         )
 
-    let assetsRegistryExporterModuleId = 0
-    for (const [id, module] of modules) {
-        if (!module.dependencyMap) continue
-        if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryModuleId) {
-            assetsRegistryExporterModuleId = id
-            break
+    let assetsRegistryNotExportedTwice = true
+
+    // In older Discord versions (<264), the assets registry is exported twice, and we need to find the latest one
+    for (let i = assetsRegistryModuleId + 1; i < modules.size; i++) {
+        const module = modules.get(i)!
+        if (module.dependencyMap?.length !== 1) continue
+        if (module.dependencyMap![0] === assetsRegistryModuleId) {
+            const exports = requireModule(i)
+            if (exports.registerAsset) {
+                logger.warn('Found another assets-registry module ID, using the latest one')
+                assetsRegistryModuleId = i
+                assetsRegistryNotExportedTwice = false
+                break
+            }
         }
     }
 
-    if (!assetsRegistryExporterModuleId)
-        return void logger.warn(
-            'Unable to create asset cache, cannot find assets-registry exporter module ID, some assets may not load',
-        )
+    if (assetsRegistryNotExportedTwice)
+        return logger.log('Assets-registry module ID not exported twice, all assets are most likely already registered')
 
     logger.log('Importing all assets modules...')
 
-    for (const [id, module] of modules) {
-        if (!module.dependencyMap) continue
-        if (module.dependencyMap.length === 1 && module.dependencyMap[0] === assetsRegistryExporterModuleId)
-            requireModule(id)
+    // We continue from the assets registry module ID, as all assets are undoubtedly registered after this module
+    for (let i = assetsRegistryModuleId + 1; i < modules.size; i++) {
+        const module = modules.get(i)!
+        if (module.dependencyMap?.length !== 1) continue
+        if (module.dependencyMap[0] === assetsRegistryModuleId) requireModule(i)
     }
 }
 
-let savePending = false
+let savePending = true
 
 /** @internal */
 export async function saveCache() {
@@ -153,7 +147,6 @@ export async function saveCache() {
             e: cache.exportsFlags,
             l: cache.lookupFlags,
             a: cache.assetModules,
-            p: cache.patchableModules,
         } satisfies MetroCacheObject),
         'utf8',
     )
@@ -175,24 +168,16 @@ export function invalidateCache() {
  * @returns A cacher object
  */
 export function cacherFor(key: string) {
-    const registry = (cache.lookupFlags[key] ??= {})
+    const registry = (cache.lookupFlags[key] ??= { f: 0, m: [] })
     let invalidated = false
 
     return {
-        cache: (id: Metro.ModuleID, exports: Metro.ModuleExports) => {
-            // biome-ignore lint/style/noCommaOperator: Sets invalidated to true if this is a new module
-            registry[id] ??= ((invalidated = true), 0)
-
-            if (isModuleExportsBad(exports)) {
-                blacklistModule(id)
-                invalidated = true
-                if (id in registry) delete registry[id]
-            }
+        cache: (id: Metro.ModuleID) => {
+            registry.m.push(id)
+            invalidated = true
         },
-        finish: (notFound: boolean, fullLookup = false) => {
-            registry.flags ??= 0
-            if (notFound) registry.flags |= MetroModuleLookupFlags.NotFound
-            if (fullLookup) registry.flags |= MetroModuleLookupFlags.FullLookup
+        finish: (flags: number) => {
+            registry.f = flags
             if (invalidated) saveCache()
         },
     }
@@ -223,13 +208,11 @@ export function cacheAsset(name: Asset['name'], index: number, moduleId: Metro.M
     saveCache()
 }
 
-export function* indexedModuleIdsForLookup(key: string) {
-    const modulesMap = cache.lookupFlags[key]
-    if (!modulesMap) return undefined
+export function* cachedModuleIdsForFilter(key: string) {
+    const registry = cache.lookupFlags[key]
+    if (!registry) return
 
-    for (const k in modulesMap) {
-        if (k !== 'flags') yield Number(k)
-    }
+    for (const id of registry.m) yield id
 }
 
 /**
@@ -246,17 +229,19 @@ export interface MetroCacheObject {
         Asset['name'],
         Record<Asset['type'], Metro.ModuleID> & { [FirstAssetTypeRegisteredKey]: Asset['type'] }
     > & { [assetCacheIndexSymbol]: Record<number, Metro.ModuleID> }
-    p: Record<'f' | 'r' | 'b' | 's' | 'd' | 'm', number | undefined>
 }
 
+// TODO: Improve this cache by saving individual module flags for the current lookup, save information like if the default/whole module matches the filter, etc.
 /**
- * Registry for Metro lookup cache, a glorified serializable Set if you will
- * @see {@link MetroCache}
- * @see {@link MetroModuleLookupFlags}
+ * Registry for Metro module lookup cache
  */
 export type MetroLookupCacheRegistry = Record<Metro.ModuleID, number> & {
     /**
+     * Module IDs that match the filter
+     */
+    m: Metro.ModuleID[]
+    /**
      * Lookup flags for this registry
      */
-    flags?: number
+    f: number
 }

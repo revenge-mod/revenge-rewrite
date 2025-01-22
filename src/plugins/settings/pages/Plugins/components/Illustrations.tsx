@@ -1,7 +1,7 @@
 import { getAssetIndexByName } from '@revenge-mod/assets'
 import { Button, Stack, Text } from '@revenge-mod/modules/common/components'
 
-import { useContext } from 'react'
+import { createElement, useContext } from 'react'
 import { Image, View } from 'react-native'
 
 import BrowsePluginsButton from './BrowsePluginsButton'
@@ -16,7 +16,7 @@ export function NoPlugins() {
             <Text variant="heading-lg/semibold">No plugins yet!</Text>
             <View style={[styles.centerChildren, { gap: 8 }]}>
                 <BrowsePluginsButton />
-                {React.createElement(ContextMenuComponent!, {
+                {createElement(ContextMenuComponent!, {
                     // biome-ignore lint/correctness/noChildrenProp: This is a valid use case
                     children: props => (
                         <Button

@@ -4,8 +4,5 @@
   "scripts": {},
   "exports": {
     "./jsx": "./src/jsx.ts"
-  },
-  "dependencies": {
-    "@revenge-mod/patcher": "workspace:*"
   }
 }

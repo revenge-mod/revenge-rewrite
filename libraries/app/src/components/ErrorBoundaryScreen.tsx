@@ -31,8 +31,10 @@ const styles = StyleSheet.create({
     },
 })
 
+type PossibleRenderError = Error & { componentStack?: string }
+
 export default function ErrorBoundaryScreen(props: {
-    error: (Error & { componentStack?: string }) | unknown
+    error: PossibleRenderError | unknown
     rerender: () => void
     reload: () => void
 }) {
@@ -92,16 +94,16 @@ export default function ErrorBoundaryScreen(props: {
                     </>
                 )}
             </LabeledCard>
-            {error instanceof Error && 'componentStack' in error && (
+            {error instanceof Error && (error as PossibleRenderError).componentStack && (
                 <LabeledCard
                     scrollable
                     label="Component Stack"
                     style={styles.resizable}
-                    rawContent={error.componentStack as string}
+                    rawContent={(error as PossibleRenderError).componentStack!}
                 >
                     <Text selectable variant="text-md/medium">
-                        {...(error.componentStack as string)
-                            .slice(1)
+                        {...(error as PossibleRenderError)
+                            .componentStack!.slice(1)
                             .split('\n')
                             // biome-ignore lint/correctness/useJsxKeyInIterable: This never gets rerendered
                             .map(line => ['<', <Text variant="text-md/bold">{line.slice(7)}</Text>, '/>\n'])}

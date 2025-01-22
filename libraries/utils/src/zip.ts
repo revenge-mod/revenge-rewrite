@@ -1,5 +1,5 @@
 import { unzipSync } from 'fflate/browser'
-import { Platform } from 'react-native'
+import { NativeModules, Platform } from 'react-native'
 
 export function parseZip(buf: ArrayBuffer | Uint8Array) {
     return unzipSync(buf instanceof Uint8Array ? buf : new Uint8Array(buf))
@@ -33,7 +33,7 @@ export async function parseZipFromURI(uri: string, options?: ParseZipFromURIOpti
 
     try {
         if (Platform.OS === 'android' && uri.startsWith('content://')) {
-            const fs = ReactNative.NativeModules.RNFSManager
+            const fs = NativeModules.RNFSManager
 
             const b64 = await fs.readFile(uri)
             return unzipSync(Buffer.from(b64, 'base64'))

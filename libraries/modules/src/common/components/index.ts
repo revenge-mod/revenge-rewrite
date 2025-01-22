@@ -1,14 +1,16 @@
 import { lazyDestructure } from '@revenge-mod/utils/lazy'
-import { findByProps, findProp, findSingleProp } from '../../finders'
 
-import type { DiscordModules } from '../../types'
+import { findEager, findProp, findSingleProp } from '@revenge-mod/modules/finders'
+import { byProps } from '@revenge-mod/modules/filters'
 
 export * as Icons from './icons'
 
+import type { DiscordModules } from '../../types'
+
 // React Native's included SafeAreaView only adds padding on iOS.
 export const { SafeAreaProvider, SafeAreaView } = lazyDestructure(
-    () => findByProps.eager('useSafeAreaInsets')!,
-) as typeof import('react-native-safe-area-context')
+    () => findEager(byProps<typeof import('react-native-safe-area-context')>('useSafeAreaInsets'))!,
+)
 
 /// DISCORD
 
@@ -67,43 +69,45 @@ export const {
     Text,
 } = lazyDestructure(
     () =>
-        findByProps.eager<{
-            Text: DiscordModules.Components.Text
+        findEager(
+            byProps<{
+                Text: DiscordModules.Components.Text
 
-            TextInput: DiscordModules.Components.TextInput
-            TextField: DiscordModules.Components.TextField
-            TextArea: DiscordModules.Components.TextArea
-            GhostInput: DiscordModules.Components.GhostInput
+                TextInput: DiscordModules.Components.TextInput
+                TextField: DiscordModules.Components.TextField
+                TextArea: DiscordModules.Components.TextArea
+                GhostInput: DiscordModules.Components.GhostInput
 
-            ActionSheet: DiscordModules.Components.ActionSheet
-            ActionSheetCloseButton: DiscordModules.Components.ActionSheetCloseButton
-            ActionSheetRow: DiscordModules.Components.ActionSheetRow
+                ActionSheet: DiscordModules.Components.ActionSheet
+                ActionSheetCloseButton: DiscordModules.Components.ActionSheetCloseButton
+                ActionSheetRow: DiscordModules.Components.ActionSheetRow
 
-            Button: DiscordModules.Components.Button
-            IconButton: DiscordModules.Components.IconButton
-            ImageButton: DiscordModules.Components.ImageButton
-            FloatingActionButton: DiscordModules.Components.FloatingActionButton
-            RowButton: DiscordModules.Components.RowButton
+                Button: DiscordModules.Components.Button
+                IconButton: DiscordModules.Components.IconButton
+                ImageButton: DiscordModules.Components.ImageButton
+                FloatingActionButton: DiscordModules.Components.FloatingActionButton
+                RowButton: DiscordModules.Components.RowButton
 
-            ContextMenu: DiscordModules.Components.ContextMenu
+                ContextMenu: DiscordModules.Components.ContextMenu
 
-            TableRow: DiscordModules.Components.TableRow
-            TableSwitchRow: DiscordModules.Components.TableSwitchRow
-            TableRowGroup: DiscordModules.Components.TableRowGroup
-            TableRowGroupTitle: DiscordModules.Components.TableRowGroupTitle
-            TableRowIcon: DiscordModules.Components.TableRowIcon
-            TableRadioGroup: DiscordModules.Components.TableRadioGroup
-            TableCheckboxRow: DiscordModules.Components.TableCheckboxRow
-            TableRadioRow: DiscordModules.Components.TableRadioRow
+                TableRow: DiscordModules.Components.TableRow
+                TableSwitchRow: DiscordModules.Components.TableSwitchRow
+                TableRowGroup: DiscordModules.Components.TableRowGroup
+                TableRowGroupTitle: DiscordModules.Components.TableRowGroupTitle
+                TableRowIcon: DiscordModules.Components.TableRowIcon
+                TableRadioGroup: DiscordModules.Components.TableRadioGroup
+                TableCheckboxRow: DiscordModules.Components.TableCheckboxRow
+                TableRadioRow: DiscordModules.Components.TableRadioRow
 
-            AlertModal: DiscordModules.Components.AlertModal
-            AlertActionButton: DiscordModules.Components.AlertActionButton
+                AlertModal: DiscordModules.Components.AlertModal
+                AlertActionButton: DiscordModules.Components.AlertActionButton
 
-            Card: DiscordModules.Components.Card
-            Stack: DiscordModules.Components.Stack
+                Card: DiscordModules.Components.Card
+                Stack: DiscordModules.Components.Stack
 
-            Slider: DiscordModules.Components.Slider
-        }>('TextField', 'ContextMenu')!,
+                Slider: DiscordModules.Components.Slider
+            }>('TextField', 'ContextMenu'),
+        )!,
 )
 
 export const IntlLink = findProp<DiscordModules.Components.IntlLink>('IntlLink')!
@@ -121,5 +125,5 @@ export const FormRadio = findSingleProp<DiscordModules.Components.FormRadio>('Fo
 export const FormCheckbox = findSingleProp<DiscordModules.Components.FormCheckbox>('FormCheckbox')!
 
 export const { FlashList, MasonryFlashList } = lazyDestructure(
-    () => findByProps.eager<typeof import('@shopify/flash-list')>('FlashList')!,
+    () => findEager(byProps<typeof import('@shopify/flash-list')>('FlashList'))!,
 )

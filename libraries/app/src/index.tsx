@@ -1,16 +1,14 @@
 import { React, ReactNative } from '@revenge-mod/modules/common'
-import { findByName } from '@revenge-mod/modules/finders'
+import { byName } from '@revenge-mod/modules/filters'
+import { findAsync } from '@revenge-mod/modules/finders'
 import { BundleUpdaterManager } from '@revenge-mod/modules/native'
 import { createPatcherInstance } from '@revenge-mod/patcher'
-import { ReactJSXLibrary } from '@revenge-mod/react/jsx'
 import { createLogger } from '@revenge-mod/utils/library'
 
 import type { Component, FC, ReactNode } from 'react'
 
 const patcher = createPatcherInstance('revenge.library.app')
 const logger = createLogger('app')
-
-logger.log('Library loaded')
 
 const initializeCallbacks = new Set<AppGenericCallback>()
 const renderCallbacks = new Set<AppGenericCallback>()
@@ -37,7 +35,6 @@ const unpatchRunApplication = patcher.after(
     () => {
         unpatchRunApplication()
 
-        logger.log('AppRegistry.runApplication called')
         for (const callback of initializeCallbacks) callback()
         logger.log('Initialized callbacks called')
     },
@@ -50,45 +47,31 @@ const unpatchCreateElement = patcher.after(
     () => {
         unpatchCreateElement()
 
-        logger.log('React.createElement called')
         for (const callback of renderCallbacks) callback()
         logger.log('Rendered callbacks called')
     },
     'runRenderCallbacks',
 )
 
-const afterErrorBoundaryPatchable = ReactNative.Platform.OS === 'ios' ? afterAppRender : afterAppInitialize
-
-afterErrorBoundaryPatchable(async function patchErrorBoundary() {
-    // Patching ErrorBoundary causes the weird "Element type is invalid" error due to TextInputWrapper's children being undefined
-    // The reason for it being undefined is unknown, but it's not a problem on Android
-    // Using this patch on Android also breaks how the chat input bar avoids the keyboard
-    if (ReactNative.Platform.OS === 'ios')
-        ReactJSXLibrary.afterElementCreate('PortalKeyboardPlaceholderInner', () => null)
-
+afterAppInitialize(async () => {
     const { default: Screen } = await import('./components/ErrorBoundaryScreen')
+    const ErrorBoundary = (await findAsync(byName<{ prototype: ErrorBoundaryComponentPrototype }>('ErrorBoundary')))!
 
-    setImmediate(() => {
-        patcher.after.await(
-            findByName
-                .async('ErrorBoundary')
-                .then(it => (it as { name: string; prototype: ErrorBoundaryComponentPrototype }).prototype),
-            'render',
-            function () {
-                if (this.state.error)
-                    return (
-                        <Screen
-                            error={this.state.error}
-                            rerender={() => this.setState({ error: null, info: null })}
-                            reload={this.handleReload}
-                        />
-                    )
-            },
-            'patchErrorBoundary',
-        )
+    const origRender = ErrorBoundary.prototype.render
+    ErrorBoundary.prototype.render = function() {
+        if (this.state.error)
+            return (
+                <Screen
+                    error={this.state.error}
+                    rerender={() => this.setState({ error: null, info: null })}
+                    reload={this.handleReload}
+                />
+            )
 
-        logger.log('ErrorBoundary patched')
-    })
+        return origRender.call(this)
+    }
+
+    logger.log('ErrorBoundary patched')
 })
 
 export const AppLibrary = {
@@ -129,7 +112,6 @@ export type ErrorBoundaryComponentPrototype = Component<
         info: { componentStack?: string } | null
     }
 > & {
-    name: 'ErrorBoundary'
     discordErrorsSet: boolean
     handleReload(): void
 }

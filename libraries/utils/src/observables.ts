@@ -1,11 +1,13 @@
 import { Observable, type Observer, type ObserverOptions } from '@gullerya/object-observer'
 import { useRerenderer } from '@revenge-mod/utils/hooks'
 
+import { useEffect } from 'react'
+
 export function useObserve(observables: Observable[], opts?: ObserverOptions) {
     const rerender = useRerenderer()
 
     // biome-ignore lint/correctness/useExhaustiveDependencies: We manually re-render when needed
-    React.useEffect(() => {
+    useEffect(() => {
         for (const o of observables) Observable.observe(o, rerender, opts)
 
         return () => {
@@ -22,7 +24,7 @@ export function useObserveFiltered(
     const rerender = useRerenderer()
 
     // biome-ignore lint/correctness/useExhaustiveDependencies: We manually re-render when needed
-    React.useEffect(() => {
+    useEffect(() => {
         const listener: Observer = changes => filter(changes) && rerender()
         Observable.observe(observable, listener, opts)
 
