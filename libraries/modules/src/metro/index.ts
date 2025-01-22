@@ -83,6 +83,10 @@ export async function initializeModules() {
         }
     }
 
+    logger.log('Importing index module...')
+    // ! Do NOT use requireModule for this
+    if (!modules.get(0)!.isInitialized) __r(0)
+
     const cacheRestored = await cacheRestoredPromise
 
     // Since cold starts are obsolete, we need to manually import all assets to cache their module IDs as they are imported lazily
